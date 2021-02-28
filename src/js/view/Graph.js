@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2006-2015, JGraph Ltd
+ * Copyright (c) 2006-2015, Gaudenz Alder
+ * Copyright (c) 2021, Junsik Shim
+ */
+
 import { IS_IE } from '../Client';
 import { addProp, isSet, isUnset } from '../Helpers';
 import Cell from '../model/Cell';
@@ -30,142 +36,1566 @@ import {
 } from '../util/Utils';
 import GraphView from './GraphView';
 
+/**
+ * Class: Graph
+ *
+ * Extends <mxEventSource> to implement a graph component for
+ * the browser. This is the main class of the package. To activate
+ * panning and connections use <setPanning> and <setConnectable>.
+ * For rubberband selection you must create a new instance of
+ * <mxRubberband>. The following listeners are added to
+ * <mouseListeners> by default:
+ *
+ * - <tooltipHandler>: <mxTooltipHandler> that displays tooltips
+ * - <panningHandler>: <mxPanningHandler> for panning and popup menus
+ * - <connectionHandler>: <mxConnectionHandler> for creating connections
+ * - <graphHandler>: <mxGraphHandler> for moving and cloning cells
+ *
+ * These listeners will be called in the above order if they are enabled.
+ *
+ * Background Images:
+ *
+ * To display a background image, set the image, image width and
+ * image height using <setBackgroundImage>. If one of the
+ * above values has changed then the <view>'s <mxGraphView.validate>
+ * should be invoked.
+ *
+ * Cell Images:
+ *
+ * To use images in cells, a shape must be specified in the default
+ * vertex style (or any named style). Possible shapes are
+ * <mxConstants.SHAPE_IMAGE> and <mxConstants.SHAPE_LABEL>.
+ * The code to change the shape used in the default vertex style,
+ * the following code is used:
+ *
+ * (code)
+ * var style = graph.getStylesheet().getDefaultVertexStyle();
+ * style[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_IMAGE;
+ * (end)
+ *
+ * For the default vertex style, the image to be displayed can be
+ * specified in a cell's style using the <mxConstants.STYLE_IMAGE>
+ * key and the image URL as a value, for example:
+ *
+ * (code)
+ * image=http://www.example.com/image.gif
+ * (end)
+ *
+ * For a named style, the the stylename must be the first element
+ * of the cell style:
+ *
+ * (code)
+ * stylename;image=http://www.example.com/image.gif
+ * (end)
+ *
+ * A cell style can have any number of key=value pairs added, divided
+ * by a semicolon as follows:
+ *
+ * (code)
+ * [stylename;|key=value;]
+ * (end)
+ *
+ * Labels:
+ *
+ * The cell labels are defined by <getLabel> which uses <convertValueToString>
+ * if <labelsVisible> is true. If a label must be rendered as HTML markup, then
+ * <isHtmlLabel> should return true for the respective cell. If all labels
+ * contain HTML markup, <htmlLabels> can be set to true. NOTE: Enabling HTML
+ * labels carries a possible security risk (see the section on security in
+ * the manual).
+ *
+ * If wrapping is needed for a label, then <isHtmlLabel> and <isWrapping> must
+ * return true for the cell whose label should be wrapped. See <isWrapping> for
+ * an example.
+ *
+ * If clipping is needed to keep the rendering of a HTML label inside the
+ * bounds of its vertex, then <isClipping> should return true for the
+ * respective cell.
+ *
+ * By default, edge labels are movable and vertex labels are fixed. This can be
+ * changed by setting <edgeLabelsMovable> and <vertexLabelsMovable>, or by
+ * overriding <isLabelMovable>.
+ *
+ * In-place Editing:
+ *
+ * In-place editing is started with a doubleclick or by typing F2.
+ * Programmatically, <edit> is used to check if the cell is editable
+ * (<isCellEditable>) and call <startEditingAtCell>, which invokes
+ * <mxCellEditor.startEditing>. The editor uses the value returned
+ * by <getEditingValue> as the editing value.
+ *
+ * After in-place editing, <labelChanged> is called, which invokes
+ * <mxGraphModel.setValue>, which in turn calls
+ * <mxGraphModel.valueForCellChanged> via <mxValueChange>.
+ *
+ * The event that triggers in-place editing is passed through to the
+ * <cellEditor>, which may take special actions depending on the type of the
+ * event or mouse location, and is also passed to <getEditingValue>. The event
+ * is then passed back to the event processing functions which can perform
+ * specific actions based on the trigger event.
+ *
+ * Tooltips:
+ *
+ * Tooltips are implemented by <getTooltip>, which calls <getTooltipForCell>
+ * if a cell is under the mousepointer. The default implementation checks if
+ * the cell has a getTooltip function and calls it if it exists. Hence, in order
+ * to provide custom tooltips, the cell must provide a getTooltip function, or
+ * one of the two above functions must be overridden.
+ *
+ * Typically, for custom cell tooltips, the latter function is overridden as
+ * follows:
+ *
+ * (code)
+ * graph.getTooltipForCell = function(cell)
+ * {
+ *   var label = this.convertValueToString(cell);
+ *   return 'Tooltip for '+label;
+ * }
+ * (end)
+ *
+ * When using a config file, the function is overridden in the mxGraph section
+ * using the following entry:
+ *
+ * (code)
+ * <add as="getTooltipForCell"><![CDATA[
+ *   function(cell)
+ *   {
+ *     var label = this.convertValueToString(cell);
+ *     return 'Tooltip for '+label;
+ *   }
+ * ]]></add>
+ * (end)
+ *
+ * "this" refers to the graph in the implementation, so for example to check if
+ * a cell is an edge, you use this.getModel().isEdge(cell)
+ *
+ * For replacing the default implementation of <getTooltipForCell> (rather than
+ * replacing the function on a specific instance), the following code should be
+ * used after loading the JavaScript files, but before creating a new mxGraph
+ * instance using <mxGraph>:
+ *
+ * (code)
+ * mxGraph.prototype.getTooltipForCell = function(cell)
+ * {
+ *   var label = this.convertValueToString(cell);
+ *   return 'Tooltip for '+label;
+ * }
+ * (end)
+ *
+ * Shapes & Styles:
+ *
+ * The implementation of new shapes is demonstrated in the examples. We'll assume
+ * that we have implemented a custom shape with the name BoxShape which we want
+ * to use for drawing vertices. To use this shape, it must first be registered in
+ * the cell renderer as follows:
+ *
+ * (code)
+ * mxCellRenderer.registerShape('box', BoxShape);
+ * (end)
+ *
+ * The code registers the BoxShape constructor under the name box in the cell
+ * renderer of the graph. The shape can now be referenced using the shape-key in
+ * a style definition. (The cell renderer contains a set of additional shapes,
+ * namely one for each constant with a SHAPE-prefix in <mxConstants>.)
+ *
+ * Styles are a collection of key, value pairs and a stylesheet is a collection
+ * of named styles. The names are referenced by the cellstyle, which is stored
+ * in <mxCell.style> with the following format: [stylename;|key=value;]. The
+ * string is resolved to a collection of key, value pairs, where the keys are
+ * overridden with the values in the string.
+ *
+ * When introducing a new shape, the name under which the shape is registered
+ * must be used in the stylesheet. There are three ways of doing this:
+ *
+ *   - By changing the default style, so that all vertices will use the new
+ * 		shape
+ *   - By defining a new style, so that only vertices with the respective
+ * 		cellstyle will use the new shape
+ *   - By using shape=box in the cellstyle's optional list of key, value pairs
+ * 		to be overridden
+ *
+ * In the first case, the code to fetch and modify the default style for
+ * vertices is as follows:
+ *
+ * (code)
+ * var style = graph.getStylesheet().getDefaultVertexStyle();
+ * style[mxConstants.STYLE_SHAPE] = 'box';
+ * (end)
+ *
+ * The code takes the default vertex style, which is used for all vertices that
+ * do not have a specific cellstyle, and modifies the value for the shape-key
+ * in-place to use the new BoxShape for drawing vertices. This is done by
+ * assigning the box value in the second line, which refers to the name of the
+ * BoxShape in the cell renderer.
+ *
+ * In the second case, a collection of key, value pairs is created and then
+ * added to the stylesheet under a new name. In order to distinguish the
+ * shapename and the stylename we'll use boxstyle for the stylename:
+ *
+ * (code)
+ * var style = new Object();
+ * style[mxConstants.STYLE_SHAPE] = 'box';
+ * style[mxConstants.STYLE_STROKECOLOR] = '#000000';
+ * style[mxConstants.STYLE_FONTCOLOR] = '#000000';
+ * graph.getStylesheet().putCellStyle('boxstyle', style);
+ * (end)
+ *
+ * The code adds a new style with the name boxstyle to the stylesheet. To use
+ * this style with a cell, it must be referenced from the cellstyle as follows:
+ *
+ * (code)
+ * var vertex = graph.insertVertex(parent, null, 'Hello, World!', 20, 20, 80, 20,
+ * 				'boxstyle');
+ * (end)
+ *
+ * To summarize, each new shape must be registered in the <mxCellRenderer> with
+ * a unique name. That name is then used as the value of the shape-key in a
+ * default or custom style. If there are multiple custom shapes, then there
+ * should be a separate style for each shape.
+ *
+ * Inheriting Styles:
+ *
+ * For fill-, stroke-, gradient-, font- and indicatorColors special keywords
+ * can be used. The inherit keyword for one of these colors will inherit the
+ * color for the same key from the parent cell. The swimlane keyword does the
+ * same, but inherits from the nearest swimlane in the ancestor hierarchy.
+ * Finally, the indicated keyword will use the color of the indicator as the
+ * color for the given key.
+ *
+ * Scrollbars:
+ *
+ * The <containers> overflow CSS property defines if scrollbars are used to
+ * display the graph. For values of 'auto' or 'scroll', the scrollbars will
+ * be shown. Note that the <resizeContainer> flag is normally not used
+ * together with scrollbars, as it will resize the container to match the
+ * size of the graph after each change.
+ *
+ * Multiplicities and Validation:
+ *
+ * To control the possible connections in mxGraph, <getEdgeValidationError> is
+ * used. The default implementation of the function uses <multiplicities>,
+ * which is an array of <mxMultiplicity>. Using this class allows to establish
+ * simple multiplicities, which are enforced by the graph.
+ *
+ * The <mxMultiplicity> uses <mxCell.is> to determine for which terminals it
+ * applies. The default implementation of <mxCell.is> works with DOM nodes (XML
+ * nodes) and checks if the given type parameter matches the nodeName of the
+ * node (case insensitive). Optionally, an attributename and value can be
+ * specified which are also checked.
+ *
+ * <getEdgeValidationError> is called whenever the connectivity of an edge
+ * changes. It returns an empty string or an error message if the edge is
+ * invalid or null if the edge is valid. If the returned string is not empty
+ * then it is displayed as an error message.
+ *
+ * <mxMultiplicity> allows to specify the multiplicity between a terminal and
+ * its possible neighbors. For example, if any rectangle may only be connected
+ * to, say, a maximum of two circles you can add the following rule to
+ * <multiplicities>:
+ *
+ * (code)
+ * graph.multiplicities.push(new mxMultiplicity(
+ *   true, 'rectangle', null, null, 0, 2, ['circle'],
+ *   'Only 2 targets allowed',
+ *   'Only shape targets allowed'));
+ * (end)
+ *
+ * This will display the first error message whenever a rectangle is connected
+ * to more than two circles and the second error message if a rectangle is
+ * connected to anything but a circle.
+ *
+ * For certain multiplicities, such as a minimum of 1 connection, which cannot
+ * be enforced at cell creation time (unless the cell is created together with
+ * the connection), mxGraph offers <validate> which checks all multiplicities
+ * for all cells and displays the respective error messages in an overlay icon
+ * on the cells.
+ *
+ * If a cell is collapsed and contains validation errors, a respective warning
+ * icon is attached to the collapsed cell.
+ *
+ * Auto-Layout:
+ *
+ * For automatic layout, the <getLayout> hook is provided in <mxLayoutManager>.
+ * It can be overridden to return a layout algorithm for the children of a
+ * given cell.
+ *
+ * Unconnected edges:
+ *
+ * The default values for all switches are designed to meet the requirements of
+ * general diagram drawing applications. A very typical set of settings to
+ * avoid edges that are not connected is the following:
+ *
+ * (code)
+ * graph.setAllowDanglingEdges(false);
+ * graph.setDisconnectOnMove(false);
+ * (end)
+ *
+ * Setting the <cloneInvalidEdges> switch to true is optional. This switch
+ * controls if edges are inserted after a copy, paste or clone-drag if they are
+ * invalid. For example, edges are invalid if copied or control-dragged without
+ * having selected the corresponding terminals and allowDanglingEdges is
+ * false, in which case the edges will not be cloned if the switch is false.
+ *
+ * Output:
+ *
+ * To produce an XML representation for a diagram, the following code can be
+ * used.
+ *
+ * (code)
+ * var enc = new mxCodec(mxUtils.createXmlDocument());
+ * var node = enc.encode(graph.getModel());
+ * (end)
+ *
+ * This will produce an XML node than can be handled using the DOM API or
+ * turned into a string representation using the following code:
+ *
+ * (code)
+ * var xml = mxUtils.getXml(node);
+ * (end)
+ *
+ * To obtain a formatted string, mxUtils.getPrettyXml can be used instead.
+ *
+ * This string can now be stored in a local persistent storage (for example
+ * using Google Gears) or it can be passed to a backend using mxUtils.post as
+ * follows. The url variable is the URL of the Java servlet, PHP page or HTTP
+ * handler, depending on the server.
+ *
+ * (code)
+ * var xmlString = encodeURIComponent(mxUtils.getXml(node));
+ * mxUtils.post(url, 'xml='+xmlString, function(req)
+ * {
+ *   // Process server response using req of type mxXmlRequest
+ * });
+ * (end)
+ *
+ * Input:
+ *
+ * To load an XML representation of a diagram into an existing graph object
+ * mxUtils.load can be used as follows. The url variable is the URL of the Java
+ * servlet, PHP page or HTTP handler that produces the XML string.
+ *
+ * (code)
+ * var xmlDoc = mxUtils.load(url).getXml();
+ * var node = xmlDoc.documentElement;
+ * var dec = new mxCodec(node.ownerDocument);
+ * dec.decode(node, graph.getModel());
+ * (end)
+ *
+ * For creating a page that loads the client and a diagram using a single
+ * request please refer to the deployment examples in the backends.
+ *
+ * Functional dependencies:
+ *
+ * (see images/callgraph.png)
+ *
+ * Resources:
+ *
+ * resources/graph - Language resources for mxGraph
+ *
+ * Group: Events
+ *
+ * Event: mxEvent.ROOT
+ *
+ * Fires if the root in the model has changed. This event has no properties.
+ *
+ * Event: mxEvent.ALIGN_CELLS
+ *
+ * Fires between begin- and endUpdate in <alignCells>. The <code>cells</code>
+ * and <code>align</code> properties contain the respective arguments that were
+ * passed to <alignCells>.
+ *
+ * Event: mxEvent.FLIP_EDGE
+ *
+ * Fires between begin- and endUpdate in <flipEdge>. The <code>edge</code>
+ * property contains the edge passed to <flipEdge>.
+ *
+ * Event: mxEvent.ORDER_CELLS
+ *
+ * Fires between begin- and endUpdate in <orderCells>. The <code>cells</code>
+ * and <code>back</code> properties contain the respective arguments that were
+ * passed to <orderCells>.
+ *
+ * Event: mxEvent.CELLS_ORDERED
+ *
+ * Fires between begin- and endUpdate in <cellsOrdered>. The <code>cells</code>
+ * and <code>back</code> arguments contain the respective arguments that were
+ * passed to <cellsOrdered>.
+ *
+ * Event: mxEvent.GROUP_CELLS
+ *
+ * Fires between begin- and endUpdate in <groupCells>. The <code>group</code>,
+ * <code>cells</code> and <code>border</code> arguments contain the respective
+ * arguments that were passed to <groupCells>.
+ *
+ * Event: mxEvent.UNGROUP_CELLS
+ *
+ * Fires between begin- and endUpdate in <ungroupCells>. The <code>cells</code>
+ * property contains the array of cells that was passed to <ungroupCells>.
+ *
+ * Event: mxEvent.REMOVE_CELLS_FROM_PARENT
+ *
+ * Fires between begin- and endUpdate in <removeCellsFromParent>. The
+ * <code>cells</code> property contains the array of cells that was passed to
+ * <removeCellsFromParent>.
+ *
+ * Event: mxEvent.ADD_CELLS
+ *
+ * Fires between begin- and endUpdate in <addCells>. The <code>cells</code>,
+ * <code>parent</code>, <code>index</code>, <code>source</code> and
+ * <code>target</code> properties contain the respective arguments that were
+ * passed to <addCells>.
+ *
+ * Event: mxEvent.CELLS_ADDED
+ *
+ * Fires between begin- and endUpdate in <cellsAdded>. The <code>cells</code>,
+ * <code>parent</code>, <code>index</code>, <code>source</code>,
+ * <code>target</code> and <code>absolute</code> properties contain the
+ * respective arguments that were passed to <cellsAdded>.
+ *
+ * Event: mxEvent.REMOVE_CELLS
+ *
+ * Fires between begin- and endUpdate in <removeCells>. The <code>cells</code>
+ * and <code>includeEdges</code> arguments contain the respective arguments
+ * that were passed to <removeCells>.
+ *
+ * Event: mxEvent.CELLS_REMOVED
+ *
+ * Fires between begin- and endUpdate in <cellsRemoved>. The <code>cells</code>
+ * argument contains the array of cells that was removed.
+ *
+ * Event: mxEvent.SPLIT_EDGE
+ *
+ * Fires between begin- and endUpdate in <splitEdge>. The <code>edge</code>
+ * property contains the edge to be splitted, the <code>cells</code>,
+ * <code>newEdge</code>, <code>dx</code> and <code>dy</code> properties contain
+ * the respective arguments that were passed to <splitEdge>.
+ *
+ * Event: mxEvent.TOGGLE_CELLS
+ *
+ * Fires between begin- and endUpdate in <toggleCells>. The <code>show</code>,
+ * <code>cells</code> and <code>includeEdges</code> properties contain the
+ * respective arguments that were passed to <toggleCells>.
+ *
+ * Event: mxEvent.FOLD_CELLS
+ *
+ * Fires between begin- and endUpdate in <foldCells>. The
+ * <code>collapse</code>, <code>cells</code> and <code>recurse</code>
+ * properties contain the respective arguments that were passed to <foldCells>.
+ *
+ * Event: mxEvent.CELLS_FOLDED
+ *
+ * Fires between begin- and endUpdate in cellsFolded. The
+ * <code>collapse</code>, <code>cells</code> and <code>recurse</code>
+ * properties contain the respective arguments that were passed to
+ * <cellsFolded>.
+ *
+ * Event: mxEvent.UPDATE_CELL_SIZE
+ *
+ * Fires between begin- and endUpdate in <updateCellSize>. The
+ * <code>cell</code> and <code>ignoreChildren</code> properties contain the
+ * respective arguments that were passed to <updateCellSize>.
+ *
+ * Event: mxEvent.RESIZE_CELLS
+ *
+ * Fires between begin- and endUpdate in <resizeCells>. The <code>cells</code>
+ * and <code>bounds</code> properties contain the respective arguments that
+ * were passed to <resizeCells>.
+ *
+ * Event: mxEvent.CELLS_RESIZED
+ *
+ * Fires between begin- and endUpdate in <cellsResized>. The <code>cells</code>
+ * and <code>bounds</code> properties contain the respective arguments that
+ * were passed to <cellsResized>.
+ *
+ * Event: mxEvent.MOVE_CELLS
+ *
+ * Fires between begin- and endUpdate in <moveCells>. The <code>cells</code>,
+ * <code>dx</code>, <code>dy</code>, <code>clone</code>, <code>target</code>
+ * and <code>event</code> properties contain the respective arguments that
+ * were passed to <moveCells>.
+ *
+ * Event: mxEvent.CELLS_MOVED
+ *
+ * Fires between begin- and endUpdate in <cellsMoved>. The <code>cells</code>,
+ * <code>dx</code>, <code>dy</code> and <code>disconnect</code> properties
+ * contain the respective arguments that were passed to <cellsMoved>.
+ *
+ * Event: mxEvent.CONNECT_CELL
+ *
+ * Fires between begin- and endUpdate in <connectCell>. The <code>edge</code>,
+ * <code>terminal</code> and <code>source</code> properties contain the
+ * respective arguments that were passed to <connectCell>.
+ *
+ * Event: mxEvent.CELL_CONNECTED
+ *
+ * Fires between begin- and endUpdate in <cellConnected>. The
+ * <code>edge</code>, <code>terminal</code> and <code>source</code> properties
+ * contain the respective arguments that were passed to <cellConnected>.
+ *
+ * Event: mxEvent.REFRESH
+ *
+ * Fires after <refresh> was executed. This event has no properties.
+ *
+ * Event: mxEvent.CLICK
+ *
+ * Fires in <click> after a click event. The <code>event</code> property
+ * contains the original mouse event and <code>cell</code> property contains
+ * the cell under the mouse or null if the background was clicked.
+ *
+ * Event: mxEvent.DOUBLE_CLICK
+ *
+ * Fires in <dblClick> after a double click. The <code>event</code> property
+ * contains the original mouse event and the <code>cell</code> property
+ * contains the cell under the mouse or null if the background was clicked.
+ *
+ * Event: mxEvent.GESTURE
+ *
+ * Fires in <fireGestureEvent> after a touch gesture. The <code>event</code>
+ * property contains the original gesture end event and the <code>cell</code>
+ * property contains the optional cell associated with the gesture.
+ *
+ * Event: mxEvent.TAP_AND_HOLD
+ *
+ * Fires in <tapAndHold> if a tap and hold event was detected. The <code>event</code>
+ * property contains the initial touch event and the <code>cell</code> property
+ * contains the cell under the mouse or null if the background was clicked.
+ *
+ * Event: mxEvent.FIRE_MOUSE_EVENT
+ *
+ * Fires in <fireMouseEvent> before the mouse listeners are invoked. The
+ * <code>eventName</code> property contains the event name and the
+ * <code>event</code> property contains the <mxMouseEvent>.
+ *
+ * Event: mxEvent.SIZE
+ *
+ * Fires after <sizeDidChange> was executed. The <code>bounds</code> property
+ * contains the new graph bounds.
+ *
+ * Event: mxEvent.START_EDITING
+ *
+ * Fires before the in-place editor starts in <startEditingAtCell>. The
+ * <code>cell</code> property contains the cell that is being edited and the
+ * <code>event</code> property contains the optional event argument that was
+ * passed to <startEditingAtCell>.
+ *
+ * Event: mxEvent.EDITING_STARTED
+ *
+ * Fires after the in-place editor starts in <startEditingAtCell>. The
+ * <code>cell</code> property contains the cell that is being edited and the
+ * <code>event</code> property contains the optional event argument that was
+ * passed to <startEditingAtCell>.
+ *
+ * Event: mxEvent.EDITING_STOPPED
+ *
+ * Fires after the in-place editor stops in <stopEditing>.
+ *
+ * Event: mxEvent.LABEL_CHANGED
+ *
+ * Fires between begin- and endUpdate in <cellLabelChanged>. The
+ * <code>cell</code> property contains the cell, the <code>value</code>
+ * property contains the new value for the cell, the <code>old</code> property
+ * contains the old value and the optional <code>event</code> property contains
+ * the mouse event that started the edit.
+ *
+ * Event: mxEvent.ADD_OVERLAY
+ *
+ * Fires after an overlay is added in <addCellOverlay>. The <code>cell</code>
+ * property contains the cell and the <code>overlay</code> property contains
+ * the <mxCellOverlay> that was added.
+ *
+ * Event: mxEvent.REMOVE_OVERLAY
+ *
+ * Fires after an overlay is removed in <removeCellOverlay> and
+ * <removeCellOverlays>. The <code>cell</code> property contains the cell and
+ * the <code>overlay</code> property contains the <mxCellOverlay> that was
+ * removed.
+ *
+ * Constructor: mxGraph
+ *
+ * Constructs a new mxGraph in the specified container. Model is an optional
+ * mxGraphModel. If no model is provided, a new mxGraphModel instance is
+ * used as the model. The container must have a valid owner document prior
+ * to calling this function in Internet Explorer. RenderHint is a string to
+ * affect the display performance and rendering in IE, but not in SVG-based
+ * browsers. The parameter is mapped to <dialect>, which may
+ * be one of <mxConstants.DIALECT_SVG> for SVG-based browsers,
+ * <mxConstants.DIALECT_STRICTHTML> for fastest display mode,
+ * <mxConstants.DIALECT_PREFERHTML> for faster display mode,
+ * <mxConstants.DIALECT_MIXEDHTML> for fast and <mxConstants.DIALECT_VML>
+ * for exact display mode (slowest). The dialects are defined in mxConstants.
+ * The default values are DIALECT_SVG for SVG-based browsers and
+ * DIALECT_MIXED for IE.
+ *
+ * The possible values for the renderingHint parameter are explained below:
+ *
+ * fast - The parameter is based on the fact that the display performance is
+ * highly improved in IE if the VML is not contained within a VML group
+ * element. The lack of a group element only slightly affects the display while
+ * panning, but improves the performance by almost a factor of 2, while keeping
+ * the display sufficiently accurate. This also allows to render certain shapes as HTML
+ * if the display accuracy is not affected, which is implemented by
+ * <mxShape.isMixedModeHtml>. This is the default setting and is mapped to
+ * DIALECT_MIXEDHTML.
+ * faster - Same as fast, but more expensive shapes are avoided. This is
+ * controlled by <mxShape.preferModeHtml>. The default implementation will
+ * avoid gradients and rounded rectangles, but more significant shapes, such
+ * as rhombus, ellipse, actor and cylinder will be rendered accurately. This
+ * setting is mapped to DIALECT_PREFERHTML.
+ * fastest - Almost anything will be rendered in Html. This allows for
+ * rectangles, labels and images. This setting is mapped to
+ * DIALECT_STRICTHTML.
+ * exact - If accurate panning is required and if the diagram is small (up
+ * to 100 cells), then this value should be used. In this mode, a group is
+ * created that contains the VML. This allows for accurate panning and is
+ * mapped to DIALECT_VML.
+ *
+ * Example:
+ *
+ * To create a graph inside a DOM node with an id of graph:
+ * (code)
+ * var container = document.getElementById('graph');
+ * var graph = new mxGraph(container);
+ * (end)
+ *
+ * Parameters:
+ *
+ * container - Optional DOM node that acts as a container for the graph.
+ * If this is null then the container can be initialized later using
+ * <init>.
+ * model - Optional <mxGraphModel> that constitutes the graph data.
+ * renderHint - Optional string that specifies the display accuracy and
+ * performance. Default is mxConstants.DIALECT_MIXEDHTML (for IE).
+ * stylesheet - Optional <mxStylesheet> to be used in the graph.
+ */
 const Graph = (container, model, _, stylesheet) => {
   const { fireEvent } = EventSource();
 
+  /**
+   * Variable: mouseListeners
+   *
+   * Holds the mouse event listeners. See <fireMouseEvent>.
+   */
   const [getMouseListeners, setMouseListeners] = addProp();
+
+  /**
+   * Variable: isMouseDown
+   *
+   * Holds the state of the mouse button.
+   */
   const [isMouseDown, setMouseDown] = addProp(false);
+
+  /**
+   * Variable: model
+   *
+   * Holds the <mxGraphModel> that contains the cells to be displayed.
+   */
   const [getModel, setModel] = addProp();
+
+  /**
+   * Variable: view
+   *
+   * Holds the <mxGraphView> that caches the <mxCellStates> for the cells.
+   */
   const [getView, setView] = addProp();
+
+  /**
+   * Variable: stylesheet
+   *
+   * Holds the <mxStylesheet> that defines the appearance of the cells.
+   *
+   *
+   * Example:
+   *
+   * Use the following code to read a stylesheet into an existing graph.
+   *
+   * (code)
+   * var req = mxUtils.load('stylesheet.xml');
+   * var root = req.getDocumentElement();
+   * var dec = new mxCodec(root.ownerDocument);
+   * dec.decode(root, graph.stylesheet);
+   * (end)
+   */
   const [getStylesheet, setStylesheet] = addProp();
+
+  /**
+   * Variable: selectionModel
+   *
+   * Holds the <mxGraphSelectionModel> that models the current selection.
+   */
   const [getSelectionModel, setSelectionModel] = addProp();
+
+  /**
+   * Variable: cellEditor
+   *
+   * Holds the <mxCellEditor> that is used as the in-place editing.
+   */
   const [getCellEditor, setCellEditor] = addProp();
+
+  /**
+   * Variable: cellRenderer
+   *
+   * Holds the <mxCellRenderer> for rendering the cells in the graph.
+   */
   const [getCellRenderer, setCellRenderer] = addProp();
+
+  /**
+   * Variable: multiplicities
+   *
+   * An array of <mxMultiplicities> describing the allowed
+   * connections in a graph.
+   */
   const [getMultiplicities, setMultiplicities] = addProp();
+
+  /**
+   * Variable: gridSize
+   *
+   * Specifies the grid size. Default is 10.
+   */
   const [getGridSize, setGridSize] = addProp(10);
+
+  /**
+   * Variable: gridEnabled
+   *
+   * Specifies if the grid is enabled. This is used in <snap>. Default is
+   * true.
+   */
   const [isGridEnabled, setGridEnabled] = addProp(true);
+
+  /**
+   * Variable: portsEnabled
+   *
+   * Specifies if ports are enabled. This is used in <cellConnected> to update
+   * the respective style. Default is true.
+   */
   const [isPortsEnabled, setPortsEnabled] = addProp(true);
+
+  /**
+   * Variable: nativeDoubleClickEnabled
+   *
+   * Specifies if native double click events should be detected. Default is true.
+   */
   const [isNativeDblClickEnabled, setNativeDblClickEnabled] = addProp(true);
+
+  /**
+   * Variable: doubleTapEnabled
+   *
+   * Specifies if double taps on touch-based devices should be handled as a
+   * double click. Default is true.
+   */
   const [isDoubleTapEnabled, setDoubleTabEnabled] = addProp(true);
+
+  /**
+   * Variable: doubleTapTimeout
+   *
+   * Specifies the timeout for double taps and non-native double clicks. Default
+   * is 500 ms.
+   */
   const [getDoubleTapTimeout, setDoubleTapTimeout] = addProp(500);
+
+  /**
+   * Variable: doubleTapTolerance
+   *
+   * Specifies the tolerance for double taps and double clicks in quirks mode.
+   * Default is 25 pixels.
+   */
   const [getDoubleTapTolerance, setDoubleTapTolerance] = addProp(25);
+
+  /**
+   * Variable: lastTouchX
+   *
+   * Holds the x-coordinate of the last touch event for double tap detection.
+   */
   const [getLastTouchX, setLastTouchX] = addProp(0);
+
+  /**
+   * Variable: lastTouchX
+   *
+   * Holds the y-coordinate of the last touch event for double tap detection.
+   */
   const [getLastTouchY, setLastTouchY] = addProp(0);
+
+  /**
+   * Variable: lastTouchTime
+   *
+   * Holds the time of the last touch event for double click detection.
+   */
   const [getLastTouchTime, setLastTouchTime] = addProp(0);
+
+  /**
+   * Variable: tapAndHoldEnabled
+   *
+   * Specifies if tap and hold should be used for starting connections on touch-based
+   * devices. Default is true.
+   */
   const [isTapAndHoldEnabled, setTapAndHoldEnabled] = addProp(true);
+
+  /**
+   * Variable: tapAndHoldDelay
+   *
+   * Specifies the time for a tap and hold. Default is 500 ms.
+   */
   const [getTapAndHoldDelay, setTapAndHoldDelay] = addProp(500);
+
+  /**
+   * Variable: tapAndHoldInProgress
+   *
+   * True if the timer for tap and hold events is running.
+   */
   const [isTapAndHoldInProgress, setTapAndHoldInProgress] = addProp(false);
+
+  /**
+   * Variable: tapAndHoldValid
+   *
+   * True as long as the timer is running and the touch events
+   * stay within the given <tapAndHoldTolerance>.
+   */
   const [isTapAndHoldValid, setTapAndHoldValid] = addProp(false);
+
+  /**
+   * Variable: initialTouchX
+   *
+   * Holds the x-coordinate of the intial touch event for tap and hold.
+   */
   const [getInitialTouchX, setInitialTouchX] = addProp(0);
+
+  /**
+   * Variable: initialTouchY
+   *
+   * Holds the y-coordinate of the intial touch event for tap and hold.
+   */
   const [getInitialTouchY, setInitialTouchY] = addProp(0);
+
+  /**
+   * Variable: tolerance
+   *
+   * Tolerance for a move to be handled as a single click.
+   * Default is 4 pixels.
+   */
   const [getTolerance, setTolerance] = addProp(4);
+
+  /**
+   * Variable: defaultOverlap
+   *
+   * Value returned by <getOverlap> if <isAllowOverlapParent> returns
+   * true for the given cell. <getOverlap> is used in <constrainChild> if
+   * <isConstrainChild> returns true. The value specifies the
+   * portion of the child which is allowed to overlap the parent.
+   */
   const [getDefaultOverlap, setDefaultOverlap] = addProp(0.5);
+
+  /**
+   * Variable: defaultParent
+   *
+   * Specifies the default parent to be used to insert new cells.
+   * This is used in <getDefaultParent>. Default is null.
+   */
   const [getDefaultParent, setDefaultParent] = addProp();
+
+  /**
+   * Variable: alternateEdgeStyle
+   *
+   * Specifies the alternate edge style to be used if the main control point
+   * on an edge is being doubleclicked. Default is null.
+   */
   const [getAlternateEdgeStyle, setAlternateEdgeStyle] = addProp();
+
+  /**
+   * Variable: backgroundImage
+   *
+   * Specifies the <mxImage> to be returned by <getBackgroundImage>. Default
+   * is null.
+   *
+   * Example:
+   *
+   * (code)
+   * var img = new mxImage('http://www.example.com/maps/examplemap.jpg', 1024, 768);
+   * graph.setBackgroundImage(img);
+   * graph.view.validate();
+   * (end)
+   */
   const [getBackgroundImage, setBackgroundImage] = addProp();
+
+  /**
+   * Variable: pageVisible
+   *
+   * Specifies if the background page should be visible. Default is false.
+   * Not yet implemented.
+   */
   const [isPageVisible, setPageVisible] = addProp(false);
+
+  /**
+   * Variable: pageBreaksVisible
+   *
+   * Specifies if a dashed line should be drawn between multiple pages. Default
+   * is false. If you change this value while a graph is being displayed then you
+   * should call <sizeDidChange> to force an update of the display.
+   */
   const [isPageBreaksVisible, setPageBreaksVisible] = addProp(false);
+
+  /**
+   * Variable: pageBreakColor
+   *
+   * Specifies the color for page breaks. Default is 'gray'.
+   */
   const [getPageBreakColor, setPageBreakColor] = addProp('gray');
+
+  /**
+   * Variable: pageBreakDashed
+   *
+   * Specifies the page breaks should be dashed. Default is true.
+   */
   const [isPageBreakDashed, setPageBreakDashed] = addProp(true);
+
+  /**
+   * Variable: minPageBreakDist
+   *
+   * Specifies the minimum distance for page breaks to be visible. Default is
+   * 20 (in pixels).
+   */
   const [getMinPageBreakDist, setMinPageBreakDist] = addProp(20);
+
+  /**
+   * Variable: preferPageSize
+   *
+   * Specifies if the graph size should be rounded to the next page number in
+   * <sizeDidChange>. This is only used if the graph container has scrollbars.
+   * Default is false.
+   */
   const [isPreferPageSize, setPreferPageSize] = addProp(false);
+
+  /**
+   * Variable: pageFormat
+   *
+   * Specifies the page format for the background page. Default is
+   * <mxConstants.PAGE_FORMAT_A4_PORTRAIT>. This is used as the default in
+   * <mxPrintPreview> and for painting the background page if <pageVisible> is
+   * true and the pagebreaks if <pageBreaksVisible> is true.
+   */
   const [getPageFormat, setPageFormat] = addProp(PAGE_FORMAT_A4_PORTRAIT);
+
+  /**
+   * Variable: pageScale
+   *
+   * Specifies the scale of the background page. Default is 1.5.
+   * Not yet implemented.
+   */
   const [getPageScale, setPageScale] = addProp(1.5);
+
+  /**
+   * Variable: enabled
+   *
+   * Specifies the return value for <isEnabled>. Default is true.
+   */
   const [isEnabled, setEnabled] = addProp(true);
+
+  /**
+   * Variable: escapeEnabled
+   *
+   * Specifies if <mxKeyHandler> should invoke <escape> when the escape key
+   * is pressed. Default is true.
+   */
   const [isEscapeEnabled, setEscapeEnabled] = addProp(true);
+
+  /**
+   * Variable: invokesStopCellEditing
+   *
+   * If true, when editing is to be stopped by way of selection changing,
+   * data in diagram changing or other means stopCellEditing is invoked, and
+   * changes are saved. This is implemented in a focus handler in
+   * <mxCellEditor>. Default is true.
+   */
   const [isInvokesStopCellEditing, setInvokesStopCellEditing] = addProp(true);
+
+  /**
+   * Variable: enterStopsCellEditing
+   *
+   * If true, pressing the enter key without pressing control or shift will stop
+   * editing and accept the new value. This is used in <mxCellEditor> to stop
+   * cell editing. Note: You can always use F2 and escape to stop editing.
+   * Default is false.
+   */
   const [isEnterStopsCellEditing, setEnterStopsCellEditing] = addProp(false);
+
+  /**
+   * Variable: useScrollbarsForPanning
+   *
+   * Specifies if scrollbars should be used for panning in <panGraph> if
+   * any scrollbars are available. If scrollbars are enabled in CSS, but no
+   * scrollbars appear because the graph is smaller than the container size,
+   * then no panning occurs if this is true. Default is true.
+   */
   const [isUseScrollBarsForPanning, setUseScrollBarsForPanning] = addProp(true);
+
+  /**
+   * Variable: exportEnabled
+   *
+   * Specifies the return value for <canExportCell>. Default is true.
+   */
   const [isExportEnabled, setExportEnabled] = addProp(true);
+
+  /**
+   * Variable: importEnabled
+   *
+   * Specifies the return value for <canImportCell>. Default is true.
+   */
   const [isImportEnabled, setImportEnabled] = addProp(true);
+
+  /**
+   * Variable: cellsLocked
+   *
+   * Specifies the return value for <isCellLocked>. Default is false.
+   */
   const [isCellsLocked, setCellsLocked] = addProp(false);
+
+  /**
+   * Variable: cellsCloneable
+   *
+   * Specifies the return value for <isCellCloneable>. Default is true.
+   */
   const [isCellsCloneable, setCellsCloneable] = addProp(true);
+
+  /**
+   * Variable: foldingEnabled
+   *
+   * Specifies if folding (collapse and expand via an image icon in the graph
+   * should be enabled). Default is true.
+   */
   const [isFoldingEnabled, setFoldingEnabled] = addProp(true);
+
+  /**
+   * Variable: cellsEditable
+   *
+   * Specifies the return value for <isCellEditable>. Default is true.
+   */
   const [isCellsEditable, setCellsEditable] = addProp(true);
+
+  /**
+   * Variable: cellsDeletable
+   *
+   * Specifies the return value for <isCellDeletable>. Default is true.
+   */
   const [isCellsDeletable, setCellsDeletable] = addProp(true);
+
+  /**
+   * Variable: cellsMovable
+   *
+   * Specifies the return value for <isCellMovable>. Default is true.
+   */
   const [isCellsMovable, setCellsMovable] = addProp(true);
+
+  /**
+   * Variable: edgeLabelsMovable
+   *
+   * Specifies the return value for edges in <isLabelMovable>. Default is true.
+   */
   const [isEdgeLabelsMovable, setEdgeLabelsMovable] = addProp(true);
+
+  /**
+   * Variable: vertexLabelsMovable
+   *
+   * Specifies the return value for vertices in <isLabelMovable>. Default is false.
+   */
   const [isVertexLabelsMovable, setVertexLabelsMovable] = addProp(false);
+
+  /**
+   * Variable: dropEnabled
+   *
+   * Specifies the return value for <isDropEnabled>. Default is false.
+   */
   const [isDropEnabled, setDropEnabled] = addProp(false);
+
+  /**
+   * Variable: splitEnabled
+   *
+   * Specifies if dropping onto edges should be enabled. This is ignored if
+   * <dropEnabled> is false. If enabled, it will call <splitEdge> to carry
+   * out the drop operation. Default is true.
+   */
   const [isSplitEnabled, setSplitEnabled] = addProp(true);
+
+  /**
+   * Variable: cellsResizable
+   *
+   * Specifies the return value for <isCellResizable>. Default is true.
+   */
   const [isCellsResizable, setCellsResizable] = addProp(true);
+
+  /**
+   * Variable: cellsBendable
+   *
+   * Specifies the return value for <isCellsBendable>. Default is true.
+   */
   const [isCellsBendable, setCellsBendable] = addProp(true);
+
+  /**
+   * Variable: cellsSelectable
+   *
+   * Specifies the return value for <isCellSelectable>. Default is true.
+   */
   const [isCellsSelectable, setCellsSelectable] = addProp(true);
+
+  /**
+   * Variable: cellsDisconnectable
+   *
+   * Specifies the return value for <isCellDisconntable>. Default is true.
+   */
   const [isCellsDisconnectable, setCellsDisconnectable] = addProp(true);
+
+  /**
+   * Variable: autoSizeCells
+   *
+   * Specifies if the graph should automatically update the cell size after an
+   * edit. This is used in <isAutoSizeCell>. Default is false.
+   */
   const [isAutoSizeCells, setAutoSizeCells] = addProp(false);
+
+  /**
+   * Variable: autoSizeCellsOnAdd
+   *
+   * Specifies if autoSize style should be applied when cells are added. Default is false.
+   */
   const [isAutoSizeCellsOnAdd, setAutoSizeCellsOnAdd] = addProp(false);
+
+  /**
+   * Variable: autoScroll
+   *
+   * Specifies if the graph should automatically scroll if the mouse goes near
+   * the container edge while dragging. This is only taken into account if the
+   * container has scrollbars. Default is true.
+   *
+   * If you need this to work without scrollbars then set <ignoreScrollbars> to
+   * true. Please consult the <ignoreScrollbars> for details. In general, with
+   * no scrollbars, the use of <allowAutoPanning> is recommended.
+   */
   const [isAutoScroll, setAutoScroll] = addProp(true);
+
+  /**
+   * Variable: ignoreScrollbars
+   *
+   * Specifies if the graph should automatically scroll regardless of the
+   * scrollbars. This will scroll the container using positive values for
+   * scroll positions (ie usually only rightwards and downwards). To avoid
+   * possible conflicts with panning, set <translateToScrollPosition> to true.
+   */
   const [isIgnoreScrollbars, setIgnoreScrollbars] = addProp(false);
+
+  /**
+   * Variable: translateToScrollPosition
+   *
+   * Specifies if the graph should automatically convert the current scroll
+   * position to a translate in the graph view when a mouseUp event is received.
+   * This can be used to avoid conflicts when using <autoScroll> and
+   * <ignoreScrollbars> with no scrollbars in the container.
+   */
   const [isTranslateToScrollPosition, setTranslateToScrollPosition] = addProp(
     false
   );
+
+  /**
+   * Variable: timerAutoScroll
+   *
+   * Specifies if autoscrolling should be carried out via mxPanningManager even
+   * if the container has scrollbars. This disables <scrollPointToVisible> and
+   * uses <mxPanningManager> instead. If this is true then <autoExtend> is
+   * disabled. It should only be used with a scroll buffer or when scollbars
+   * are visible and scrollable in all directions. Default is false.
+   */
   const [isTimerAutoScroll, setTimerAutoScroll] = addProp(false);
+
+  /**
+   * Variable: allowAutoPanning
+   *
+   * Specifies if panning via <panGraph> should be allowed to implement autoscroll
+   * if no scrollbars are available in <scrollPointToVisible>. To enable panning
+   * inside the container, near the edge, set <mxPanningManager.border> to a
+   * positive value. Default is false.
+   */
   const [isAllowAutoPanning, setAllowAutoPanning] = addProp(false);
+
+  /**
+   * Variable: autoExtend
+   *
+   * Specifies if the size of the graph should be automatically extended if the
+   * mouse goes near the container edge while dragging. This is only taken into
+   * account if the container has scrollbars. Default is true. See <autoScroll>.
+   */
   const [isAutoExtend, setAutoExtend] = addProp(true);
+
+  /**
+   * Variable: maximumGraphBounds
+   *
+   * <mxRectangle> that specifies the area in which all cells in the diagram
+   * should be placed. Uses in <getMaximumGraphBounds>. Use a width or height of
+   * 0 if you only want to give a upper, left corner.
+   */
   const [getMaximumGraphBounds, setMaximiumGraphBounds] = addProp();
+
+  /**
+   * Variable: minimumGraphSize
+   *
+   * <mxRectangle> that specifies the minimum size of the graph. This is ignored
+   * if the graph container has no scrollbars. Default is null.
+   */
   const [getMinimumGraphSize, setMinimumGraphSize] = addProp();
+
+  /**
+   * Variable: minimumContainerSize
+   *
+   * <mxRectangle> that specifies the minimum size of the <container> if
+   * <resizeContainer> is true.
+   */
   const [getMinimumContainerSize, setMinimumContainerSize] = addProp();
+
+  /**
+   * Variable: maximumContainerSize
+   *
+   * <mxRectangle> that specifies the maximum size of the container if
+   * <resizeContainer> is true.
+   */
   const [getMaximumContainerSize, setMaximumContainerSize] = addProp();
+
+  /**
+   * Variable: resizeContainer
+   *
+   * Specifies if the container should be resized to the graph size when
+   * the graph size has changed. Default is false.
+   */
   const [isResizeContainer, setResizeContainer] = addProp(false);
+
+  /**
+   * Variable: border
+   *
+   * Border to be added to the bottom and right side when the container is
+   * being resized after the graph has been changed. Default is 0.
+   */
   const [getBorder, setBorder] = addProp(0);
+
+  /**
+   * Variable: keepEdgesInForeground
+   *
+   * Specifies if edges should appear in the foreground regardless of their order
+   * in the model. If <keepEdgesInForeground> and <keepEdgesInBackground> are
+   * both true then the normal order is applied. Default is false.
+   */
   const [isKeepEdgesInForeground, setKeepEdgesInForeground] = addProp(false);
+
+  /**
+   * Variable: keepEdgesInBackground
+   *
+   * Specifies if edges should appear in the background regardless of their order
+   * in the model. If <keepEdgesInForeground> and <keepEdgesInBackground> are
+   * both true then the normal order is applied. Default is false.
+   */
   const [isKeepEdgesInBackground, setKeepEdgesInBackground] = addProp(false);
+
+  /**
+   * Variable: allowNegativeCoordinates
+   *
+   * Specifies if negative coordinates for vertices are allowed. Default is true.
+   */
   const [isAllowNegativeCoordinates, setAllowNegativeCoordinates] = addProp(
     true
   );
+
+  /**
+   * Variable: constrainChildren
+   *
+   * Specifies if a child should be constrained inside the parent bounds after a
+   * move or resize of the child. Default is true.
+   */
   const [isConstrainChildren, setConstrainChildren] = addProp(true);
+
+  /**
+   * Variable: constrainRelativeChildren
+   *
+   * Specifies if child cells with relative geometries should be constrained
+   * inside the parent bounds, if <constrainChildren> is true, and/or the
+   * <maximumGraphBounds>. Default is false.
+   */
   const [isConstrainRelativeChildren, setConstrainRelativeChildren] = addProp(
     false
   );
+
+  /**
+   * Variable: extendParents
+   *
+   * Specifies if a parent should contain the child bounds after a resize of
+   * the child. Default is true. This has precedence over <constrainChildren>.
+   */
   const [isExtendParents, setExtendParents] = addProp(true);
+
+  /**
+   * Variable: extendParentsOnAdd
+   *
+   * Specifies if parents should be extended according to the <extendParents>
+   * switch if cells are added. Default is true.
+   */
   const [isExtendParentsOnAdd, setExtendParentsOnAdd] = addProp(true);
+
+  /**
+   * Variable: extendParentsOnAdd
+   *
+   * Specifies if parents should be extended according to the <extendParents>
+   * switch if cells are added. Default is false for backwards compatiblity.
+   */
   const [isExtendParentsOnMove, setExtendParentsOnMove] = addProp(false);
+
+  /**
+   * Variable: recursiveResize
+   *
+   * Specifies the return value for <isRecursiveResize>. Default is
+   * false for backwards compatiblity.
+   */
   const [isRecursiveResize, setRecursiveResize] = addProp(false);
+
+  /**
+   * Variable: collapseToPreferredSize
+   *
+   * Specifies if the cell size should be changed to the preferred size when
+   * a cell is first collapsed. Default is true.
+   */
   const [isCollapseToPreferredSize, setCollapseToPreferredSize] = addProp(true);
+
+  /**
+   * Variable: zoomFactor
+   *
+   * Specifies the factor used for <zoomIn> and <zoomOut>. Default is 1.2
+   * (120%).
+   */
   const [getZoomFactor, setZoomFactor] = addProp(1.2);
+
+  /**
+   * Variable: keepSelectionVisibleOnZoom
+   *
+   * Specifies if the viewport should automatically contain the selection cells
+   * after a zoom operation. Default is false.
+   */
   const [isKeepSelectionVisibleOnZoom, setKeepSelectionVisibleOnZoom] = addProp(
     false
   );
+
+  /**
+   * Variable: centerZoom
+   *
+   * Specifies if the zoom operations should go into the center of the actual
+   * diagram rather than going from top, left. Default is true.
+   */
   const [isCenterZoom, setCenterZoom] = addProp(true);
+
+  /**
+   * Variable: resetViewOnRootChange
+   *
+   * Specifies if the scale and translate should be reset if the root changes in
+   * the model. Default is true.
+   */
   const [isResetViewOnRootChange, setResetViewOnRootChange] = addProp(true);
+
+  /**
+   * Variable: resetEdgesOnResize
+   *
+   * Specifies if edge control points should be reset after the resize of a
+   * connected cell. Default is false.
+   */
   const [isResetEdgesOnResize, setResetEdgesOnResize] = addProp(false);
+
+  /**
+   * Variable: resetEdgesOnMove
+   *
+   * Specifies if edge control points should be reset after the move of a
+   * connected cell. Default is false.
+   */
   const [isResetEdgesOnMove, setResetEdgesOnMove] = addProp(false);
+
+  /**
+   * Variable: resetEdgesOnConnect
+   *
+   * Specifies if edge control points should be reset after the the edge has been
+   * reconnected. Default is true.
+   */
   const [isResetEdgesOnConnect, setResetEdgesOnConnect] = addProp(true);
+
+  /**
+   * Variable: allowLoops
+   *
+   * Specifies if loops (aka self-references) are allowed. Default is false.
+   */
   const [isAllowLoops, setAllowLoops] = addProp(false);
+
+  /**
+   * Variable: defaultLoopStyle
+   *
+   * <mxEdgeStyle> to be used for loops. This is a fallback for loops if the
+   * <mxConstants.STYLE_LOOP> is undefined. Default is <mxEdgeStyle.Loop>.
+   */
   const [getDefaultLoopStyle, setDefaultLoopStyle] = addProp(EdgeStyle.Loop);
+
+  /**
+   * Variable: multigraph
+   *
+   * Specifies if multiple edges in the same direction between the same pair of
+   * vertices are allowed. Default is true.
+   */
   const [isMultigraph, setMultigraph] = addProp(true);
+
+  /**
+   * Variable: connectableEdges
+   *
+   * Specifies if edges are connectable. Default is false. This overrides the
+   * connectable field in edges.
+   */
   const [isConnectableEdges, setConnectableEdges] = addProp(false);
+
+  /**
+   * Variable: allowDanglingEdges
+   *
+   * Specifies if edges with disconnected terminals are allowed in the graph.
+   * Default is true.
+   */
   const [isAllowDanglingEdges, setAllowDanglingEdges] = addProp(true);
+
+  /**
+   * Variable: cloneInvalidEdges
+   *
+   * Specifies if edges that are cloned should be validated and only inserted
+   * if they are valid. Default is true.
+   */
   const [isCloneInvalidEdges, setCloneInvalidEdges] = addProp(false);
+
+  /**
+   * Variable: disconnectOnMove
+   *
+   * Specifies if edges should be disconnected from their terminals when they
+   * are moved. Default is true.
+   */
   const [isDisconnectOnMove, setDisconnectOnMove] = addProp(true);
+
+  /**
+   * Variable: labelsVisible
+   *
+   * Specifies if labels should be visible. This is used in <getLabel>. Default
+   * is true.
+   */
   const [isLabelsVisible, setLabelsVisible] = addProp(true);
+
+  /**
+   * Variable: htmlLabels
+   *
+   * Specifies the return value for <isHtmlLabel>. Default is false.
+   */
   const [isHtmlLabels, setHtmlLabels] = addProp(false);
+
+  /**
+   * Variable: swimlaneSelectionEnabled
+   *
+   * Specifies if swimlanes should be selectable via the content if the
+   * mouse is released. Default is true.
+   */
   const [isSwimlaneSelectionEnabled, setSwimlaneSelectionEnabled] = addProp(
     true
   );
+
+  /**
+   * Variable: swimlaneNesting
+   *
+   * Specifies if nesting of swimlanes is allowed. Default is true.
+   */
   const [isSwimlaneNesting, setSwimlaneNesting] = addProp(true);
+
+  /**
+   * Variable: swimlaneIndicatorColorAttribute
+   *
+   * The attribute used to find the color for the indicator if the indicator
+   * color is set to 'swimlane'. Default is <mxConstants.STYLE_FILLCOLOR>.
+   */
   const [
     getSwimlaneIndicatorColorAttribute,
     setSwimlaneIndicatorColorAttribute
   ] = addProp(STYLE_FILLCOLOR);
+
+  /**
+   * Variable: imageBundles
+   *
+   * Holds the list of image bundles.
+   */
   const [getImageBundles, setImageBundles] = addProp();
+
+  /**
+   * Variable: minFitScale
+   *
+   * Specifies the minimum scale to be applied in <fit>. Default is 0.1. Set this
+   * to null to allow any value.
+   */
   const [getMinFitScale, setMinFitScale] = addProp(0.1);
+
+  /**
+   * Variable: maxFitScale
+   *
+   * Specifies the maximum scale to be applied in <fit>. Default is 8. Set this
+   * to null to allow any value.
+   */
   const [getMaxFitScale, setMaxFitScale] = addProp(8);
+
+  /**
+   * Variable: panDx
+   *
+   * Current horizontal panning value. Default is 0.
+   */
   const [getPanDx, setPanDx] = addProp(0);
+
+  /**
+   * Variable: panDy
+   *
+   * Current vertical panning value. Default is 0.
+   */
   const [getPanDy, setPanDy] = addProp(0);
+
+  /**
+   * Variable: collapsedImage
+   *
+   * Specifies the <mxImage> to indicate a collapsed state.
+   * Default value is mxClient.imageBasePath + '/collapsed.gif'
+   */
   const [getCollapsedImage, setCollapsedImage] = addProp(
     Image(Client.imageBasePath + '/collapsed.gif', 9, 9)
   );
+
+  /**
+   * Variable: expandedImage
+   *
+   * Specifies the <mxImage> to indicate a expanded state.
+   * Default value is mxClient.imageBasePath + '/expanded.gif'
+   */
   const [getExpandedImage, setExpandedImage] = addProp(
     Image(Client.imageBasePath + '/expanded.gif', 9, 9)
   );
+
+  /**
+   * Variable: warningImage
+   *
+   * Specifies the <mxImage> for the image to be used to display a warning
+   * overlay. See <setCellWarning>. Default value is mxClient.imageBasePath +
+   * '/warning'.  The extension for the image depends on the platform. It is
+   * '.png' on the Mac and '.gif' on all other platforms.
+   */
   const [getWarningImage, setWarningImage] = addProp(
     Image(Client.imageBasePath + '/warning.png', 16, 16)
   );
   const [getContainer, setContainer] = addProp();
   const [getShiftPreview1, setShiftPreview1] = addProp();
   const [getShiftPreview2, setShiftPreview2] = addProp();
+  const [getMouseMoveRedirect, setMouseMoveRedirect] = addProp();
+  const [getMouseUpRedirect, setMouseUpRedirect] = addProp();
+  const [getEventSource, setEventSource] = addProps();
 
+  /**
+   * Function: init
+   *
+   * Initializes the <container> and creates the respective datastructures.
+   *
+   * Parameters:
+   *
+   * container - DOM node that will contain the graph display.
+   */
   const init = (container) => {
     setContainer(container);
 
@@ -190,6 +1620,12 @@ const Graph = (container, model, _, stylesheet) => {
     });
   };
 
+  /**
+   * Function: createHandlers
+   *
+   * Creates the tooltip-, panning-, connection- and graph-handler (in this
+   * order). This is called in the constructor before <init> is called.
+   */
   const createHandlers = () => {
     setTooltipHandler(createTooltipHandler());
     getTooltipHandler().setEnabled(false);
@@ -202,28 +1638,94 @@ const Graph = (container, model, _, stylesheet) => {
     setPopupMenuHandler(createPopupMenuHandler());
   };
 
+  /**
+   * Function: createTooltipHandler
+   *
+   * Creates and returns a new <mxTooltipHandler> to be used in this graph.
+   */
   const createTooltipHandler = () => TooltipHandler(me);
 
+  /**
+   * Function: createSelectionCellsHandler
+   *
+   * Creates and returns a new <mxTooltipHandler> to be used in this graph.
+   */
   const createSelectionCellsHandler = () => SelectionCellsHandler(me);
 
+  /**
+   * Function: createConnectionHandler
+   *
+   * Creates and returns a new <mxConnectionHandler> to be used in this graph.
+   */
   const createConnectionHandler = () => ConnectionHandler(me);
 
+  /**
+   * Function: createGraphHandler
+   *
+   * Creates and returns a new <mxGraphHandler> to be used in this graph.
+   */
   const createGraphHandler = () => GraphHandler(me);
 
+  /**
+   * Function: createPanningHandler
+   *
+   * Creates and returns a new <mxPanningHandler> to be used in this graph.
+   */
   const createPanningHandler = () => PanningHandler(me);
 
+  /**
+   * Function: createPopupMenuHandler
+   *
+   * Creates and returns a new <mxPopupMenuHandler> to be used in this graph.
+   */
   const createPopupMenuHandler = () => PopupMenuHandler(me);
 
+  /**
+   * Function: createSelectionModel
+   *
+   * Creates a new <mxGraphSelectionModel> to be used in this graph.
+   */
   const createSelectionModel = () => GraphSelectionModel(me);
 
+  /**
+   * Function: createStylesheet
+   *
+   * Creates a new <mxGraphSelectionModel> to be used in this graph.
+   */
   const createStylesheet = () => Stylesheet(me);
 
+  /**
+   * Function: createGraphView
+   *
+   * Creates a new <mxGraphView> to be used in this graph.
+   */
   const createGraphView = () => GraphView(me);
 
+  /**
+   * Function: createCellRenderer
+   *
+   * Creates a new <mxCellRenderer> to be used in this graph.
+   */
   const createCellRenderer = () => CellRenderer(me);
 
+  /**
+   * Function: createCellEditor
+   *
+   * Creates a new <mxCellEditor> to be used in this graph.
+   */
   const createCellEditor = () => CellEditor(me);
 
+  /**
+   * Function: getSelectionCellsForChanges
+   *
+   * Returns the cells to be selected for the given array of changes.
+   *
+   * Parameters:
+   *
+   * ignoreFn - Optional function that takes a change and returns true if the
+   * change should be ignored.
+   *
+   */
   const getSelectionCellsForChanges = (changes, ignoreFn) => {
     const model = getModel();
     const dict = Dictionary();
@@ -268,6 +1770,16 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: graphModelChanged
+   *
+   * Called when the graph model changes. Invokes <processChange> on each
+   * item of the given array to update the view accordingly.
+   *
+   * Parameters:
+   *
+   * changes - Array that contains the individual changes.
+   */
   const graphModelChanged = (changes) => {
     for (let i = 0; i < changes.length; i++) {
       processChange(changes[i]);
@@ -278,6 +1790,11 @@ const Graph = (container, model, _, stylesheet) => {
     sizeDidChange();
   };
 
+  /**
+   * Function: updateSelection
+   *
+   * Removes selection cells that are not in the model from the selection.
+   */
   const updateSelection = () => {
     const model = getModel();
     const cells = getSelectionCells();
@@ -303,6 +1820,17 @@ const Graph = (container, model, _, stylesheet) => {
     removeSelectionCells(removed);
   };
 
+  /**
+   * Function: processChange
+   *
+   * Processes the given change and invalidates the respective cached data
+   * in <view>. This fires a <root> event if the root has changed in the
+   * model.
+   *
+   * Parameters:
+   *
+   * change - Object that represents the change on the model.
+   */
   const processChange = (change) => {
     const view = getView();
 
@@ -393,6 +1921,16 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: removeStateForCell
+   *
+   * Removes all cached information for the given cell and its descendants.
+   * This is called when a cell was removed from the model.
+   *
+   * Paramters:
+   *
+   * cell - <mxCell> that was removed from the model.
+   */
   const removeStateForCell = (cell) => {
     const childCount = getModel().getChildCount(cell);
 
@@ -408,6 +1946,17 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Overlays
    */
 
+  /**
+   * Function: addCellOverlay
+   *
+   * Adds an <mxCellOverlay> for the specified cell. This method fires an
+   * <addoverlay> event and returns the new <mxCellOverlay>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to add the overlay for.
+   * overlay - <mxCellOverlay> to be added for the cell.
+   */
   const addCellOverlay = (cell, overlay) => {
     if (isUnset(cell.getOverlays())) {
       cell.setOverlays([]);
@@ -427,8 +1976,30 @@ const Graph = (container, model, _, stylesheet) => {
     return overlay;
   };
 
+  /**
+   * Function: getCellOverlays
+   *
+   * Returns the array of <mxCellOverlays> for the given cell or null, if
+   * no overlays are defined.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose overlays should be returned.
+   */
   const getCellOverlays = (cell) => cell.getOverlays();
 
+  /**
+   * Function: removeCellOverlay
+   *
+   * Removes and returns the given <mxCellOverlay> from the given cell. This
+   * method fires a <removeoverlay> event. If no overlay is given, then all
+   * overlays are removed using <removeOverlays>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose overlay should be removed.
+   * overlay - Optional <mxCellOverlay> to be removed.
+   */
   const removeCellOverlay = (cell, overlay) => {
     if (isUnset(overlay)) {
       removeCellOverlays(cell);
@@ -460,6 +2031,17 @@ const Graph = (container, model, _, stylesheet) => {
     return overlay;
   };
 
+  /**
+   * Function: removeCellOverlays
+   *
+   * Removes all <mxCellOverlays> from the given cell. This method
+   * fires a <removeoverlay> event for each <mxCellOverlay> and returns
+   * the array of <mxCellOverlays> that was removed from the cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose overlays should be removed
+   */
   const removeCellOverlays = (cell) => {
     const overlays = cell.getOverlays();
 
@@ -489,6 +2071,19 @@ const Graph = (container, model, _, stylesheet) => {
     return overlays;
   };
 
+  /**
+   * Function: clearCellOverlays
+   *
+   * Removes all <mxCellOverlays> in the graph for the given cell and all its
+   * descendants. If no cell is specified then all overlays are removed from
+   * the graph. This implementation uses <removeCellOverlays> to remove the
+   * overlays from the individual cells.
+   *
+   * Parameters:
+   *
+   * cell - Optional <mxCell> that represents the root of the subtree to
+   * remove the overlays from. Default is the root in the model.
+   */
   const clearCellOverlays = (cell = getModel().getRoot()) => {
     removeCellOverlays(cell);
 
@@ -501,6 +2096,30 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: setCellWarning
+   *
+   * Creates an overlay for the given cell using the warning and image or
+   * <warningImage> and returns the new <mxCellOverlay>. The warning is
+   * displayed as a tooltip in a red font and may contain HTML markup. If
+   * the warning is null or a zero length string, then all overlays are
+   * removed from the cell.
+   *
+   * Example:
+   *
+   * (code)
+   * graph.setCellWarning(cell, '<b>Warning:</b>: Hello, World!');
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose warning should be set.
+   * warning - String that represents the warning to be displayed.
+   * img - Optional <mxImage> to be used for the overlay. Default is
+   * <warningImage>.
+   * isSelect - Optional boolean indicating if a click on the overlay
+   * should select the corresponding cell. Default is false.
+   */
   const setCellWarning = (cell, warning, img = getWarningImage(), isSelect) => {
     if (isSet(warning) && warning.length > 0) {
       // Creates the overlay with the image and warning
@@ -531,8 +2150,30 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: In-place editing
    */
 
+  /**
+   * Function: startEditing
+   *
+   * Calls <startEditingAtCell> using the given cell or the first selection
+   * cell.
+   *
+   * Parameters:
+   *
+   * evt - Optional mouse event that triggered the editing.
+   */
   const startEditing = (evt) => startEditingAtCell(null, evt);
 
+  /**
+   * Function: startEditingAtCell
+   *
+   * Fires a <startEditing> event and invokes <mxCellEditor.startEditing>
+   * on <editor>. After editing was started, a <editingStarted> event is
+   * fired.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to start the in-place editor for.
+   * evt - Optional mouse event that triggered the editing.
+   */
   const startEditingAtCell = (cell, evt) => {
     if (isUnset(evt) || !Event.isMultiTouchEvent(evt)) {
       if (isUnset(cell)) {
@@ -553,13 +2194,49 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: getEditingValue
+   *
+   * Returns the initial value for in-place editing. This implementation
+   * returns <convertValueToString> for the given cell. If this function is
+   * overridden, then <mxGraphModel.valueForCellChanged> should take care
+   * of correctly storing the actual new value inside the user object.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the initial editing value should be returned.
+   * evt - Optional mouse event that triggered the editor.
+   */
   const getEditingValue = (cell, evt) => convertValueToString(cell);
 
+  /**
+   * Function: stopEditing
+   *
+   * Stops the current editing  and fires a <editingStopped> event.
+   *
+   * Parameters:
+   *
+   * cancel - Boolean that specifies if the current editing value
+   * should be stored.
+   */
   const stopEditing = (cancel) => {
     getCellEditor().stopEditing(cancel);
     fireEvent(EventObject(Event.EDITING_STOPPED, 'cancel', cancel));
   };
 
+  /**
+   * Function: labelChanged
+   *
+   * Sets the label of the specified cell to the given value using
+   * <cellLabelChanged> and fires <mxEvent.LABEL_CHANGED> while the
+   * transaction is in progress. Returns the cell whose label was changed.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose label should be changed.
+   * value - New label to be assigned.
+   * evt - Optional event that triggered the change.
+   */
   const labelChanged = (cell, value, evt) => {
     getModel().beginUpdate();
 
@@ -586,6 +2263,37 @@ const Graph = (container, model, _, stylesheet) => {
     return cell;
   };
 
+  /**
+   * Function: cellLabelChanged
+   *
+   * Sets the new label for a cell. If autoSize is true then
+   * <cellSizeUpdated> will be called.
+   *
+   * In the following example, the function is extended to map changes to
+   * attributes in an XML node, as shown in <convertValueToString>.
+   * Alternatively, the handling of this can be implemented as shown in
+   * <mxGraphModel.valueForCellChanged> without the need to clone the
+   * user object.
+   *
+   * (code)
+   * var graphCellLabelChanged = graph.cellLabelChanged;
+   * graph.cellLabelChanged = function(cell, newValue, autoSize)
+   * {
+   * 	// Cloned for correct undo/redo
+   * 	var elt = cell.value.cloneNode(true);
+   *  elt.setAttribute('label', newValue);
+   *
+   *  newValue = elt;
+   *  graphCellLabelChanged.apply(this, arguments);
+   * };
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose label should be changed.
+   * value - New label to be assigned.
+   * autoSize - Boolean that specifies if <cellSizeUpdated> should be called.
+   */
   const cellLabelChanged = (cell, value, autoSize) => {
     getModel().beginUpdate();
     try {
@@ -599,8 +2307,47 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: escape
+   *
+   * Processes an escape keystroke.
+   *
+   * Parameters:
+   *
+   * evt - Mouseevent that represents the keystroke.
+   */
   const escape = (evt) => fireEvent(EventObject(Event.ESCAPE, 'event', evt));
 
+  /**
+   * Function: click
+   *
+   * Processes a singleclick on an optional cell and fires a <click> event.
+   * The click event is fired initially. If the graph is enabled and the
+   * event has not been consumed, then the cell is selected using
+   * <selectCellForEvent> or the selection is cleared using
+   * <clearSelection>. The events consumed state is set to true if the
+   * corresponding <mxMouseEvent> has been consumed.
+   *
+   * To handle a click event, use the following code.
+   *
+   * (code)
+   * graph.addListener(mxEvent.CLICK, function(sender, evt)
+   * {
+   *   var e = evt.getProperty('event'); // mouse event
+   *   var cell = evt.getProperty('cell'); // cell may be null
+   *
+   *   if (cell != null)
+   *   {
+   *     // Do something useful with cell and consume the event
+   *     evt.consume();
+   *   }
+   * });
+   * (end)
+   *
+   * Parameters:
+   *
+   * me - <mxMouseEvent> that represents the single click.
+   */
   const click = (mE) => {
     const evt = mE.getEvent();
     const cell = mE.getCell();
@@ -679,6 +2426,11 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: isSiblingSelected
+   *
+   * Returns true if any sibling of the given cell is selected.
+   */
   const isSiblingSelected = (cell) => {
     const model = getModel();
     const parent = model.getParent(cell);
@@ -695,6 +2447,46 @@ const Graph = (container, model, _, stylesheet) => {
     return false;
   };
 
+  /**
+   * Function: dblClick
+   *
+   * Processes a doubleclick on an optional cell and fires a <dblclick>
+   * event. The event is fired initially. If the graph is enabled and the
+   * event has not been consumed, then <edit> is called with the given
+   * cell. The event is ignored if no cell was specified.
+   *
+   * Example for overriding this method.
+   *
+   * (code)
+   * graph.dblClick = function(evt, cell)
+   * {
+   *   var mxe = new mxEventObject(mxEvent.DOUBLE_CLICK, 'event', evt, 'cell', cell);
+   *   this.fireEvent(mxe);
+   *
+   *   if (this.isEnabled() && !mxEvent.isConsumed(evt) && !mxe.isConsumed())
+   *   {
+   * 	   mxUtils.alert('Hello, World!');
+   *     mxe.consume();
+   *   }
+   * }
+   * (end)
+   *
+   * Example listener for this event.
+   *
+   * (code)
+   * graph.addListener(mxEvent.DOUBLE_CLICK, function(sender, evt)
+   * {
+   *   var cell = evt.getProperty('cell');
+   *   // do something with the cell and consume the
+   *   // event to prevent in-place editing from start
+   * });
+   * (end)
+   *
+   * Parameters:
+   *
+   * evt - Mouseevent that represents the doubleclick.
+   * cell - Optional <mxCell> under the mousepointer.
+   */
   const dblClick = (evt, cell) => {
     const mxe = EventObject(Event.DOUBLE_CLICK, 'event', evt, 'cell', cell);
     fireEvent(mxe);
@@ -713,6 +2505,16 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: tapAndHold
+   *
+   * Handles the <mxMouseEvent> by highlighting the <mxCellState>.
+   *
+   * Parameters:
+   *
+   * me - <mxMouseEvent> that represents the touch event.
+   * state - Optional <mxCellState> that is associated with the event.
+   */
   const tapAndHold = (mE) => {
     const evt = mE.getEvent();
     const mxe = EventObject(
@@ -757,6 +2559,12 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: scrollPointToVisible
+   *
+   * Scrolls the graph to the given point, extending the graph container if
+   * specified.
+   */
   const scrollPointToVisible = (x, y, extend, border = 20) => {
     if (
       !isTimerAutoScroll() &&
@@ -830,8 +2638,20 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: createPanningManager
+   *
+   * Creates and returns an <mxPanningManager>.
+   */
   const createPanningManager = () => PanningManager(me);
 
+  /**
+   * Function: getBorderSizes
+   *
+   * Returns the size of the border and padding on all four sides of the
+   * container. The left, top, right and bottom borders are stored in the x, y,
+   * width and height of the returned <mxRectangle>, respectively.
+   */
   const getBorderSizes = () => {
     const css = getCurrentStyle(getContainer());
 
@@ -855,6 +2675,11 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: getPreferredPageSize
+   *
+   * Returns the preferred size of the background page if <preferPageSize> is true.
+   */
   const getPreferredPageSize = (bounds, width, height) => {
     const tr = getView().getTranslate();
     const fmt = getPageFormat();
@@ -881,6 +2706,52 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: fit
+   *
+   * Scales the graph such that the complete diagram fits into <container> and
+   * returns the current scale in the view. To fit an initial graph prior to
+   * rendering, set <mxGraphView.rendering> to false prior to changing the model
+   * and execute the following after changing the model.
+   *
+   * (code)
+   * graph.fit();
+   * graph.view.rendering = true;
+   * graph.refresh();
+   * (end)
+   *
+   * To fit and center the graph, the following code can be used.
+   *
+   * (code)
+   * var margin = 2;
+   * var max = 3;
+   *
+   * var bounds = graph.getGraphBounds();
+   * var cw = graph.container.clientWidth - margin;
+   * var ch = graph.container.clientHeight - margin;
+   * var w = bounds.width / graph.view.scale;
+   * var h = bounds.height / graph.view.scale;
+   * var s = Math.min(max, Math.min(cw / w, ch / h));
+   *
+   * graph.view.scaleAndTranslate(s,
+   *   (margin + cw - w * s) / (2 * s) - bounds.x / graph.view.scale,
+   *   (margin + ch - h * s) / (2 * s) - bounds.y / graph.view.scale);
+   * (end)
+   *
+   * Parameters:
+   *
+   * border - Optional number that specifies the border. Default is <border>.
+   * keepOrigin - Optional boolean that specifies if the translate should be
+   * changed. Default is false.
+   * margin - Optional margin in pixels. Default is 0.
+   * enabled - Optional boolean that specifies if the scale should be set or
+   * just returned. Default is true.
+   * ignoreWidth - Optional boolean that specifies if the width should be
+   * ignored. Default is false.
+   * ignoreHeight - Optional boolean that specifies if the height should be
+   * ignored. Default is false.
+   * maxHeight - Optional maximum height.
+   */
   const fit = (
     border = getBorder(),
     keepOrigin = false,
@@ -993,6 +2864,13 @@ const Graph = (container, model, _, stylesheet) => {
     return view.getScale();
   };
 
+  /**
+   * Function: sizeDidChange
+   *
+   * Called when the size of the graph has changed. This implementation fires
+   * a <size> event after updating the clipping region of the SVG element in
+   * SVG-bases browsers.
+   */
   const sizeDidChange = () => {
     const view = getView();
     const bounds = getGraphBounds();
@@ -1049,6 +2927,11 @@ const Graph = (container, model, _, stylesheet) => {
     fireEvent(EventObject(Event.SIZE, 'bounds', bounds));
   };
 
+  /**
+   * Function: doResizeContainer
+   *
+   * Resizes the container for the given graph width and height.
+   */
   const doResizeContainer = (width, height) => {
     if (isSet(getMaximumContainerSize())) {
       width = Math.min(getMaximumContainerSize().getWidth(), width);
@@ -1059,6 +2942,17 @@ const Graph = (container, model, _, stylesheet) => {
     getContainer().style.height = Math.ceil(height) + 'px';
   };
 
+  /**
+   * Function: updatePageBreaks
+   *
+   * Invokes from <sizeDidChange> to redraw the page breaks.
+   *
+   * Parameters:
+   *
+   * visible - Boolean that specifies if page breaks should be shown.
+   * width - Specifies the width of the container in pixels.
+   * height - Specifies the height of the container in pixels.
+   */
   const updatePageBreaks = (visible, width, height) => {
     const view = getView();
     const scale = view.getScale();
@@ -1176,12 +3070,37 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell styles
    */
 
+  /**
+   * Function: getCurrentCellStyle
+   *
+   * Returns the style for the given cell from the cell state, if one exists,
+   * or using <getCellStyle>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose style should be returned as an array.
+   * ignoreState - Optional boolean that specifies if the cell state should be ignored.
+   */
   const getCurrentCellStyle = (cell, ignoreState) => {
     const state = ignoreState ? null : getView().getState(cell);
 
     return isSet(state) ? state.getStyle() : getCellStyle(cell);
   };
 
+  /**
+   * Function: getCellStyle
+   *
+   * Returns an array of key, value pairs representing the cell style for the
+   * given cell. If no string is defined in the model that specifies the
+   * style, then the default style for the cell is returned or an empty object,
+   * if no style can be found. Note: You should try and get the cell state
+   * for the given cell and use the cached style in the state before using
+   * this method.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose style should be returned as an array.
+   */
   const getCellStyle = (cell) => {
     const stylename = getModel().getStyle(cell);
     const stylesheet = getStylesheet();
@@ -1207,6 +3126,13 @@ const Graph = (container, model, _, stylesheet) => {
     return style;
   };
 
+  /**
+   * Function: postProcessCellStyle
+   *
+   * Tries to resolve the value for the image style in the image bundles and
+   * turns short data URIs as defined in mxImageBundle to data URIs as
+   * defined in RFC 2397 of the IETF.
+   */
   const postProcessCellStyle = (style) => {
     if (isSet(style)) {
       const key = style[STYLE_IMAGE];
@@ -1246,6 +3172,18 @@ const Graph = (container, model, _, stylesheet) => {
     return style;
   };
 
+  /**
+   * Function: setCellStyle
+   *
+   * Sets the style of the specified cells. If no cells are given, then the
+   * selection cells are changed.
+   *
+   * Parameters:
+   *
+   * style - String representing the new style of the cells.
+   * cells - Optional array of <mxCells> to set the style for. Default is the
+   * selection cells.
+   */
   const setCellStyle = (style, cells = getSelectionCells()) => {
     if (isSet(cells)) {
       getModel().beginUpdate();
@@ -1260,9 +3198,40 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: toggleCellStyle
+   *
+   * Toggles the boolean value for the given key in the style of the given cell
+   * and returns the new value as 0 or 1. If no cell is specified then the
+   * selection cell is used.
+   *
+   * Parameter:
+   *
+   * key - String representing the key for the boolean value to be toggled.
+   * defaultValue - Optional boolean default value if no value is defined.
+   * Default is false.
+   * cell - Optional <mxCell> whose style should be modified. Default is
+   * the selection cell.
+   */
   const toggleCellStyle = (key, defaultValue, cell = getSelectionCell()) =>
     toggleCellStyles(key, defaultValue, [cell]);
 
+  /**
+   * Function: toggleCellStyles
+   *
+   * Toggles the boolean value for the given key in the style of the given cells
+   * and returns the new value as 0 or 1. If no cells are specified, then the
+   * selection cells are used. For example, this can be used to toggle
+   * <mxConstants.STYLE_ROUNDED> or any other style with a boolean value.
+   *
+   * Parameter:
+   *
+   * key - String representing the key for the boolean value to be toggled.
+   * defaultValue - Optional boolean default value if no value is defined.
+   * Default is false.
+   * cells - Optional array of <mxCells> whose styles should be modified.
+   * Default is the selection cells.
+   */
   const toggleCellStyles = (
     key,
     defaultValue = false,
@@ -1279,12 +3248,55 @@ const Graph = (container, model, _, stylesheet) => {
     return value;
   };
 
+  /**
+   * Function: setCellStyles
+   *
+   * Sets the key to value in the styles of the given cells. This will modify
+   * the existing cell styles in-place and override any existing assignment
+   * for the given key. If no cells are specified, then the selection cells
+   * are changed. If no value is specified, then the respective key is
+   * removed from the styles.
+   *
+   * Parameters:
+   *
+   * key - String representing the key to be assigned.
+   * value - String representing the new value for the key.
+   * cells - Optional array of <mxCells> to change the style for. Default is
+   * the selection cells.
+   */
   const setCellStyles = (key, value, cells = getSelectionCells()) =>
     setCellStyles(getModel(), cells, key, value);
 
+  /**
+   * Function: toggleCellStyleFlags
+   *
+   * Toggles the given bit for the given key in the styles of the specified
+   * cells.
+   *
+   * Parameters:
+   *
+   * key - String representing the key to toggle the flag in.
+   * flag - Integer that represents the bit to be toggled.
+   * cells - Optional array of <mxCells> to change the style for. Default is
+   * the selection cells.
+   */
   const toggleCellStyleFlags = (key, flag, cells) =>
     setCellStyleFlags(key, flag, null, cells);
 
+  /**
+   * Function: setCellStyleFlags
+   *
+   * Sets or toggles the given bit for the given key in the styles of the
+   * specified cells.
+   *
+   * Parameters:
+   *
+   * key - String representing the key to toggle the flag in.
+   * flag - Integer that represents the bit to be toggled.
+   * value - Boolean value to be used or null if the value should be toggled.
+   * cells - Optional array of <mxCells> to change the style for. Default is
+   * the selection cells.
+   */
   const setCellStyleFlags = (key, flag, value, cells = getSelectionCells()) => {
     if (isSet(cells) && cells.length > 0) {
       if (isUnset(value)) {
@@ -1301,6 +3313,19 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell alignment and orientation
    */
 
+  /**
+   * Function: alignCells
+   *
+   * Aligns the given cells vertically or horizontally according to the given
+   * alignment using the optional parameter as the coordinate.
+   *
+   * Parameters:
+   *
+   * align - Specifies the alignment. Possible values are all constants in
+   * mxConstants with an ALIGN prefix.
+   * cells - Array of <mxCells> to be aligned.
+   * param - Optional coordinate for the alignment.
+   */
   const alignCells = (align, cells = getSelectionCells(), param) => {
     if (isSet(cells) && cells.length > 1) {
       // Finds the required coordinate for the alignment
@@ -1397,6 +3422,35 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: flipEdge
+   *
+   * Toggles the style of the given edge between null (or empty) and
+   * <alternateEdgeStyle>. This method fires <mxEvent.FLIP_EDGE> while the
+   * transaction is in progress. Returns the edge that was flipped.
+   *
+   * Here is an example that overrides this implementation to invert the
+   * value of <mxConstants.STYLE_ELBOW> without removing any existing styles.
+   *
+   * (code)
+   * graph.flipEdge = function(edge)
+   * {
+   *   if (edge != null)
+   *   {
+   *     var style = this.getCurrentCellStyle(edge);
+   *     var elbow = mxUtils.getValue(style, mxConstants.STYLE_ELBOW,
+   *         mxConstants.ELBOW_HORIZONTAL);
+   *     var value = (elbow == mxConstants.ELBOW_HORIZONTAL) ?
+   *         mxConstants.ELBOW_VERTICAL : mxConstants.ELBOW_HORIZONTAL;
+   *     this.setCellStyles(mxConstants.STYLE_ELBOW, value, [edge]);
+   *   }
+   * };
+   * (end)
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> whose style should be changed.
+   */
   const flipEdge = (edge) => {
     const model = getModel();
 
@@ -1423,8 +3477,18 @@ const Graph = (container, model, _, stylesheet) => {
     return edge;
   };
 
+  /**
+   * Function: addImageBundle
+   *
+   * Adds the specified <mxImageBundle>.
+   */
   const addImageBundle = (bundle) => getImageBundles().push(bundle);
 
+  /**
+   * Function: removeImageBundle
+   *
+   * Removes the specified <mxImageBundle>.
+   */
   const removeImageBundle = (bundle) => {
     const tmp = [];
     const imageBundles = getImageBundles();
@@ -1438,6 +3502,12 @@ const Graph = (container, model, _, stylesheet) => {
     setImageBundles(tmp);
   };
 
+  /**
+   * Function: getImageFromBundles
+   *
+   * Searches all <imageBundles> for the specified key and returns the value
+   * for the first match or null if the key is not found.
+   */
   const getImageFromBundles = (key) => {
     const imageBundles = getImageBundles();
 
@@ -1458,6 +3528,19 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Order
    */
 
+  /**
+   * Function: orderCells
+   *
+   * Moves the given cells to the front or back. The change is carried out
+   * using <cellsOrdered>. This method fires <mxEvent.ORDER_CELLS> while the
+   * transaction is in progress.
+   *
+   * Parameters:
+   *
+   * back - Boolean that specifies if the cells should be moved to back.
+   * cells - Array of <mxCells> to move to the background. If null is
+   * specified then the selection cells are used.
+   */
   const orderCells = (back, cells) => {
     if (isUnset(cells)) {
       cells = sortCells(getSelectionCells(), true);
@@ -1475,6 +3558,17 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsOrdered
+   *
+   * Moves the given cells to the front or back. This method fires
+   * <mxEvent.CELLS_ORDERED> while the transaction is in progress.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose order should be changed.
+   * back - Boolean that specifies if the cells should be moved to back.
+   */
   const cellsOrdered = (cells, back) => {
     const model = getModel();
 
@@ -1504,6 +3598,24 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Grouping
    */
 
+  /**
+   * Function: groupCells
+   *
+   * Adds the cells into the given group. The change is carried out using
+   * <cellsAdded>, <cellsMoved> and <cellsResized>. This method fires
+   * <mxEvent.GROUP_CELLS> while the transaction is in progress. Returns the
+   * new group. A group is only created if there is at least one entry in the
+   * given array of cells.
+   *
+   * Parameters:
+   *
+   * group - <mxCell> that represents the target group. If null is specified
+   * then a new group is created using <createGroupCell>.
+   * border - Optional integer that specifies the border between the child
+   * area and the group bounds. Default is 0.
+   * cells - Optional array of <mxCells> to be grouped. If null is specified
+   * then the selection cells are used.
+   */
   const groupCells = (group, border, cells) => {
     const model = getModel();
 
@@ -1567,6 +3679,12 @@ const Graph = (container, model, _, stylesheet) => {
     return group;
   };
 
+  /**
+   * Function: getCellsForGroup
+   *
+   * Returns the cells with the same parent as the first cell
+   * in the given array.
+   */
   const getCellsForGroup = (cells) => {
     const result = [];
 
@@ -1585,6 +3703,11 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: getBoundsForGroup
+   *
+   * Returns the bounds to be used for the given group and children.
+   */
   const getBoundsForGroup = (group, children, border) => {
     const result = getBoundingBoxFromGeometry(children, true);
 
@@ -1610,6 +3733,24 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: createGroupCell
+   *
+   * Hook for creating the group cell to hold the given array of <mxCells> if
+   * no group cell was given to the <group> function.
+   *
+   * The following code can be used to set the style of new group cells.
+   *
+   * (code)
+   * var graphCreateGroupCell = graph.createGroupCell;
+   * graph.createGroupCell = function(cells)
+   * {
+   *   var group = graphCreateGroupCell.apply(this, arguments);
+   *   group.setStyle('group');
+   *
+   *   return group;
+   * };
+   */
   const createGroupCell = (cells) => {
     const group = Cell('');
     group.setVertex(true);
@@ -1618,6 +3759,18 @@ const Graph = (container, model, _, stylesheet) => {
     return group;
   };
 
+  /**
+   * Function: ungroupCells
+   *
+   * Ungroups the given cells by moving the children the children to their
+   * parents parent and removing the empty groups. Returns the children that
+   * have been removed from the groups.
+   *
+   * Parameters:
+   *
+   * cells - Array of cells to be ungrouped. If null is specified then the
+   * selection cells are used.
+   */
   const ungroupCells = (cells = getCellsForUngroup()) => {
     const result = [];
     const model = getModel();
@@ -1664,6 +3817,11 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: getCellsForUngroup
+   *
+   * Returns the selection cells that can be ungrouped.
+   */
   const getCellsForUngroup = () => {
     const cells = getSelectionCells();
 
@@ -1682,8 +3840,27 @@ const Graph = (container, model, _, stylesheet) => {
     return tmp;
   };
 
+  /**
+   * Function: removeCellsAfterUngroup
+   *
+   * Hook to remove the groups after <ungroupCells>.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> that were ungrouped.
+   */
   const removeCellsAfterUngroup = (cells) => cellsRemoved(addAllEdges(cells));
 
+  /**
+   * Function: removeCellsFromParent
+   *
+   * Removes the specified cells from their parents and adds them to the
+   * default parent. Returns the cells that were removed from their parents.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be removed from their parents.
+   */
   const removeCellsFromParent = (cells = getSelectionCells()) => {
     const model = getModel();
 
@@ -1702,6 +3879,26 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: updateGroupBounds
+   *
+   * Updates the bounds of the given groups to include all children and returns
+   * the passed-in cells. Call this with the groups in parent to child order,
+   * top-most group first, the cells are processed in reverse order and cells
+   * with no children are ignored.
+   *
+   * Parameters:
+   *
+   * cells - The groups whose bounds should be updated. If this is null, then
+   * the selection cells are used.
+   * border - Optional border to be added in the group. Default is 0.
+   * moveGroup - Optional boolean that allows the group to be moved. Default
+   * is false.
+   * topBorder - Optional top border to be added in the group. Default is 0.
+   * rightBorder - Optional top border to be added in the group. Default is 0.
+   * bottomBorder - Optional top border to be added in the group. Default is 0.
+   * leftBorder - Optional top border to be added in the group. Default is 0.
+   */
   const updateGroupBounds = (
     cells = getSelectionCells(),
     border = 0,
@@ -1795,6 +3992,16 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: getBoundingBox
+   *
+   * Returns the bounding box for the given array of <mxCells>. The bounding box for
+   * each cell and its descendants is computed using <mxGraphView.getBoundingBox>.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose bounding box should be returned.
+   */
   const getBoundingBox = (cells) => {
     let result = null;
 
@@ -1824,9 +4031,40 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell cloning, insertion and removal
    */
 
+  /**
+   * Function: cloneCell
+   *
+   * Returns the clone for the given cell. Uses <cloneCells>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be cloned.
+   * allowInvalidEdges - Optional boolean that specifies if invalid edges
+   * should be cloned. Default is true.
+   * mapping - Optional mapping for existing clones.
+   * keepPosition - Optional boolean indicating if the position of the cells should
+   * be updated to reflect the lost parent cell. Default is false.
+   */
   const cloneCell = (cell, allowInvalidEdges, mapping, keepPosition) =>
     cloneCells([cell], allowInvalidEdges, mapping, keepPosition)[0];
 
+  /**
+   * Function: cloneCells
+   *
+   * Returns the clones for the given cells. The clones are created recursively
+   * using <mxGraphModel.cloneCells>. If the terminal of an edge is not in the
+   * given array, then the respective end is assigned a terminal point and the
+   * terminal is removed.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be cloned.
+   * allowInvalidEdges - Optional boolean that specifies if invalid edges
+   * should be cloned. Default is true.
+   * mapping - Optional mapping for existing clones.
+   * keepPosition - Optional boolean indicating if the position of the cells should
+   * be updated to reflect the lost parent cell. Default is false.
+   */
   const cloneCells = (
     cells,
     allowInvalidEdges = true,
@@ -1939,6 +4177,47 @@ const Graph = (container, model, _, stylesheet) => {
     return clones;
   };
 
+  /**
+   * Function: insertVertex
+   *
+   * Adds a new vertex into the given parent <mxCell> using value as the user
+   * object and the given coordinates as the <mxGeometry> of the new vertex.
+   * The id and style are used for the respective properties of the new
+   * <mxCell>, which is returned.
+   *
+   * When adding new vertices from a mouse event, one should take into
+   * account the offset of the graph container and the scale and translation
+   * of the view in order to find the correct unscaled, untranslated
+   * coordinates using <mxGraph.getPointForEvent> as follows:
+   *
+   * (code)
+   * var pt = graph.getPointForEvent(evt);
+   * var parent = graph.getDefaultParent();
+   * graph.insertVertex(parent, null,
+   * 			'Hello, World!', x, y, 220, 30);
+   * (end)
+   *
+   * For adding image cells, the style parameter can be assigned as
+   *
+   * (code)
+   * stylename;image=imageUrl
+   * (end)
+   *
+   * See <mxGraph> for more information on using images.
+   *
+   * Parameters:
+   *
+   * parent - <mxCell> that specifies the parent of the new vertex.
+   * id - Optional string that defines the Id of the new vertex.
+   * value - Object to be used as the user object.
+   * x - Integer that defines the x coordinate of the vertex.
+   * y - Integer that defines the y coordinate of the vertex.
+   * width - Integer that defines the width of the vertex.
+   * height - Integer that defines the height of the vertex.
+   * style - Optional string that defines the cell style.
+   * relative - Optional boolean that specifies if the geometry is relative.
+   * Default is false.
+   */
   const insertVertex = (
     parent,
     id,
@@ -1965,6 +4244,11 @@ const Graph = (container, model, _, stylesheet) => {
     return addCell(vertex, parent);
   };
 
+  /**
+   * Function: createVertex
+   *
+   * Hook method that creates the new vertex for <insertVertex>.
+   */
   const createVertex = (
     parent,
     id,
@@ -1989,12 +4273,37 @@ const Graph = (container, model, _, stylesheet) => {
     return vertex;
   };
 
+  /**
+   * Function: insertEdge
+   *
+   * Adds a new edge into the given parent <mxCell> using value as the user
+   * object and the given source and target as the terminals of the new edge.
+   * The id and style are used for the respective properties of the new
+   * <mxCell>, which is returned.
+   *
+   * Parameters:
+   *
+   * parent - <mxCell> that specifies the parent of the new edge.
+   * id - Optional string that defines the Id of the new edge.
+   * value - JavaScript object to be used as the user object.
+   * source - <mxCell> that defines the source of the edge.
+   * target - <mxCell> that defines the target of the edge.
+   * style - Optional string that defines the cell style.
+   */
   const insertEdge = (parent, id, value, source, target, style) => {
     const edge = createEdge(parent, id, value, source, target, style);
 
     return addEdge(edge, parent, source, target);
   };
 
+  /**
+   * Function: createEdge
+   *
+   * Hook method that creates the new edge for <insertEdge>. This
+   * implementation does not set the source and target of the edge, these
+   * are set when the edge is added to the model.
+   *
+   */
   const createEdge = (parent, id, value, source, target, style) => {
     // Creates the edge
     const edge = Cell(value, Geometry(), style);
@@ -2005,12 +4314,63 @@ const Graph = (container, model, _, stylesheet) => {
     return edge;
   };
 
+  /**
+   * Function: addEdge
+   *
+   * Adds the edge to the parent and connects it to the given source and
+   * target terminals. This is a shortcut method. Returns the edge that was
+   * added.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> to be inserted into the given parent.
+   * parent - <mxCell> that represents the new parent. If no parent is
+   * given then the default parent is used.
+   * source - Optional <mxCell> that represents the source terminal.
+   * target - Optional <mxCell> that represents the target terminal.
+   * index - Optional index to insert the cells at. Default is to append.
+   */
   const addEdge = (edge, parent, source, target, index) =>
     addCell(edge, parent, index, source, target);
 
+  /**
+   * Function: addCell
+   *
+   * Adds the cell to the parent and connects it to the given source and
+   * target terminals. This is a shortcut method. Returns the cell that was
+   * added.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be inserted into the given parent.
+   * parent - <mxCell> that represents the new parent. If no parent is
+   * given then the default parent is used.
+   * index - Optional index to insert the cells at. Default is to append.
+   * source - Optional <mxCell> that represents the source terminal.
+   * target - Optional <mxCell> that represents the target terminal.
+   */
   const addCell = (cell, parent, index, source, target) =>
     addCells([cell], parent, index, source, target)[0];
 
+  /**
+   * Function: addCells
+   *
+   * Adds the cells to the parent at the given index, connecting each cell to
+   * the optional source and target terminal. The change is carried out using
+   * <cellsAdded>. This method fires <mxEvent.ADD_CELLS> while the
+   * transaction is in progress. Returns the cells that were added.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be inserted.
+   * parent - <mxCell> that represents the new parent. If no parent is
+   * given then the default parent is used.
+   * index - Optional index to insert the cells at. Default is to append.
+   * source - Optional source <mxCell> for all inserted cells.
+   * target - Optional target <mxCell> for all inserted cells.
+   * absolute - Optional boolean indicating of cells should be kept at
+   * their absolute position. Default is false.
+   */
   const addCells = (cells, parent, index, source, target, absolute = false) => {
     const model = getModel();
 
@@ -2048,6 +4408,12 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsAdded
+   *
+   * Adds the specified cells to the given parent. This method fires
+   * <mxEvent.CELLS_ADDED> while the transaction is in progress.
+   */
   const cellsAdded = (
     cells,
     parent,
@@ -2166,6 +4532,17 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: autoSizeCell
+   *
+   * Resizes the specified cell to just fit around the its label and/or children
+   *
+   * Parameters:
+   *
+   * cell - <mxCells> to be resized.
+   * recurse - Optional boolean which specifies if all descendants should be
+   * autosized. Default is true.
+   */
   const autoSizeCell = (cell, recurse = true) => {
     const model = getModel();
 
@@ -2182,6 +4559,21 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: removeCells
+   *
+   * Removes the given cells from the graph including all connected edges if
+   * includeEdges is true. The change is carried out using <cellsRemoved>.
+   * This method fires <mxEvent.REMOVE_CELLS> while the transaction is in
+   * progress. The removed cells are returned as an array.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to remove. If null is specified then the
+   * selection cells which are deletable are used.
+   * includeEdges - Optional boolean which specifies if all connected edges
+   * should be removed as well. Default is true.
+   */
   const removeCells = (cells, includeEdges = true) => {
     if (isUnset(cells)) {
       cells = getDeletableCells(getSelectionCells());
@@ -2232,6 +4624,16 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsRemoved
+   *
+   * Removes the given cells from the model. This method fires
+   * <mxEvent.CELLS_REMOVED> while the transaction is in progress.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to remove.
+   */
   const cellsRemoved = (cells) => {
     const model = getModel();
 
@@ -2329,6 +4731,26 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: splitEdge
+   *
+   * Splits the given edge by adding the newEdge between the previous source
+   * and the given cell and reconnecting the source of the given edge to the
+   * given cell. This method fires <mxEvent.SPLIT_EDGE> while the transaction
+   * is in progress. Returns the new edge that was inserted.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> that represents the edge to be splitted.
+   * cells - <mxCells> that represents the cells to insert into the edge.
+   * newEdge - <mxCell> that represents the edge to be inserted.
+   * dx - Optional integer that specifies the vector to move the cells.
+   * dy - Optional integer that specifies the vector to move the cells.
+   * x - Integer that specifies the x-coordinate of the drop location.
+   * y - Integer that specifies the y-coordinate of the drop location.
+   * parent - Optional parent to insert the cell. If null the parent of
+   * the edge is used.
+   */
   const splitEdge = (edge, cells, newEdge, dx = 0, dy = 0, x, y, parent) => {
     const view = getView();
     const model = getModel();
@@ -2403,6 +4825,22 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell visibility
    */
 
+  /**
+   * Function: toggleCells
+   *
+   * Sets the visible state of the specified cells and all connected edges
+   * if includeEdges is true. The change is carried out using <cellsToggled>.
+   * This method fires <mxEvent.TOGGLE_CELLS> while the transaction is in
+   * progress. Returns the cells whose visible state was changed.
+   *
+   * Parameters:
+   *
+   * show - Boolean that specifies the visible state to be assigned.
+   * cells - Array of <mxCells> whose visible state should be changed. If
+   * null is specified then the selection cells are used.
+   * includeEdges - Optional boolean indicating if the visible state of all
+   * connected edges should be changed as well. Default is true.
+   */
   const toggleCells = (show, cells, includeEdges) => {
     const model = getModel();
 
@@ -2437,6 +4875,16 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsToggled
+   *
+   * Sets the visible state of the specified cells.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose visible state should be changed.
+   * show - Boolean that specifies the visible state to be assigned.
+   */
   const cellsToggled = (cells, show) => {
     const model = getModel();
 
@@ -2457,6 +4905,25 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Folding
    */
 
+  /**
+   * Function: foldCells
+   *
+   * Sets the collapsed state of the specified cells and all descendants
+   * if recurse is true. The change is carried out using <cellsFolded>.
+   * This method fires <mxEvent.FOLD_CELLS> while the transaction is in
+   * progress. Returns the cells whose collapsed state was changed.
+   *
+   * Parameters:
+   *
+   * collapsed - Boolean indicating the collapsed state to be assigned.
+   * recurse - Optional boolean indicating if the collapsed state of all
+   * descendants should be set. Default is false.
+   * cells - Array of <mxCells> whose collapsed state should be set. If
+   * null is specified then the foldable selection cells are used.
+   * checkFoldable - Optional boolean indicating of isCellFoldable should be
+   * checked. Default is false.
+   * evt - Optional native event that triggered the invocation.
+   */
   const foldCells = (collapse, recurse = false, cells, checkFoldable, evt) => {
     const model = getModel();
 
@@ -2488,6 +4955,22 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsFolded
+   *
+   * Sets the collapsed state of the specified cells. This method fires
+   * <mxEvent.CELLS_FOLDED> while the transaction is in progress. Returns the
+   * cells whose collapsed state was changed.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose collapsed state should be set.
+   * collapsed - Boolean indicating the collapsed state to be assigned.
+   * recurse - Boolean indicating if the collapsed state of all descendants
+   * should be set.
+   * checkFoldable - Optional boolean indicating of isCellFoldable should be
+   * checked. Default is false.
+   */
   const cellsFolded = (cells, collapse, recurse, checkFoldable) => {
     const model = getModel();
 
@@ -2533,6 +5016,17 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: swapBounds
+   *
+   * Swaps the alternate and the actual bounds in the geometry of the given
+   * cell invoking <updateAlternateBounds> before carrying out the swap.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the bounds should be swapped.
+   * willCollapse - Boolean indicating if the cell is going to be collapsed.
+   */
   const swapBounds = (cell, willCollapse) => {
     if (isSet(cell)) {
       let geo = getModel().getGeometry(cell);
@@ -2548,6 +5042,22 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: updateAlternateBounds
+   *
+   * Updates or sets the alternate bounds in the given geometry for the given
+   * cell depending on whether the cell is going to be collapsed. If no
+   * alternate bounds are defined in the geometry and
+   * <collapseToPreferredSize> is true, then the preferred size is used for
+   * the alternate bounds. The top, left corner is always kept at the same
+   * location.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the geometry is being udpated.
+   * g - <mxGeometry> for which the alternate bounds should be updated.
+   * willCollapse - Boolean indicating if the cell is going to be collapsed.
+   */
   const updateAlternateBounds = (cell, geo, willCollapse) => {
     if (isSet(cell) && isSet(geo)) {
       const style = getCurrentCellStyle(cell);
@@ -2598,12 +5108,23 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: addAllEdges
+   *
+   * Returns an array with the given cells and all edges that are connected
+   * to a cell or one of its descendants.
+   */
   const addAllEdges = (cells) => {
     const allCells = cells.slice();
 
     return removeDuplicates(allCells.concat(getAllEdges(cells)));
   };
 
+  /**
+   * Function: getAllEdges
+   *
+   * Returns all edges connected to the given cells or its descendants.
+   */
   const getAllEdges = (cells) => {
     const model = getModel();
     const edges = [];
@@ -2629,6 +5150,17 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell sizing
    */
 
+  /**
+   * Function: updateCellSize
+   *
+   * Updates the size of the given cell in the model using <cellSizeUpdated>.
+   * This method fires <mxEvent.UPDATE_CELL_SIZE> while the transaction is in
+   * progress. Returns the cell whose size was updated.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose size should be updated.
+   */
   const updateCellSize = (cell, ignoreChildren = false) => {
     getModel().beginUpdate();
 
@@ -2650,6 +5182,16 @@ const Graph = (container, model, _, stylesheet) => {
     return cell;
   };
 
+  /**
+   * Function: cellSizeUpdated
+   *
+   * Updates the size of the given cell in the model using
+   * <getPreferredSizeForCell> to get the new size.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the size should be changed.
+   */
   const cellSizeUpdated = (cell, ignoreChildren) => {
     const view = getView();
     const model = getModel();
@@ -2756,6 +5298,34 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: getPreferredSizeForCell
+   *
+   * Returns the preferred width and height of the given <mxCell> as an
+   * <mxRectangle>. To implement a minimum width, add a new style eg.
+   * minWidth in the vertex and override this method as follows.
+   *
+   * (code)
+   * var graphGetPreferredSizeForCell = graph.getPreferredSizeForCell;
+   * graph.getPreferredSizeForCell = function(cell)
+   * {
+   *   var result = graphGetPreferredSizeForCell.apply(this, arguments);
+   *   var style = this.getCellStyle(cell);
+   *
+   *   if (style['minWidth'] > 0)
+   *   {
+   *     result.width = Math.max(style['minWidth'], result.width);
+   *   }
+   *
+   *   return result;
+   * };
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the preferred size should be returned.
+   * textWidth - Optional maximum text width for word wrapping.
+   */
   const getPreferredSizeForCell = (cell, textWidth) => {
     let result = null;
 
@@ -2842,9 +5412,32 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: resizeCell
+   *
+   * Sets the bounds of the given cell using <resizeCells>. Returns the
+   * cell which was passed to the function.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose bounds should be changed.
+   * bounds - <mxRectangle> that represents the new bounds.
+   */
   const resizeCell = (cell, bounds, recurse) =>
     resizeCells([cell], [bounds], recurse)[0];
 
+  /**
+   * Function: resizeCells
+   *
+   * Sets the bounds of the given cells and fires a <mxEvent.RESIZE_CELLS>
+   * event while the transaction is in progress. Returns the cells which
+   * have been passed to the function.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose bounds should be changed.
+   * bounds - Array of <mxRectangles> that represent the new bounds.
+   */
   const resizeCells = (cells, bounds, recurse = isRecursiveResize()) => {
     getModel().beginUpdate();
 
@@ -2868,6 +5461,52 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsResized
+   *
+   * Sets the bounds of the given cells and fires a <mxEvent.CELLS_RESIZED>
+   * event. If <extendParents> is true, then the parent is extended if a
+   * child size is changed so that it overlaps with the parent.
+   *
+   * The following example shows how to control group resizes to make sure
+   * that all child cells stay within the group.
+   *
+   * (code)
+   * graph.addListener(mxEvent.CELLS_RESIZED, function(sender, evt)
+   * {
+   *   var cells = evt.getProperty('cells');
+   *
+   *   if (cells != null)
+   *   {
+   *     for (var i = 0; i < cells.length; i++)
+   *     {
+   *       if (graph.getModel().getChildCount(cells[i]) > 0)
+   *       {
+   *         var geo = graph.getCellGeometry(cells[i]);
+   *
+   *         if (geo != null)
+   *         {
+   *           var children = graph.getChildCells(cells[i], true, true);
+   *           var bounds = graph.getBoundingBoxFromGeometry(children, true);
+   *
+   *           geo = geo.clone();
+   *           geo.width = Math.max(geo.width, bounds.width);
+   *           geo.height = Math.max(geo.height, bounds.height);
+   *
+   *           graph.getModel().setGeometry(cells[i], geo);
+   *         }
+   *       }
+   *     }
+   *   }
+   * });
+   * (end)
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose bounds should be changed.
+   * bounds - Array of <mxRectangles> that represent the new bounds.
+   * recurse - Optional boolean that specifies if the children should be resized.
+   */
   const cellsResized = (cells, bounds, recurse = false) => {
     const prev = [];
 
@@ -2908,6 +5547,19 @@ const Graph = (container, model, _, stylesheet) => {
     return prev;
   };
 
+  /**
+   * Function: cellResized
+   *
+   * Resizes the parents recursively so that they contain the complete area
+   * of the resized child cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose bounds should be changed.
+   * bounds - <mxRectangles> that represent the new bounds.
+   * ignoreRelative - Boolean that indicates if relative cells should be ignored.
+   * recurse - Optional boolean that specifies if the children should be resized.
+   */
   const cellResized = (cell, bounds, ignoreRelative, recurse) => {
     const mode = getModel();
     const prev = model.getGeometry(cell);
@@ -2956,6 +5608,17 @@ const Graph = (container, model, _, stylesheet) => {
     return prev;
   };
 
+  /**
+   * Function: resizeChildCells
+   *
+   * Resizes the child cells of the given cell for the given new geometry with
+   * respect to the current geometry of the cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that has been resized.
+   * newGeo - <mxGeometry> that represents the new bounds.
+   */
   const resizeChildCells = (cell, newGeo) => {
     const model = getModel();
     const geo = model.getGeometry(cell);
@@ -2968,6 +5631,15 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: constrainChildCells
+   *
+   * Constrains the children of the given cell using <constrainChild>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that has been resized.
+   */
   const constrainChildCells = (cell) => {
     const model = getModel();
     const childCount = model.getChildCount(cell);
@@ -2977,6 +5649,19 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: scaleCell
+   *
+   * Scales the points, position and size of the given cell according to the
+   * given vertical and horizontal scaling factors.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose geometry should be scaled.
+   * dx - Horizontal scaling factor.
+   * dy - Vertical scaling factor.
+   * recurse - Boolean indicating if the child cells should be scaled.
+   */
   const scaleCell = (cell, dx, dy, recurse) => {
     const model = getModel();
     let geo = model.getGeometry(cell);
@@ -3023,6 +5708,16 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: extendParent
+   *
+   * Resizes the parents recursively so that they contain the complete area
+   * of the resized child cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that has been resized.
+   */
   const extendParent = (cell) => {
     if (isSet(cell)) {
       const parent = getModel().getParent(cell);
@@ -3052,9 +5747,50 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell moving
    */
 
+  /**
+   * Function: importCells
+   *
+   * Clones and inserts the given cells into the graph using the move
+   * method and returns the inserted cells. This shortcut is used if
+   * cells are inserted via datatransfer.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be imported.
+   * dx - Integer that specifies the x-coordinate of the vector. Default is 0.
+   * dy - Integer that specifies the y-coordinate of the vector. Default is 0.
+   * target - <mxCell> that represents the new parent of the cells.
+   * evt - Mouseevent that triggered the invocation.
+   * mapping - Optional mapping for existing clones.
+   */
   const importCells = (cells, dx, dy, target, evt, mapping) =>
     moveCells(cells, dx, dy, true, target, evt, mapping);
 
+  /**
+   * Function: moveCells
+   *
+   * Moves or clones the specified cells and moves the cells or clones by the
+   * given amount, adding them to the optional target cell. The evt is the
+   * mouse event as the mouse was released. The change is carried out using
+   * <cellsMoved>. This method fires <mxEvent.MOVE_CELLS> while the
+   * transaction is in progress. Returns the cells that were moved.
+   *
+   * Use the following code to move all cells in the graph.
+   *
+   * (code)
+   * graph.moveCells(graph.getChildCells(null, true, true), 10, 10);
+   * (end)
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be moved, cloned or added to the target.
+   * dx - Integer that specifies the x-coordinate of the vector. Default is 0.
+   * dy - Integer that specifies the y-coordinate of the vector. Default is 0.
+   * clone - Boolean indicating if the cells should be cloned. Default is false.
+   * target - <mxCell> that represents the new parent of the cells.
+   * evt - Mouseevent that triggered the invocation.
+   * mapping - Optional mapping for existing clones.
+   */
   const moveCells = (
     cells,
     dx = 0,
@@ -3191,6 +5927,13 @@ const Graph = (container, model, _, stylesheet) => {
     return cells;
   };
 
+  /**
+   * Function: cellsMoved
+   *
+   * Moves the specified cells by the given vector, disconnecting the cells
+   * using disconnectGraph is disconnect is true. This method fires
+   * <mxEvent.CELLS_MOVED> while the transaction is in progress.
+   */
   const cellsMoved = (cells, dx, dy, disconnect, constrain, extend = false) => {
     const model = getModel();
 
@@ -3235,6 +5978,12 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: translateCell
+   *
+   * Translates the geometry of the given cell and stores the new,
+   * translated geometry in the model as an atomic change.
+   */
   const translateCell = (cell, dx, dy) => {
     const model = getModel();
     let geo = model.getGeometry(cell);
@@ -3285,6 +6034,15 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: getCellContainmentArea
+   *
+   * Returns the <mxRectangle> inside which a cell is to be kept.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the area should be returned.
+   */
   const getCellContainmentArea = (cell) => {
     const model = getModel();
 
@@ -3335,6 +6093,19 @@ const Graph = (container, model, _, stylesheet) => {
     return null;
   };
 
+  /**
+   * Function: constrainChild
+   *
+   * Keeps the given cell inside the bounds returned by
+   * <getCellContainmentArea> for its parent, according to the rules defined by
+   * <getOverlap> and <isConstrainChild>. This modifies the cell's geometry
+   * in-place and does not clone it.
+   *
+   * Parameters:
+   *
+   * cells - <mxCell> which should be constrained.
+   * sizeFirst - Specifies if the size should be changed first. Default is true.
+   */
   const constrainChild = (cell, sizeFirst = true) => {
     const model = getModel();
 
@@ -3467,6 +6238,17 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: resetEdges
+   *
+   * Resets the control points of the edges that are connected to the given
+   * cells if not both ends of the edge are in the given cells array.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> for which the connected edges should be
+   * reset.
+   */
   const resetEdges = (cells) => {
     const view = getView();
     const model = getModel();
@@ -3511,6 +6293,15 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: resetEdge
+   *
+   * Resets the control points of the given edge.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> whose points should be reset.
+   */
   const resetEdge = (edge) => {
     const model = getModel();
     let geo = model.getGeometry(edge);
@@ -3529,6 +6320,11 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Cell connecting and connection constraints
    */
 
+  /**
+   * Function: getOutlineConstraint
+   *
+   * Returns the constraint used to connect to the outline of the given state.
+   */
   const getOutlineConstraint = (point, terminalState, mE) => {
     const shape = terminalState.getShape();
     const style = terminalState.getStyle();
@@ -3610,6 +6406,18 @@ const Graph = (container, model, _, stylesheet) => {
     return null;
   };
 
+  /**
+   * Function: getAllConnectionConstraints
+   *
+   * Returns an array of all <mxConnectionConstraints> for the given terminal. If
+   * the shape of the given terminal is a <mxStencilShape> then the constraints
+   * of the corresponding <mxStencil> are returned.
+   *
+   * Parameters:
+   *
+   * terminal - <mxCellState> that represents the terminal.
+   * source - Boolean that specifies if the terminal is the source or target.
+   */
   const getAllConnectionConstraints = (terminal, source) => {
     if (
       isSet(terminal) &&
@@ -3622,6 +6430,18 @@ const Graph = (container, model, _, stylesheet) => {
     return null;
   };
 
+  /**
+   * Function: getConnectionConstraint
+   *
+   * Returns an <mxConnectionConstraint> that describes the given connection
+   * point. This result can then be passed to <getConnectionPoint>.
+   *
+   * Parameters:
+   *
+   * edge - <mxCellState> that represents the edge.
+   * terminal - <mxCellState> that represents the terminal.
+   * source - Boolean indicating if the terminal is the source or target.
+   */
   const getConnectionConstraint = (edge, terminal, source) => {
     const style = edge.getStyle();
     let point = null;
@@ -3657,6 +6477,21 @@ const Graph = (container, model, _, stylesheet) => {
     return ConnectionConstraint(point, perimeter, null, dx, dy);
   };
 
+  /**
+   * Function: setConnectionConstraint
+   *
+   * Sets the <mxConnectionConstraint> that describes the given connection point.
+   * If no constraint is given then nothing is changed. To remove an existing
+   * constraint from the given edge, use an empty constraint instead.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> that represents the edge.
+   * terminal - <mxCell> that represents the terminal.
+   * source - Boolean indicating if the terminal is the source or target.
+   * constraint - Optional <mxConnectionConstraint> to be used for this
+   * connection.
+   */
   const setConnectionConstraint = (edge, terminal, source, constraint) => {
     if (isSet(constraint)) {
       getModel().beginUpdate();
@@ -3713,6 +6548,18 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: getConnectionPoint
+   *
+   * Returns the nearest point in the list of absolute points or the center
+   * of the opposite terminal.
+   *
+   * Parameters:
+   *
+   * vertex - <mxCellState> that represents the vertex.
+   * constraint - <mxConnectionConstraint> that represents the connection point
+   * constraint as returned by <getConnectionConstraint>.
+   */
   const getConnectionPoint = (vertex, constraint, round = true) => {
     let point = null;
     const cp = constraint.getPoint();
@@ -3814,6 +6661,21 @@ const Graph = (container, model, _, stylesheet) => {
     return point;
   };
 
+  /**
+   * Function: connectCell
+   *
+   * Connects the specified end of the given edge to the given terminal
+   * using <cellConnected> and fires <mxEvent.CONNECT_CELL> while the
+   * transaction is in progress. Returns the updated edge.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> whose terminal should be updated.
+   * terminal - <mxCell> that represents the new terminal to be used.
+   * source - Boolean indicating if the new terminal is the source or target.
+   * constraint - Optional <mxConnectionConstraint> to be used for this
+   * connection.
+   */
   const connectCell = (edge, terminal, source, constraint) => {
     const model = getModel();
 
@@ -3842,6 +6704,20 @@ const Graph = (container, model, _, stylesheet) => {
     return edge;
   };
 
+  /**
+   * Function: cellConnected
+   *
+   * Sets the new terminal for the given edge and resets the edge points if
+   * <resetEdgesOnConnect> is true. This method fires
+   * <mxEvent.CELL_CONNECTED> while the transaction is in progress.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> whose terminal should be updated.
+   * terminal - <mxCell> that represents the new terminal to be used.
+   * source - Boolean indicating if the new terminal is the source or target.
+   * constraint - <mxConnectionConstraint> to be used for this connection.
+   */
   const cellConnected = (edge, terminal, source, constraint) => {
     const model = getModel();
 
@@ -3894,6 +6770,16 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: disconnectGraph
+   *
+   * Disconnects the given edges from the terminals which are not in the
+   * given array.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be disconnected.
+   */
   const disconnectGraph = (cells) => {
     const view = getView();
     const model = getModel();
@@ -3981,16 +6867,118 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Drilldown
    */
 
+  /**
+   * Function: getCurrentRoot
+   *
+   * Returns the current root of the displayed cell hierarchy. This is a
+   * shortcut to <mxGraphView.currentRoot> in <view>.
+   */
   const getCurrentRoot = () => getView().getCurrentRoot();
 
+  /**
+   * Function: getTranslateForRoot
+   *
+   * Returns the translation to be used if the given cell is the root cell as
+   * an <mxPoint>. This implementation returns null.
+   *
+   * Example:
+   *
+   * To keep the children at their absolute position while stepping into groups,
+   * this function can be overridden as follows.
+   *
+   * (code)
+   * var offset = new mxPoint(0, 0);
+   *
+   * while (cell != null)
+   * {
+   *   var geo = this.model.getGeometry(cell);
+   *
+   *   if (geo != null)
+   *   {
+   *     offset.x -= geo.x;
+   *     offset.y -= geo.y;
+   *   }
+   *
+   *   cell = this.model.getParent(cell);
+   * }
+   *
+   * return offset;
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the root.
+   */
   const getTranslateForRoot = (cell) => null;
 
+  /**
+   * Function: isPort
+   *
+   * Returns true if the given cell is a "port", that is, when connecting to
+   * it, the cell returned by getTerminalForPort should be used as the
+   * terminal and the port should be referenced by the ID in either the
+   * mxConstants.STYLE_SOURCE_PORT or the or the
+   * mxConstants.STYLE_TARGET_PORT. Note that a port should not be movable.
+   * This implementation always returns false.
+   *
+   * A typical implementation is the following:
+   *
+   * (code)
+   * graph.isPort = function(cell)
+   * {
+   *   var geo = this.getCellGeometry(cell);
+   *
+   *   return (geo != null) ? geo.relative : false;
+   * };
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the port.
+   */
   const isPort = (cell) => false;
 
+  /**
+   * Function: getTerminalForPort
+   *
+   * Returns the terminal to be used for a given port. This implementation
+   * always returns the parent cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the port.
+   * source - If the cell is the source or target port.
+   */
   const getTerminalForPort = (cell, source) => getModel().getParent(cell);
 
+  /**
+   * Function: getChildOffsetForCell
+   *
+   * Returns the offset to be used for the cells inside the given cell. The
+   * root and layer cells may be identified using <mxGraphModel.isRoot> and
+   * <mxGraphModel.isLayer>. For all other current roots, the
+   * <mxGraphView.currentRoot> field points to the respective cell, so that
+   * the following holds: cell == this.view.currentRoot. This implementation
+   * returns null.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose offset should be returned.
+   */
   const getChildOffsetForCell = (cell) => null;
 
+  /**
+   * Function: enterGroup
+   *
+   * Uses the given cell as the root of the displayed cell hierarchy. If no
+   * cell is specified then the selection cell is used. The cell is only used
+   * if <isValidRoot> returns true.
+   *
+   * Parameters:
+   *
+   * cell - Optional <mxCell> to be used as the new root. Default is the
+   * selection cell.
+   */
   const enterGroup = (cell = getSelectionCell()) => {
     if (isSet(cell) && isValidRoot(cell)) {
       getView().setCurrentRoot(cell);
@@ -3998,6 +6986,12 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: exitGroup
+   *
+   * Changes the current root to the next valid root in the displayed cell
+   * hierarchy.
+   */
   const exitGroup = () => {
     const view = getView();
     const model = getModel();
@@ -4033,6 +7027,12 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: home
+   *
+   * Uses the root of the model as the root of the displayed cell hierarchy
+   * and selects the previous root.
+   */
   const home = () => {
     const current = getCurrentRoot();
 
@@ -4046,10 +7046,40 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: isValidRoot
+   *
+   * Returns true if the given cell is a valid root for the cell display
+   * hierarchy. This implementation returns true for all non-null values.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> which should be checked as a possible root.
+   */
   const isValidRoot = (cell) => isSet(cell);
 
+  /**
+   * Function: getGraphBounds
+   *
+   * Returns the bounds of the visible graph. Shortcut to
+   * <mxGraphView.getGraphBounds>. See also: <getBoundingBoxFromGeometry>.
+   */
   const getGraphBounds = () => getView().getGraphBounds();
 
+  /**
+   * Function: getCellBounds
+   *
+   * Returns the scaled, translated bounds for the given cell. See
+   * <mxGraphView.getBounds> for arrays.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose bounds should be returned.
+   * includeEdge - Optional boolean that specifies if the bounds of
+   * the connected edges should be included. Default is false.
+   * includeDescendants - Optional boolean that specifies if the bounds
+   * of all descendants should be included. Default is false.
+   */
   const getCellBounds = (cell, includeEdges, includeDescendants) => {
     const model = getModel();
     let cells = [cell];
@@ -4083,6 +7113,42 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: getBoundingBoxFromGeometry
+   *
+   * Returns the bounding box for the geometries of the vertices in the
+   * given array of cells. This can be used to find the graph bounds during
+   * a layout operation (ie. before the last endUpdate) as follows:
+   *
+   * (code)
+   * var cells = graph.getChildCells(graph.getDefaultParent(), true, true);
+   * var bounds = graph.getBoundingBoxFromGeometry(cells, true);
+   * (end)
+   *
+   * This can then be used to move cells to the origin:
+   *
+   * (code)
+   * if (bounds.x < 0 || bounds.y < 0)
+   * {
+   *   graph.moveCells(cells, -Math.min(bounds.x, 0), -Math.min(bounds.y, 0))
+   * }
+   * (end)
+   *
+   * Or to translate the graph view:
+   *
+   * (code)
+   * if (bounds.x < 0 || bounds.y < 0)
+   * {
+   *   graph.view.setTranslate(-Math.min(bounds.x, 0), -Math.min(bounds.y, 0));
+   * }
+   * (end)
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> whose bounds should be returned.
+   * includeEdges - Specifies if edge bounds should be included by computing
+   * the bounding box for all points in geometry. Default is false.
+   */
   const getBoundingBoxFromGeometry = (cells, includeEdges = false) => {
     const model = getModel();
     let result = null;
@@ -4197,6 +7263,17 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: refresh
+   *
+   * Clears all cell states or the states for the hierarchy starting at the
+   * given cell and validates the graph. This fires a refresh event as the
+   * last step.
+   *
+   * Parameters:
+   *
+   * cell - Optional <mxCell> for which the cell states should be cleared.
+   */
   const refresh = (cell) => {
     getView().clear(cell, isUnset(cell));
     getView().validate();
@@ -4204,6 +7281,15 @@ const Graph = (container, model, _, stylesheet) => {
     fireEvent(EventObject(Event.REFRESH));
   };
 
+  /**
+   * Function: snap
+   *
+   * Snaps the given numeric value to the grid if <gridEnabled> is true.
+   *
+   * Parameters:
+   *
+   * value - Numeric value to be snapped to the grid.
+   */
   const snap = (value) => {
     if (isGridEnabled()) {
       value = Math.round(value / getGridSize()) * getGridSize();
@@ -4212,6 +7298,11 @@ const Graph = (container, model, _, stylesheet) => {
     return value;
   };
 
+  /**
+   * Function: snapDelta
+   *
+   * Snaps the given delta with the given scaled bounds.
+   */
   const snapDelta = (
     delta,
     bounds,
@@ -4277,6 +7368,18 @@ const Graph = (container, model, _, stylesheet) => {
     return delta;
   };
 
+  /**
+   * Function: panGraph
+   *
+   * Shifts the graph display by the given amount. This is used to preview
+   * panning operations, use <mxGraphView.setTranslate> to set a persistent
+   * translation of the view. Fires <mxEvent.PAN>.
+   *
+   * Parameters:
+   *
+   * dx - Amount to shift the graph along the x-axis.
+   * dy - Amount to shift the graph along the y-axis.
+   */
   const panGraph = (dx, dy) => {
     const container = getContainer();
 
@@ -4377,10 +7480,25 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: zoomIn
+   *
+   * Zooms into the graph by <zoomFactor>.
+   */
   const zoomIn = () => zoom(getZoomFactor());
 
+  /**
+   * Function: zoomOut
+   *
+   * Zooms out of the graph by <zoomFactor>.
+   */
   const zoomOut = () => zoom(1 / getZoomFactor());
 
+  /**
+   * Function: zoomActual
+   *
+   * Resets the zoom and panning in the view.
+   */
   const zoomActual = () => {
     const view = getView();
 
@@ -4394,8 +7512,28 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: zoomTo
+   *
+   * Zooms the graph to the given scale with an optional boolean center
+   * argument, which is passd to <zoom>.
+   */
   const zoomTo = (scale, center) => zoom(scale / getView().getScale(), center);
 
+  /**
+   * Function: center
+   *
+   * Centers the graph in the container.
+   *
+   * Parameters:
+   *
+   * horizontal - Optional boolean that specifies if the graph should be centered
+   * horizontally. Default is true.
+   * vertical - Optional boolean that specifies if the graph should be centered
+   * vertically. Default is true.
+   * cx - Optional float that specifies the horizontal center. Default is 0.5.
+   * cy - Optional float that specifies the vertical center. Default is 0.5.
+   */
   const center = (horizontal = true, vertical = true, cx = 0.5, cy = 0.5) => {
     const view = getView();
     const container = getContainer();
@@ -4444,6 +7582,13 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: zoom
+   *
+   * Zooms the graph using the given factor. Center is an optional boolean
+   * argument that keeps the graph scrolled to the center. If the center argument
+   * is omitted, then <centerZoom> will be used as its value.
+   */
   const zoom = (factor, center = getCenterZoom()) => {
     const view = getView();
     const container = getContainer();
@@ -4519,6 +7664,20 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: zoomToRect
+   *
+   * Zooms the graph to the specified rectangle. If the rectangle does not have same aspect
+   * ratio as the display container, it is increased in the smaller relative dimension only
+   * until the aspect match. The original rectangle is centralised within this expanded one.
+   *
+   * Note that the input rectangular must be un-scaled and un-translated.
+   *
+   * Parameters:
+   *
+   * rect - The un-scaled and un-translated rectangluar region that should be just visible
+   * after the operation
+   */
   const zoomToRect = (rect) => {
     const view = getView();
     const container = getContainer();
@@ -4596,6 +7755,25 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: scrollCellToVisible
+   *
+   * Pans the graph so that it shows the given cell. Optionally the cell may
+   * be centered in the container.
+   *
+   * To center a given graph if the <container> has no scrollbars, use the following code.
+   *
+   * [code]
+   * var bounds = graph.getGraphBounds();
+   * graph.view.setTranslate(-bounds.x - (bounds.width - container.clientWidth) / 2,
+   * 						   -bounds.y - (bounds.height - container.clientHeight) / 2);
+   * [/code]
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be made visible.
+   * center - Optional boolean flag. Default is false.
+   */
   const scrollCellToVisible = (cell, center) => {
     const view = getView();
     const translate = view.getTranslate();
@@ -4636,6 +7814,15 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
+  /**
+   * Function: scrollRectToVisible
+   *
+   * Pans the graph so that it shows the given rectangle.
+   *
+   * Parameters:
+   *
+   * rect - <mxRectangle> to be made visible.
+   */
   const scrollRectToVisible = (rect) => {
     const view = getView();
     const translate = view.getTranslate();
@@ -4734,14 +7921,78 @@ const Graph = (container, model, _, stylesheet) => {
     return isChanged;
   };
 
+  /**
+   * Function: getCellGeometry
+   *
+   * Returns the <mxGeometry> for the given cell. This implementation uses
+   * <mxGraphModel.getGeometry>. Subclasses can override this to implement
+   * specific geometries for cells in only one graph, that is, it can return
+   * geometries that depend on the current state of the view.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose geometry should be returned.
+   */
   const getCellGeometry = (cell) => getModel().getGeometry(cell);
 
+  /**
+   * Function: isCellVisible
+   *
+   * Returns true if the given cell is visible in this graph. This
+   * implementation uses <mxGraphModel.isVisible>. Subclassers can override
+   * this to implement specific visibility for cells in only one graph, that
+   * is, without affecting the visible state of the cell.
+   *
+   * When using dynamic filter expressions for cell visibility, then the
+   * graph should be revalidated after the filter expression has changed.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose visible state should be returned.
+   */
   const isCellVisible = (cell) => getModel.isVisible(cell);
 
+  /**
+   * Function: isCellCollapsed
+   *
+   * Returns true if the given cell is collapsed in this graph. This
+   * implementation uses <mxGraphModel.isCollapsed>. Subclassers can override
+   * this to implement specific collapsed states for cells in only one graph,
+   * that is, without affecting the collapsed state of the cell.
+   *
+   * When using dynamic filter expressions for the collapsed state, then the
+   * graph should be revalidated after the filter expression has changed.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose collapsed state should be returned.
+   */
   const isCellCollapsed = (cell) => getModel().isCollapsed(cell);
 
+  /**
+   * Function: isCellConnectable
+   *
+   * Returns true if the given cell is connectable in this graph. This
+   * implementation uses <mxGraphModel.isConnectable>. Subclassers can override
+   * this to implement specific connectable states for cells in only one graph,
+   * that is, without affecting the connectable state of the cell in the model.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose connectable state should be returned.
+   */
   const isCellConnectable = (cell) => getModel().isConnectable(cell);
 
+  /**
+   * Function: isOrthogonal
+   *
+   * Returns true if perimeter points should be computed such that the
+   * resulting edge has only horizontal or vertical segments.
+   *
+   * Parameters:
+   *
+   * edge - <mxCellState> that represents the edge.
+   */
   const isOrthogonal = (edge) => {
     const orthogonal = edge.getStyle()[STYLE_ORTHOGONAL];
 
@@ -4761,6 +8012,15 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: isLoop
+   *
+   * Returns true if the given cell state is a loop.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> that represents a potential loop.
+   */
   const isLoop = (state) => {
     const src = state.getVisibleTerminalState(true);
     const trg = state.getVisibleTerminalState(false);
@@ -4768,28 +8028,123 @@ const Graph = (container, model, _, stylesheet) => {
     return isSet(src) && src === trg;
   };
 
+  /**
+   * Function: isCloneEvent
+   *
+   * Returns true if the given event is a clone event. This implementation
+   * returns true if control is pressed.
+   */
   const isCloneEvent = (evt) => Event.isControlDown(evt);
 
+  /**
+   * Function: isTransparentClickEvent
+   *
+   * Hook for implementing click-through behaviour on selected cells. If this
+   * returns true the cell behind the selected cell will be selected. This
+   * implementation returns false;
+   */
   const isTransparentClickEvent = (evt) => false;
 
+  /**
+   * Function: isToggleEvent
+   *
+   * Returns true if the given event is a toggle event. This implementation
+   * returns true if the meta key (Cmd) is pressed on Macs or if control is
+   * pressed on any other platform.
+   */
   const isToggleEvent = (evt) =>
     IS_MAC ? Event.isMetaDown(evt) : Event.isControlDown(evt);
 
+  /**
+   * Function: isGridEnabledEvent
+   *
+   * Returns true if the given mouse event should be aligned to the grid.
+   */
   const isGridEnabledEvent = (evt) => isSet(evt) && !Event.isAltDown(evt);
 
+  /**
+   * Function: isConstrainedEvent
+   *
+   * Returns true if the given mouse event should be aligned to the grid.
+   */
   const isConstrainedEvent = (evt) => Event.isShiftDown(evt);
 
+  /**
+   * Function: isIgnoreTerminalEvent
+   *
+   * Returns true if the given mouse event should not allow any connections to be
+   * made. This implementation returns false.
+   */
   const isIgnoreTerminalEvent = (evt) => false;
 
   /**
    * Group: Validation
    */
 
+  /**
+   * Function: validationAlert
+   *
+   * Displays the given validation error in a dialog. This implementation uses
+   * mxUtils.alert.
+   */
   const validationAlert = (message) => alert(message);
 
+  /**
+   * Function: isEdgeValid
+   *
+   * Checks if the return value of <getEdgeValidationError> for the given
+   * arguments is null.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> that represents the edge to validate.
+   * source - <mxCell> that represents the source terminal.
+   * target - <mxCell> that represents the target terminal.
+   */
   const isEdgeValid = (edge, source, target) =>
     isUnset(getEdgeValidationError(edge, source, target));
 
+  /**
+   * Function: getEdgeValidationError
+   *
+   * Returns the validation error message to be displayed when inserting or
+   * changing an edges' connectivity. A return value of null means the edge
+   * is valid, a return value of '' means it's not valid, but do not display
+   * an error message. Any other (non-empty) string returned from this method
+   * is displayed as an error message when trying to connect an edge to a
+   * source and target. This implementation uses the <multiplicities>, and
+   * checks <multigraph>, <allowDanglingEdges> and <allowLoops> to generate
+   * validation errors.
+   *
+   * For extending this method with specific checks for source/target cells,
+   * the method can be extended as follows. Returning an empty string means
+   * the edge is invalid with no error message, a non-null string specifies
+   * the error message, and null means the edge is valid.
+   *
+   * (code)
+   * graph.getEdgeValidationError = function(edge, source, target)
+   * {
+   *   if (source != null && target != null &&
+   *     this.model.getValue(source) != null &&
+   *     this.model.getValue(target) != null)
+   *   {
+   *     if (target is not valid for source)
+   *     {
+   *       return 'Invalid Target';
+   *     }
+   *   }
+   *
+   *   // "Supercall"
+   *   return mxGraph.prototype.getEdgeValidationError.apply(this, arguments);
+   * }
+   * (end)
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> that represents the edge to validate.
+   * source - <mxCell> that represents the source terminal.
+   * target - <mxCell> that represents the target terminal.
+   */
   const getEdgeValidationError = (edge, source, target) => {
     const model = getModel();
 
@@ -4870,8 +8225,36 @@ const Graph = (container, model, _, stylesheet) => {
     return isAllowDanglingEdges() ? null : '';
   };
 
+  /**
+   * Function: validateEdge
+   *
+   * Hook method for subclassers to return an error message for the given
+   * edge and terminals. This implementation returns null.
+   *
+   * Parameters:
+   *
+   * edge - <mxCell> that represents the edge to validate.
+   * source - <mxCell> that represents the source terminal.
+   * target - <mxCell> that represents the target terminal.
+   */
   const validateEdge = (edge, source, target) => null;
 
+  /**
+   * Function: validateGraph
+   *
+   * Validates the graph by validating each descendant of the given cell or
+   * the root of the model. Context is an object that contains the validation
+   * state for the complete validation run. The validation errors are
+   * attached to their cells using <setCellWarning>. Returns null in the case of
+   * successful validation or an array of strings (warnings) in the case of
+   * failed validations.
+   *
+   * Paramters:
+   *
+   * cell - Optional <mxCell> to start the validation recursion. Default is
+   * the graph root.
+   * context - Object that represents the global validation state.
+   */
   const validateGraph = (cell = getModel().getRoot(), context = {}) => {
     const model = getModel();
     let isValid = true;
@@ -4933,6 +8316,17 @@ const Graph = (container, model, _, stylesheet) => {
     return warning.length > 0 || !isValid ? warning : null;
   };
 
+  /**
+   * Function: getCellValidationError
+   *
+   * Checks all <multiplicities> that cannot be enforced while the graph is
+   * being modified, namely, all multiplicities that require a minimum of
+   * 1 edge.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the multiplicities should be checked.
+   */
   const getCellValidationError = (cell) => {
     const model = getModel();
     const outCount = model.getDirectedEdgeCount(cell, true);
@@ -4964,8 +8358,26 @@ const Graph = (container, model, _, stylesheet) => {
     return error.length > 0 ? error : null;
   };
 
+  /**
+   * Function: validateCell
+   *
+   * Hook method for subclassers to return an error message for the given
+   * cell and validation context. This implementation returns null. Any HTML
+   * breaks will be converted to linefeeds in the calling method.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the cell to validate.
+   * context - Object that represents the global validation state.
+   */
   const validateCell = (cell, context) => null;
 
+  /**
+   * Function: getFoldingImage
+   *
+   * Returns the <mxImage> used to display the collapsed state of
+   * the specified cell state. This returns null for all edges.
+   */
   const getFoldingImage = (state) => {
     if (
       isSet(state) &&
@@ -4982,6 +8394,31 @@ const Graph = (container, model, _, stylesheet) => {
     return null;
   };
 
+  /**
+   * Function: convertValueToString
+   *
+   * Returns the textual representation for the given cell. This
+   * implementation returns the nodename or string-representation of the user
+   * object.
+   *
+   * Example:
+   *
+   * The following returns the label attribute from the cells user
+   * object if it is an XML node.
+   *
+   * (code)
+   * graph.convertValueToString = function(cell)
+   * {
+   * 	return cell.getAttribute('label');
+   * }
+   * (end)
+   *
+   * See also: <cellLabelChanged>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose textual representation should be returned.
+   */
   const convertValueToString = (cell) => {
     const value = getModel().getValue(cell);
 
@@ -4996,6 +8433,58 @@ const Graph = (container, model, _, stylesheet) => {
     return '';
   };
 
+  /**
+   * Function: getLabel
+   *
+   * Returns a string or DOM node that represents the label for the given
+   * cell. This implementation uses <convertValueToString> if <labelsVisible>
+   * is true. Otherwise it returns an empty string.
+   *
+   * To truncate a label to match the size of the cell, the following code
+   * can be used.
+   *
+   * (code)
+   * graph.getLabel = function(cell)
+   * {
+   *   var label = mxGraph.prototype.getLabel.apply(this, arguments);
+   *
+   *   if (label != null && this.model.isVertex(cell))
+   *   {
+   *     var geo = this.getCellGeometry(cell);
+   *
+   *     if (geo != null)
+   *     {
+   *       var max = parseInt(geo.width / 8);
+   *
+   *       if (label.length > max)
+   *       {
+   *         label = label.substring(0, max)+'...';
+   *       }
+   *     }
+   *   }
+   *   return mxUtils.htmlEntities(label);
+   * }
+   * (end)
+   *
+   * A resize listener is needed in the graph to force a repaint of the label
+   * after a resize.
+   *
+   * (code)
+   * graph.addListener(mxEvent.RESIZE_CELLS, function(sender, evt)
+   * {
+   *   var cells = evt.getProperty('cells');
+   *
+   *   for (var i = 0; i < cells.length; i++)
+   *   {
+   *     this.view.removeState(cells[i]);
+   *   }
+   * });
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose label should be returned.
+   */
   const getLabel = (cell) => {
     let result = '';
 
@@ -5010,14 +8499,100 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: isHtmlLabel
+   *
+   * Returns true if the label must be rendered as HTML markup. The default
+   * implementation returns <htmlLabels>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose label should be displayed as HTML markup.
+   */
   const isHtmlLabel = (cell) => isHtmlLabels();
 
+  /**
+   * Function: isWrapping
+   *
+   * This enables wrapping for HTML labels.
+   *
+   * Returns true if no white-space CSS style directive should be used for
+   * displaying the given cells label. This implementation returns true if
+   * <mxConstants.STYLE_WHITE_SPACE> in the style of the given cell is 'wrap'.
+   *
+   * This is used as a workaround for IE ignoring the white-space directive
+   * of child elements if the directive appears in a parent element. It
+   * should be overridden to return true if a white-space directive is used
+   * in the HTML markup that represents the given cells label. In order for
+   * HTML markup to work in labels, <isHtmlLabel> must also return true
+   * for the given cell.
+   *
+   * Example:
+   *
+   * (code)
+   * graph.getLabel = function(cell)
+   * {
+   *   var tmp = mxGraph.prototype.getLabel.apply(this, arguments); // "supercall"
+   *
+   *   if (this.model.isEdge(cell))
+   *   {
+   *     tmp = '<div style="width: 150px; white-space:normal;">'+tmp+'</div>';
+   *   }
+   *
+   *   return tmp;
+   * }
+   *
+   * graph.isWrapping = function(state)
+   * {
+   * 	 return this.model.isEdge(state.cell);
+   * }
+   * (end)
+   *
+   * Makes sure no edge label is wider than 150 pixels, otherwise the content
+   * is wrapped. Note: No width must be specified for wrapped vertex labels as
+   * the vertex defines the width in its geometry.
+   *
+   * Parameters:
+   *
+   * state - <mxCell> whose label should be wrapped.
+   */
   const isWrapping = (cell) =>
     getCurrentCellStyle(cell)[STYLE_WHITE_SPACE] === 'wrap';
 
+  /**
+   * Function: isLabelClipped
+   *
+   * Returns true if the overflow portion of labels should be hidden. If this
+   * returns true then vertex labels will be clipped to the size of the vertices.
+   * This implementation returns true if <mxConstants.STYLE_OVERFLOW> in the
+   * style of the given cell is 'hidden'.
+   *
+   * Parameters:
+   *
+   * state - <mxCell> whose label should be clipped.
+   */
   const isLabelClipped = (cell) =>
     getCurrentCellStyle(cell)[STYLE_OVERFLOW] === 'hidden';
 
+  /**
+   * Function: getTooltip
+   *
+   * Returns the string or DOM node that represents the tooltip for the given
+   * state, node and coordinate pair. This implementation checks if the given
+   * node is a folding icon or overlay and returns the respective tooltip. If
+   * this does not result in a tooltip, the handler for the cell is retrieved
+   * from <selectionCellsHandler> and the optional getTooltipForNode method is
+   * called. If no special tooltip exists here then <getTooltipForCell> is used
+   * with the cell in the given state as the argument to return a tooltip for the
+   * given state.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose tooltip should be returned.
+   * node - DOM node that is currently under the mouse.
+   * x - X-coordinate of the mouse.
+   * y - Y-coordinate of the mouse.
+   */
   const getTooltip = (state, node, x, y) => {
     let tip = null;
 
@@ -5060,6 +8635,28 @@ const Graph = (container, model, _, stylesheet) => {
     return tip;
   };
 
+  /**
+   * Function: getTooltipForCell
+   *
+   * Returns the string or DOM node to be used as the tooltip for the given
+   * cell. This implementation uses the cells getTooltip function if it
+   * exists, or else it returns <convertValueToString> for the cell.
+   *
+   * Example:
+   *
+   * (code)
+   * graph.getTooltipForCell = function(cell)
+   * {
+   *   return 'Hello, World!';
+   * }
+   * (end)
+   *
+   * Replaces all tooltips with the string Hello, World!
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose tooltip should be returned.
+   */
   const getTooltipForCell = (cell) => {
     let tip = null;
 
@@ -5072,12 +8669,55 @@ const Graph = (container, model, _, stylesheet) => {
     return tip;
   };
 
+  /**
+   * Function: getLinkForCell
+   *
+   * Returns the string to be used as the link for the given cell. This
+   * implementation returns null.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose tooltip should be returned.
+   */
   const getLinkForCell = (cell) => null;
 
+  /**
+   * Function: getCursorForMouseEvent
+   *
+   * Returns the cursor value to be used for the CSS of the shape for the
+   * given event. This implementation calls <getCursorForCell>.
+   *
+   * Parameters:
+   *
+   * me - <mxMouseEvent> whose cursor should be returned.
+   */
   const getCursorForMouseEvent = (mE) => getCursorForCell(mE.getCell());
 
+  /**
+   * Function: getCursorForCell
+   *
+   * Returns the cursor value to be used for the CSS of the shape for the
+   * given cell. This implementation returns null.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose cursor should be returned.
+   */
   const getCursorForCell = (cell) => null;
 
+  /**
+   * Function: getStartSize
+   *
+   * Returns the start size of the given swimlane, that is, the width or
+   * height of the part that contains the title, depending on the
+   * horizontal style. The return value is an <mxRectangle> with either
+   * width or height set as appropriate.
+   *
+   * Parameters:
+   *
+   * swimlane - <mxCell> whose start size should be returned.
+   * ignoreState - Optional boolean that specifies if cell state should be ignored.
+   */
   const getStartSize = (swimlane, ignoreState) => {
     const result = Rectangle();
     const style = getCurrentCellStyle(swimlane, ignoreState);
@@ -5092,6 +8732,11 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: getSwimlaneDirection
+   *
+   * Returns the direction for the given swimlane style.
+   */
   const getSwimlaneDirection = (style) => {
     const dir = getValue(style, STYLE_DIRECTION, DIRECTION_EAST);
     const flipH = getValue(style, STYLE_FLIPH, 0) === 1;
@@ -5122,6 +8767,19 @@ const Graph = (container, model, _, stylesheet) => {
     ];
   };
 
+  /**
+   * Function: getActualStartSize
+   *
+   * Returns the actual start size of the given swimlane taking into account
+   * direction and horizontal and vertial flip styles. The start size is
+   * returned as an <mxRectangle> where top, left, bottom, right start sizes
+   * are returned as x, y, height and width, respectively.
+   *
+   * Parameters:
+   *
+   * swimlane - <mxCell> whose start size should be returned.
+   * ignoreState - Optional boolean that specifies if cell state should be ignored.
+   */
   const getActualStartSize = (swimlane, ignoreState) => {
     const result = Rectangle();
 
@@ -5146,8 +8804,28 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: getImage
+   *
+   * Returns the image URL for the given cell state. This implementation
+   * returns the value stored under <mxConstants.STYLE_IMAGE> in the cell
+   * style.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose image URL should be returned.
+   */
   const getImage = (state) => state?.style?.[STYLE_IMAGE];
 
+  /**
+   * Function: isTransparentState
+   *
+   * Returns true if the given state has no stroke- or fillcolor and no image.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> to check.
+   */
   const isTransparentState = (state) => {
     let result = false;
 
@@ -5161,18 +8839,88 @@ const Graph = (container, model, _, stylesheet) => {
     return result;
   };
 
+  /**
+   * Function: getVerticalAlign
+   *
+   * Returns the vertical alignment for the given cell state. This
+   * implementation returns the value stored under
+   * <mxConstants.STYLE_VERTICAL_ALIGN> in the cell style.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose vertical alignment should be
+   * returned.
+   */
   const getVerticalAlign = (state) =>
     state?.style?.[STYLE_VERTICAL_ALIGN] || ALIGN_MIDDLE;
 
+  /**
+   * Function: getIndicatorColor
+   *
+   * Returns the indicator color for the given cell state. This
+   * implementation returns the value stored under
+   * <mxConstants.STYLE_INDICATOR_COLOR> in the cell style.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose indicator color should be
+   * returned.
+   */
   const getIndicatorColor = (state) => state?.style?.[STYLE_INDICATOR_COLOR];
 
+  /**
+   * Function: getIndicatorGradientColor
+   *
+   * Returns the indicator gradient color for the given cell state. This
+   * implementation returns the value stored under
+   * <mxConstants.STYLE_INDICATOR_GRADIENTCOLOR> in the cell style.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose indicator gradient color should be
+   * returned.
+   */
   const getIndicatorGradientColor = (state) =>
     state?.style?.[STYLE_INDICATOR_GRADIENTCOLOR];
 
+  /**
+   * Function: getIndicatorShape
+   *
+   * Returns the indicator shape for the given cell state. This
+   * implementation returns the value stored under
+   * <mxConstants.STYLE_INDICATOR_SHAPE> in the cell style.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose indicator shape should be returned.
+   */
   const getIndicatorShape = (state) => state?.style?.[STYLE_INDICATOR_SHAPE];
 
+  /**
+   * Function: getIndicatorImage
+   *
+   * Returns the indicator image for the given cell state. This
+   * implementation returns the value stored under
+   * <mxConstants.STYLE_INDICATOR_IMAGE> in the cell style.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose indicator image should be returned.
+   */
   const getIndicatorImage = (state) => state?.style?.[STYLE_INDICATOR_IMAGE];
 
+  /**
+   * Function: isSwimlane
+   *
+   * Returns true if the given cell is a swimlane in the graph. A swimlane is
+   * a container cell with some specific behaviour. This implementation
+   * checks if the shape associated with the given cell is a <mxSwimlane>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be checked.
+   * ignoreState - Optional boolean that specifies if the cell state should be ignored.
+   */
   const isSwimlane = (cell, ignoreState) => {
     if (
       isSet(cell) &&
@@ -5191,6 +8939,17 @@ const Graph = (container, model, _, stylesheet) => {
    * Group: Graph behaviour
    */
 
+  /**
+   * Function: isCellLocked
+   *
+   * Returns true if the given cell may not be moved, sized, bended,
+   * disconnected, edited or selected. This implementation returns true for
+   * all vertices with a relative geometry if <locked> is false.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose locked state should be returned.
+   */
   const isCellLocked = (cell) => {
     const geometry = getModel().getGeometry(cell);
 
@@ -5200,50 +8959,176 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: getCloneableCells
+   *
+   * Returns the cells which may be exported in the given array of cells.
+   */
   const getCloneableCells = (cells) =>
     getModel().filterCells(cells, (cell) => isCellsCloneable(cell));
 
+  /**
+   * Function: isCellCloneable
+   *
+   * Returns true if the given cell is cloneable. This implementation returns
+   * <isCellsCloneable> for all cells unless a cell style specifies
+   * <mxConstants.STYLE_CLONEABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - Optional <mxCell> whose cloneable state should be returned.
+   */
   const isCellCloneable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
     return isCellsCloneable() && style[STYLE_CLONEABLE] !== 0;
   };
 
+  /**
+   * Function: getExportableCells
+   *
+   * Returns the cells which may be exported in the given array of cells.
+   */
   const getExportableCells = (cells) =>
     getModel().filterCells(cells, (cell) => canExportCell(cell));
 
+  /**
+   * Function: canExportCell
+   *
+   * Returns true if the given cell may be exported to the clipboard. This
+   * implementation returns <exportEnabled> for all cells.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the cell to be exported.
+   */
   const canExportCell = (cell) => isExportEnabled();
 
+  /**
+   * Function: getImportableCells
+   *
+   * Returns the cells which may be imported in the given array of cells.
+   */
   const getImportableCells = (cells) =>
     getModel().filterCells(cells, (cell) => canImportCell(cell));
 
+  /**
+   * Function: canImportCell
+   *
+   * Returns true if the given cell may be imported from the clipboard.
+   * This implementation returns <importEnabled> for all cells.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the cell to be imported.
+   */
   const canImportCell = (cell) => isImportEnabled();
 
+  /**
+   * Function: isCellSelectable
+   *
+   * Returns true if the given cell is selectable. This implementation
+   * returns <cellsSelectable>.
+   *
+   * To add a new style for making cells (un)selectable, use the following code.
+   *
+   * (code)
+   * mxGraph.prototype.isCellSelectable = function(cell)
+   * {
+   *   var style = this.getCurrentCellStyle(cell);
+   *
+   *   return this.isCellsSelectable() && !this.isCellLocked(cell) && style['selectable'] != 0;
+   * };
+   * (end)
+   *
+   * You can then use the new style as shown in this example.
+   *
+   * (code)
+   * graph.insertVertex(parent, null, 'Hello,', 20, 20, 80, 30, 'selectable=0');
+   * (end)
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose selectable state should be returned.
+   */
   const isCellSelectable = (cell) => isCellsSelectable();
 
+  /**
+   * Function: getDeletableCells
+   *
+   * Returns the cells which may be exported in the given array of cells.
+   */
   const getDeletableCells = (cells) =>
     getModel().filterCells(cells, (cell) => isCellDeletable(cell));
 
+  /**
+   * Function: isCellDeletable
+   *
+   * Returns true if the given cell is moveable. This returns
+   * <cellsDeletable> for all given cells if a cells style does not specify
+   * <mxConstants.STYLE_DELETABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose deletable state should be returned.
+   */
   const isCellDeletable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
     return isCellsDeletable() && style[STYLE_DELETABLE] !== 0;
   };
 
+  /**
+   * Function: isLabelMovable
+   *
+   * Returns true if the given edges's label is moveable. This returns
+   * <movable> for all given cells if <isLocked> does not return true
+   * for the given cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose label should be moved.
+   */
   const isLabelMovable = (cell) =>
     !isCellLocked(cell) &&
     ((getModel().isEdge(cell) && isEdgeLabelsMovable()) ||
       (getModel().isVertex(cell) && isVertexLabelsMovable()));
 
+  /**
+   * Function: isCellRotatable
+   *
+   * Returns true if the given cell is rotatable. This returns true for the given
+   * cell if its style does not specify <mxConstants.STYLE_ROTATABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose rotatable state should be returned.
+   */
   const isCellRotatable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
     return style[STYLE_ROTATABLE] !== 0;
   };
 
+  /**
+   * Function: getMovableCells
+   *
+   * Returns the cells which are movable in the given array of cells.
+   */
   const getMovableCells = (cells) =>
     getModel().filterCells(cells, (cell) => isCellMovable(cell));
 
+  /**
+   * Function: isCellMovable
+   *
+   * Returns true if the given cell is moveable. This returns <cellsMovable>
+   * for all given cells if <isCellLocked> does not return true for the given
+   * cell and its style does not specify <mxConstants.STYLE_MOVABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose movable state should be returned.
+   */
   const isCellMovable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
@@ -5252,6 +9137,18 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: isCellResizable
+   *
+   * Returns true if the given cell is resizable. This returns
+   * <cellsResizable> for all given cells if <isCellLocked> does not return
+   * true for the given cell and its style does not specify
+   * <mxConstants.STYLE_RESIZABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose resizable state should be returned.
+   */
   const isCellResizable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
@@ -5262,6 +9159,17 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: isCellBendable
+   *
+   * Returns true if the given cell is bendable. This returns <cellsBendable>
+   * for all given cells if <isLocked> does not return true for the given
+   * cell and its style does not specify <mxConstants.STYLE_BENDABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose bendable state should be returned.
+   */
   const isCellBendable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
@@ -5270,6 +9178,17 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: isCellEditable
+   *
+   * Returns true if the given cell is editable. This returns <cellsEditable> for
+   * all given cells if <isCellLocked> does not return true for the given cell
+   * and its style does not specify <mxConstants.STYLE_EDITABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose editable state should be returned.
+   */
   const isCellEditable = (cell) => {
     const style = getCurrentCellStyle(cell);
 
@@ -5278,30 +9197,125 @@ const Graph = (container, model, _, stylesheet) => {
     );
   };
 
+  /**
+   * Function: isCellDisconnectable
+   *
+   * Returns true if the given cell is disconnectable from the source or
+   * target terminal. This returns <isCellsDisconnectable> for all given
+   * cells if <isCellLocked> does not return true for the given cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose disconnectable state should be returned.
+   * terminal - <mxCell> that represents the source or target terminal.
+   * source - Boolean indicating if the source or target terminal is to be
+   * disconnected.
+   */
   const isCellDisconnectable = (cell, terminal, source) =>
     isCellsDisconnectable() && !isCellLocked(cell);
 
+  /**
+   * Function: isValidSource
+   *
+   * Returns true if the given cell is a valid source for new connections.
+   * This implementation returns true for all non-null values and is
+   * called by is called by <isValidConnection>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents a possible source or null.
+   */
   const isValidSource = (cell) =>
     (isUnset(cell) && isAllowDanglingEdges()) ||
     (isSet(cell) &&
       (!getModel().isEdge(cell) || isConnectableEdges()) &&
       isCellConnectable(cell));
 
+  /**
+   * Function: isValidTarget
+   *
+   * Returns <isValidSource> for the given cell. This is called by
+   * <isValidConnection>.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents a possible target or null.
+   */
   const isValidTarget = isValidSource(cell);
 
+  /**
+   * Function: isValidConnection
+   *
+   * Returns true if the given target cell is a valid target for source.
+   * This is a boolean implementation for not allowing connections between
+   * certain pairs of vertices and is called by <getEdgeValidationError>.
+   * This implementation returns true if <isValidSource> returns true for
+   * the source and <isValidTarget> returns true for the target.
+   *
+   * Parameters:
+   *
+   * source - <mxCell> that represents the source cell.
+   * target - <mxCell> that represents the target cell.
+   */
   const isValidConnection = (source, target) =>
     isValidSource(source) && isValidTarget(target);
 
+  /**
+   * Function: setConnectable
+   *
+   * Specifies if the graph should allow new connections. This implementation
+   * updates <mxConnectionHandler.enabled> in <connectionHandler>.
+   *
+   * Parameters:
+   *
+   * connectable - Boolean indicating if new connections should be allowed.
+   */
   const setConnectable = (connectable) =>
     getConnectionHandler().setEnabled(connectable);
 
+  /**
+   * Function: isConnectable
+   *
+   * Returns true if the <connectionHandler> is enabled.
+   */
   const isConnectable = () => getConnectionHandler().isEnabled();
 
+  /**
+   * Function: setTooltips
+   *
+   * Specifies if tooltips should be enabled. This implementation updates
+   * <mxTooltipHandler.enabled> in <tooltipHandler>.
+   *
+   * Parameters:
+   *
+   * enabled - Boolean indicating if tooltips should be enabled.
+   */
   const setTooltips = (enabled) => getTooltipHandler().setEnabled(enabled);
 
+  /**
+   * Function: setPanning
+   *
+   * Specifies if panning should be enabled. This implementation updates
+   * <mxPanningHandler.panningEnabled> in <panningHandler>.
+   *
+   * Parameters:
+   *
+   * enabled - Boolean indicating if panning should be enabled.
+   */
   const setPanning = (enabled) =>
     getPanningHandler().setPanningEnabled(enabled);
 
+  /**
+   * Function: isEditing
+   *
+   * Returns true if the given cell is currently being edited.
+   * If no cell is specified then this returns true if any
+   * cell is currently being edited.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that should be checked.
+   */
   const isEditing = (cell) => {
     if (isSet(getCellEditor())) {
       const editingCell = getCellEditor().getEditingCell();
@@ -5312,32 +9326,121 @@ const Graph = (container, model, _, stylesheet) => {
     return false;
   };
 
+  /**
+   * Function: isAutoSizeCell
+   *
+   * Returns true if the size of the given cell should automatically be
+   * updated after a change of the label. This implementation returns
+   * <autoSizeCells> or checks if the cell style does specify
+   * <mxConstants.STYLE_AUTOSIZE> to be 1.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that should be resized.
+   */
   const isAutoSizeCell = (cell) => {
     const style = getCurrentCellStyle(cell);
 
     return isAutoSizeCells() || style[STYLE_AUTOSIZE] === 1;
   };
 
+  /**
+   * Function: isExtendParent
+   *
+   * Returns true if the parent of the given cell should be extended if the
+   * child has been resized so that it overlaps the parent. This
+   * implementation returns <isExtendParents> if the cell is not an edge.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that has been resized.
+   */
   const isExtendParent = (cell) =>
     !getModel().isEdge(cell) && isExtendParents();
 
+  /**
+   * Function: isConstrainChild
+   *
+   * Returns true if the given cell should be kept inside the bounds of its
+   * parent according to the rules defined by <getOverlap> and
+   * <isAllowOverlapParent>. This implementation returns false for all children
+   * of edges and <isConstrainChildren> otherwise.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that should be constrained.
+   */
   const isConstrainChild = (cell) =>
     isConstrainChildren() && !getModel().isEdge(getModel().getParent(cell));
 
+  /**
+   * Function: getOverlap
+   *
+   * Returns a decimal number representing the amount of the width and height
+   * of the given cell that is allowed to overlap its parent. A value of 0
+   * means all children must stay inside the parent, 1 means the child is
+   * allowed to be placed outside of the parent such that it touches one of
+   * the parents sides. If <isAllowOverlapParent> returns false for the given
+   * cell, then this method returns 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the overlap ratio should be returned.
+   */
   const getOverlap = (cell) =>
     isAllowOverlapParent(cell) ? getDefaultOverlap() : 0;
 
+  /**
+   * Function: isAllowOverlapParent
+   *
+   * Returns true if the given cell is allowed to be placed outside of the
+   * parents area.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the child to be checked.
+   */
   const isAllowOverlapParent = (cell) => false;
 
+  /**
+   * Function: getFoldableCells
+   *
+   * Returns the cells which are movable in the given array of cells.
+   */
   const getFoldableCells = (cells, collapse) =>
     getModel().filterCells(cells, (cell) => isCellFoldable(cell, collapse));
 
+  /**
+   * Function: isCellFoldable
+   *
+   * Returns true if the given cell is foldable. This implementation
+   * returns true if the cell has at least one child and its style
+   * does not specify <mxConstants.STYLE_FOLDABLE> to be 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose foldable state should be returned.
+   */
   const isCellFoldable = (cell, collapse) => {
     const style = getCurrentCellStyle(cell);
 
     return getModel().getChildCount(cell) > 0 && style[STYLE_FOLDABLE] !== 0;
   };
 
+  /**
+   * Function: isValidDropTarget
+   *
+   * Returns true if the given cell is a valid drop target for the specified
+   * cells. If <splitEnabled> is true then this returns <isSplitTarget> for
+   * the given arguments else it returns true if the cell is not collapsed
+   * and its child count is greater than 0.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> that represents the possible drop target.
+   * cells - <mxCells> that should be dropped into the target.
+   * evt - Mouseevent that triggered the invocation.
+   */
   const isValidDropTarget = (cell, cells, evt) =>
     isSet(cell) &&
     ((isSplitEnabled() && isSplitTarget(cell, cells, evt)) ||
@@ -5345,6 +9448,18 @@ const Graph = (container, model, _, stylesheet) => {
         (isSwimlane(cell) ||
           (getModel().getChildCount(cell) > 0 && !isCellCollapsed(cell)))));
 
+  /**
+   * Function: isSplitTarget
+   *
+   * Returns true if the given edge may be splitted into two edges with the
+   * given cell as a new terminal between the two.
+   *
+   * Parameters:
+   *
+   * target - <mxCell> that represents the edge to be splitted.
+   * cells - <mxCells> that should split the edge.
+   * evt - Mouseevent that triggered the invocation.
+   */
   const isSplitTarget = (target, cells, evt) => {
     const model = getModel();
 
@@ -5372,6 +9487,24 @@ const Graph = (container, model, _, stylesheet) => {
     return false;
   };
 
+  /**
+   * Function: getDropTarget
+   *
+   * Returns the given cell if it is a drop target for the given cells or the
+   * nearest ancestor that may be used as a drop target for the given cells.
+   * If the given array contains a swimlane and <swimlaneNesting> is false
+   * then this always returns null. If no cell is given, then the bottommost
+   * swimlane at the location of the given event is returned.
+   *
+   * This function should only be used if <isDropEnabled> returns true.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> which are to be dropped onto the target.
+   * evt - Mouseevent for the drag and drop.
+   * cell - <mxCell> that is under the mousepointer.
+   * clone - Optional boolean to indicate of cells will be cloned.
+   */
   const getDropTarget = (cells, evt, cell, clone) => {
     const model = getModel();
 
@@ -5427,4 +9560,3053 @@ const Graph = (container, model, _, stylesheet) => {
 
     return !model.isLayer(cell) && isUnset(parent) ? cell : null;
   };
+
+  /**
+   * Group: Cell retrieval
+   */
+
+  /**
+   * Function: getDefaultParent
+   *
+   * Returns <defaultParent> or <mxGraphView.currentRoot> or the first child
+   * child of <mxGraphModel.root> if both are null. The value returned by
+   * this function should be used as the parent for new cells (aka default
+   * layer).
+   */
+  const getDefaultParent = () => {
+    let parent = getCurrentRoot();
+
+    if (isUnset(parent)) {
+      parent = getDefaultParent();
+
+      if (isUnset(parent)) {
+        const root = getModel().getRoot();
+        parent = getModel().getChildAt(root, 0);
+      }
+    }
+
+    return parent;
+  };
+
+  /**
+   * Function: getSwimlane
+   *
+   * Returns the nearest ancestor of the given cell which is a swimlane, or
+   * the given cell, if it is itself a swimlane.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the ancestor swimlane should be returned.
+   */
+  const getSwimlane = (cell) => {
+    while (isSet(cell) && !isSwimlane(cell)) {
+      cell = getModel().getParent(cell);
+    }
+
+    return cell;
+  };
+
+  /**
+   * Function: getSwimlaneAt
+   *
+   * Returns the bottom-most swimlane that intersects the given point (x, y)
+   * in the cell hierarchy that starts at the given parent.
+   *
+   * Parameters:
+   *
+   * x - X-coordinate of the location to be checked.
+   * y - Y-coordinate of the location to be checked.
+   * parent - <mxCell> that should be used as the root of the recursion.
+   * Default is <defaultParent>.
+   */
+  const getSwimlaneAt = (x, y, parent) => {
+    if (isUnset(parent)) {
+      parent = getCurrentRoot();
+
+      if (isUnset(parent)) {
+        parent = getModel().getRoot();
+      }
+    }
+
+    if (isSet(parent)) {
+      const childCount = getModel().getChildCount(parent);
+
+      for (let i = 0; i < childCount; i++) {
+        const child = getModel().getChildAt(parent, i);
+
+        if (isSet(child)) {
+          const result = getSwimlaneAt(x, y, child);
+
+          if (isSet(result)) {
+            return result;
+          } else if (isCellVisible(child) && isSwimlane(child)) {
+            const state = getView().getState(child);
+
+            if (intersects(state, x, y)) {
+              return child;
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
+  /**
+   * Function: getCellAt
+   *
+   * Returns the bottom-most cell that intersects the given point (x, y) in
+   * the cell hierarchy starting at the given parent. This will also return
+   * swimlanes if the given location intersects the content area of the
+   * swimlane. If this is not desired, then the <hitsSwimlaneContent> may be
+   * used if the returned cell is a swimlane to determine if the location
+   * is inside the content area or on the actual title of the swimlane.
+   *
+   * Parameters:
+   *
+   * x - X-coordinate of the location to be checked.
+   * y - Y-coordinate of the location to be checked.
+   * parent - <mxCell> that should be used as the root of the recursion.
+   * Default is current root of the view or the root of the model.
+   * vertices - Optional boolean indicating if vertices should be returned.
+   * Default is true.
+   * edges - Optional boolean indicating if edges should be returned. Default
+   * is true.
+   * ignoreFn - Optional function that returns true if cell should be ignored.
+   * The function is passed the cell state and the x and y parameter.
+   */
+  const getCellAt = (x, y, parent, vertices = true, edges = true, ignoreFn) => {
+    if (isUnset(parent)) {
+      parent = getCurrentRoot();
+
+      if (isUnset(parent)) {
+        parent = getModel().getRoot();
+      }
+    }
+
+    if (isSet(parent)) {
+      const childCount = getModel().getChildCount(parent);
+
+      for (let i = childCount - 1; i >= 0; i--) {
+        const cell = getModel().getChildAt(parent, i);
+        const result = this.getCellAt(x, y, cell, vertices, edges, ignoreFn);
+
+        if (isSet(result)) {
+          return result;
+        } else if (
+          isCellVisible(cell) &&
+          ((edges && getModel().isEdge(cell)) ||
+            (vertices && getModel().isVertex(cell)))
+        ) {
+          const state = getView().getState(cell);
+
+          if (
+            isSet(state) &&
+            (isUnset(ignoreFn) || !ignoreFn(state, x, y)) &&
+            intersects(state, x, y)
+          ) {
+            return cell;
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
+  /**
+   * Function: intersects
+   *
+   * Returns the bottom-most cell that intersects the given point (x, y) in
+   * the cell hierarchy that starts at the given parent.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> that represents the cell state.
+   * x - X-coordinate of the location to be checked.
+   * y - Y-coordinate of the location to be checked.
+   */
+  const intersects = (state, x, y) => {
+    if (isSet(state)) {
+      const pts = state.getAbsolutePoints();
+
+      if (isSet(pts)) {
+        const t2 = getTolerance() * getTolerance();
+        let pt = pts[0];
+
+        for (let i = 1; i < pts.length; i++) {
+          const next = pts[i];
+          const dist = ptSegDistSq(
+            pt.getX(),
+            pt.getY(),
+            next.getX(),
+            next.getY(),
+            x,
+            y
+          );
+
+          if (dist <= t2) {
+            return true;
+          }
+
+          pt = next;
+        }
+      } else {
+        const alpha = toRadians(
+          getValue(state.getStyle(), STYLE_ROTATION) || 0
+        );
+
+        if (alpha !== 0) {
+          const cos = Math.cos(-alpha);
+          const sin = Math.sin(-alpha);
+          const cx = Point(state.getCenterX(), state.getCenterY());
+          const pt = getRotatedPoint(Point(x, y), cos, sin, cx);
+          x = pt.x;
+          y = pt.y;
+        }
+
+        if (contains(state, x, y)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  };
+
+  /**
+   * Function: hitsSwimlaneContent
+   *
+   * Returns true if the given coordinate pair is inside the content
+   * are of the given swimlane.
+   *
+   * Parameters:
+   *
+   * swimlane - <mxCell> that specifies the swimlane.
+   * x - X-coordinate of the mouse event.
+   * y - Y-coordinate of the mouse event.
+   */
+  const hitsSwimlaneContent = (swimlane, x, y) => {
+    const state = getView().getState(swimlane);
+    const size = getStartSize(swimlane);
+
+    if (isSet(state)) {
+      const scale = getView().getScale();
+      x -= state.getX();
+      y -= state.getY();
+
+      if (size.getWidth() > 0 && x > 0 && x > size.getWidth() * scale) {
+        return true;
+      } else if (
+        size.getHeight() > 0 &&
+        y > 0 &&
+        y > size.getHeight() * scale
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  /**
+   * Function: getChildVertices
+   *
+   * Returns the visible child vertices of the given parent.
+   *
+   * Parameters:
+   *
+   * parent - <mxCell> whose children should be returned.
+   */
+  const getChildVertices = (parent) => getChildCells(parent, true, false);
+
+  /**
+   * Function: getChildEdges
+   *
+   * Returns the visible child edges of the given parent.
+   *
+   * Parameters:
+   *
+   * parent - <mxCell> whose child vertices should be returned.
+   */
+  const getChildEdges = (parent) => getChildCells(parent, false, true);
+
+  /**
+   * Function: getChildCells
+   *
+   * Returns the visible child vertices or edges in the given parent. If
+   * vertices and edges is false, then all children are returned.
+   *
+   * Parameters:
+   *
+   * parent - <mxCell> whose children should be returned.
+   * vertices - Optional boolean that specifies if child vertices should
+   * be returned. Default is false.
+   * edges - Optional boolean that specifies if child edges should
+   * be returned. Default is false.
+   */
+  const getChildCells = (
+    parent = getDefaultParent(),
+    vertices = false,
+    edges = false
+  ) => {
+    const cells = getModel().getChildCells(parent, vertices, edges);
+    const result = [];
+
+    // Filters out the non-visible child cells
+    for (let i = 0; i < cells.length; i++) {
+      if (isCellVisible(cells[i])) {
+        result.push(cells[i]);
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: getConnections
+   *
+   * Returns all visible edges connected to the given cell without loops.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose connections should be returned.
+   * parent - Optional parent of the opposite end for a connection to be
+   * returned.
+   */
+  const getConnections = (cell, parent) =>
+    getEdges(cell, parent, true, true, false);
+
+  /**
+   * Function: getIncomingEdges
+   *
+   * Returns the visible incoming edges for the given cell. If the optional
+   * parent argument is specified, then only child edges of the given parent
+   * are returned.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose incoming edges should be returned.
+   * parent - Optional parent of the opposite end for an edge to be
+   * returned.
+   */
+  const getIncomingEdges = (cell, parent) =>
+    getEdges(cell, parent, true, false, false);
+
+  /**
+   * Function: getOutgoingEdges
+   *
+   * Returns the visible outgoing edges for the given cell. If the optional
+   * parent argument is specified, then only child edges of the given parent
+   * are returned.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose outgoing edges should be returned.
+   * parent - Optional parent of the opposite end for an edge to be
+   * returned.
+   */
+  const getOutgoingEdges = (cell, parent) =>
+    getEdges(cell, parent, false, true, false);
+
+  /**
+   * Function: getEdges
+   *
+   * Returns the incoming and/or outgoing edges for the given cell.
+   * If the optional parent argument is specified, then only edges are returned
+   * where the opposite is in the given parent cell. If at least one of incoming
+   * or outgoing is true, then loops are ignored, if both are false, then all
+   * edges connected to the given cell are returned including loops.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose edges should be returned.
+   * parent - Optional parent of the opposite end for an edge to be
+   * returned.
+   * incoming - Optional boolean that specifies if incoming edges should
+   * be included in the result. Default is true.
+   * outgoing - Optional boolean that specifies if outgoing edges should
+   * be included in the result. Default is true.
+   * includeLoops - Optional boolean that specifies if loops should be
+   * included in the result. Default is true.
+   * recurse - Optional boolean the specifies if the parent specified only
+   * need be an ancestral parent, true, or the direct parent, false.
+   * Default is false
+   */
+  const getEdges = (
+    cell,
+    parent,
+    incoming = true,
+    outgoing = true,
+    includeLoops = true,
+    recurse = false
+  ) => {
+    const view = getView();
+    const model = getModel();
+    let edges = [];
+    const isCollapsed = isCellCollapsed(cell);
+    const childCount = model.getChildCount(cell);
+
+    for (let i = 0; i < childCount; i++) {
+      const child = model.getChildAt(cell, i);
+
+      if (isCollapsed || !isCellVisible(child)) {
+        edges = edges.concat(model.getEdges(child, incoming, outgoing));
+      }
+    }
+
+    edges = edges.concat(model.getEdges(cell, incoming, outgoing));
+    const result = [];
+
+    for (let i = 0; i < edges.length; i++) {
+      const state = view.getState(edges[i]);
+
+      const source = isSet(state)
+        ? state.getVisibleTerminal(true)
+        : view.getVisibleTerminal(edges[i], true);
+      const target = isSet(state)
+        ? state.getVisibleTerminal(false)
+        : view.getVisibleTerminal(edges[i], false);
+
+      if (
+        (includeLoops && source === target) ||
+        (source !== target &&
+          ((incoming &&
+            target === cell &&
+            (isUnset(parent) || isValidAncestor(source, parent, recurse))) ||
+            (outgoing &&
+              source === cell &&
+              (isUnset(parent) || isValidAncestor(target, parent, recurse)))))
+      ) {
+        result.push(edges[i]);
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: isValidAncestor
+   *
+   * Returns whether or not the specified parent is a valid
+   * ancestor of the specified cell, either direct or indirectly
+   * based on whether ancestor recursion is enabled.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> the possible child cell
+   * parent - <mxCell> the possible parent cell
+   * recurse - boolean whether or not to recurse the child ancestors
+   */
+  const isValidAncestor = (cell, parent, recurse) =>
+    recurse
+      ? getModel().isAncestor(parent, cell)
+      : getModel().getParent(cell) === parent;
+
+  /**
+   * Function: getOpposites
+   *
+   * Returns all distinct visible opposite cells for the specified terminal
+   * on the given edges.
+   *
+   * Parameters:
+   *
+   * edges - Array of <mxCells> that contains the edges whose opposite
+   * terminals should be returned.
+   * terminal - Terminal that specifies the end whose opposite should be
+   * returned.
+   * sources - Optional boolean that specifies if source terminals should be
+   * included in the result. Default is true.
+   * targets - Optional boolean that specifies if targer terminals should be
+   * included in the result. Default is true.
+   */
+  const getOpposites = (edges, terminal, sources = true, targets = true) => {
+    const view = getView();
+    const terminals = [];
+
+    // Fast lookup to avoid duplicates in terminals array
+    const dict = Dictionary();
+
+    if (isSet(edges)) {
+      for (let i = 0; i < edges.length; i++) {
+        const state = this.view.getState(edges[i]);
+
+        const source = isSet(state)
+          ? state.getVisibleTerminal(true)
+          : view.getVisibleTerminal(edges[i], true);
+        const target = isSet(state)
+          ? state.getVisibleTerminal(false)
+          : view.getVisibleTerminal(edges[i], false);
+
+        // Checks if the terminal is the source of the edge and if the
+        // target should be stored in the result
+        if (
+          source === terminal &&
+          isSet(target) &&
+          target !== terminal &&
+          targets
+        ) {
+          if (!dict.get(target)) {
+            dict.put(target, true);
+            terminals.push(target);
+          }
+        }
+
+        // Checks if the terminal is the taget of the edge and if the
+        // source should be stored in the result
+        else if (
+          target === terminal &&
+          isSet(source) &&
+          source !== terminal &&
+          sources
+        ) {
+          if (!dict.get(source)) {
+            dict.put(source, true);
+            terminals.push(source);
+          }
+        }
+      }
+    }
+
+    return terminals;
+  };
+
+  /**
+   * Function: getEdgesBetween
+   *
+   * Returns the edges between the given source and target. This takes into
+   * account collapsed and invisible cells and returns the connected edges
+   * as displayed on the screen.
+   *
+   * Parameters:
+   *
+   * source -
+   * target -
+   * directed -
+   */
+  const getEdgesBetween = (source, target, directed = false) => {
+    const view = getView();
+    const edges = getEdges(source);
+    const result = [];
+
+    // Checks if the edge is connected to the correct
+    // cell and returns the first match
+    for (let i = 0; i < edges.length; i++) {
+      const state = view.getState(edges[i]);
+
+      const src = isSet(state)
+        ? state.getVisibleTerminal(true)
+        : view.getVisibleTerminal(edges[i], true);
+      const trg = isSet(state)
+        ? state.getVisibleTerminal(false)
+        : view.getVisibleTerminal(edges[i], false);
+
+      if (
+        (src == source && trg == target) ||
+        (!directed && src == target && trg == source)
+      ) {
+        result.push(edges[i]);
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: getPointForEvent
+   *
+   * Returns an <mxPoint> representing the given event in the unscaled,
+   * non-translated coordinate space of <container> and applies the grid.
+   *
+   * Parameters:
+   *
+   * evt - Mousevent that contains the mouse pointer location.
+   * addOffset - Optional boolean that specifies if the position should be
+   * offset by half of the <gridSize>. Default is true.
+   */
+  const getPointForEvent = (evt, addOffset) => {
+    const p = convertPoint(
+      getContainer(),
+      Event.getClientX(evt),
+      Event.getClientY(evt)
+    );
+
+    const s = getView().getScale();
+    const tr = getView().getTranslate();
+    const off = addOffset !== false ? getGridSize() / 2 : 0;
+
+    p.setX(snap(p.getX() / s - tr.getX() - off));
+    p.setY(snap(p.getY() / s - tr.getY() - off));
+
+    return p;
+  };
+
+  /**
+   * Function: getCells
+   *
+   * Returns the child vertices and edges of the given parent that are contained
+   * in the given rectangle. The result is added to the optional result array,
+   * which is returned. If no result array is specified then a new array is
+   * created and returned.
+   *
+   * Parameters:
+   *
+   * x - X-coordinate of the rectangle.
+   * y - Y-coordinate of the rectangle.
+   * width - Width of the rectangle.
+   * height - Height of the rectangle.
+   * parent - <mxCell> that should be used as the root of the recursion.
+   * Default is current root of the view or the root of the model.
+   * result - Optional array to store the result in.
+   * intersection - Optional <mxRectangle> to check vertices for intersection.
+   * ignoreFn - Optional function to check if a cell state is ignored.
+   * includeDescendants - Optional boolean flag to add descendants to the result.
+   * Default is false.
+   */
+  const getCells = (
+    x,
+    y,
+    width,
+    height,
+    parent,
+    result = [],
+    intersection,
+    ignoreFn,
+    includeDescendants
+  ) => {
+    if (width > 0 || height > 0 || isSet(intersection)) {
+      const model = getModel();
+      const right = x + width;
+      const bottom = y + height;
+
+      if (isUnset(parent)) {
+        parent = getCurrentRoot();
+
+        if (isUnset(parent)) {
+          parent = model.getRoot();
+        }
+      }
+
+      if (isSet(parent)) {
+        const childCount = model.getChildCount(parent);
+
+        for (let i = 0; i < childCount; i++) {
+          const cell = model.getChildAt(parent, i);
+          const state = getView().getState(cell);
+
+          if (
+            isSet(state) &&
+            isCellVisible(cell) &&
+            (isUnset(ignoreFn) || !ignoreFn(state))
+          ) {
+            const deg = getValue(state.getStyle(), STYLE_ROTATION) || 0;
+            let box = state;
+
+            if (deg !== 0) {
+              box = getBoundingBox(box, deg);
+            }
+
+            const hit =
+              (isSet(intersection) &&
+                model.isVertex(cell) &&
+                intersects(intersection, box)) ||
+              (isUnset(intersection) &&
+                (model.isEdge(cell) || model.isVertex(cell)) &&
+                box.getX() >= x &&
+                box.getY() + box.getHeight() <= bottom &&
+                box.getY() >= y &&
+                box.getX() + box.getWidth() <= right);
+
+            if (hit) {
+              result.push(cell);
+            }
+
+            if (!hit || includeDescendants) {
+              getCells(
+                x,
+                y,
+                width,
+                height,
+                cell,
+                result,
+                intersection,
+                ignoreFn,
+                includeDescendants
+              );
+            }
+          }
+        }
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: getCellsBeyond
+   *
+   * Returns the children of the given parent that are contained in the
+   * halfpane from the given point (x0, y0) rightwards or downwards
+   * depending on rightHalfpane and bottomHalfpane.
+   *
+   * Parameters:
+   *
+   * x0 - X-coordinate of the origin.
+   * y0 - Y-coordinate of the origin.
+   * parent - Optional <mxCell> whose children should be checked. Default is
+   * <defaultParent>.
+   * rightHalfpane - Boolean indicating if the cells in the right halfpane
+   * from the origin should be returned.
+   * bottomHalfpane - Boolean indicating if the cells in the bottom halfpane
+   * from the origin should be returned.
+   */
+  const getCellsBeyond = (x0, y0, parent, rightHalfpane, bottomHalfpane) => {
+    const result = [];
+
+    if (rightHalfpane || bottomHalfpane) {
+      if (isUnset(parent)) {
+        parent = getDefaultParent();
+      }
+
+      if (isSet(parent)) {
+        const childCount = getModel().getChildCount(parent);
+
+        for (let i = 0; i < childCount; i++) {
+          const child = getModel().getChildAt(parent, i);
+          const state = getView().getState(child);
+
+          if (isCellVisible(child) && isSet(state)) {
+            if (
+              (!rightHalfpane || state.getX() >= x0) &&
+              (!bottomHalfpane || state.getY() >= y0)
+            ) {
+              result.push(child);
+            }
+          }
+        }
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: findTreeRoots
+   *
+   * Returns all children in the given parent which do not have incoming
+   * edges. If the result is empty then the with the greatest difference
+   * between incoming and outgoing edges is returned.
+   *
+   * Parameters:
+   *
+   * parent - <mxCell> whose children should be checked.
+   * isolate - Optional boolean that specifies if edges should be ignored if
+   * the opposite end is not a child of the given parent cell. Default is
+   * false.
+   * invert - Optional boolean that specifies if outgoing or incoming edges
+   * should be counted for a tree root. If false then outgoing edges will be
+   * counted. Default is false.
+   */
+  const findTreeRoots = (parent, isolate = false, invert = false) => {
+    const roots = [];
+
+    if (isSet(parent)) {
+      const model = getModel();
+      const childCount = model.getChildCount(parent);
+      let best = null;
+      let maxDiff = 0;
+
+      for (let i = 0; i < childCount; i++) {
+        const cell = model.getChildAt(parent, i);
+
+        if (model.isVertex(cell) && isCellVisible(cell)) {
+          const conns = getConnections(cell, isolate ? parent : null);
+          let fanOut = 0;
+          let fanIn = 0;
+
+          for (let j = 0; j < conns.length; j++) {
+            const src = getView().getVisibleTerminal(conns[j], true);
+
+            if (src === cell) {
+              fanOut++;
+            } else {
+              fanIn++;
+            }
+          }
+
+          if (
+            (invert && fanOut === 0 && fanIn > 0) ||
+            (!invert && fanIn === 0 && fanOut > 0)
+          ) {
+            roots.push(cell);
+          }
+
+          const diff = invert ? fanIn - fanOut : fanOut - fanIn;
+
+          if (diff > maxDiff) {
+            maxDiff = diff;
+            best = cell;
+          }
+        }
+      }
+
+      if (roots.length == 0 && isSet(best)) {
+        roots.push(best);
+      }
+    }
+
+    return roots;
+  };
+
+  /**
+   * Function: traverse
+   *
+   * Traverses the (directed) graph invoking the given function for each
+   * visited vertex and edge. The function is invoked with the current vertex
+   * and the incoming edge as a parameter. This implementation makes sure
+   * each vertex is only visited once. The function may return false if the
+   * traversal should stop at the given vertex.
+   *
+   * Example:
+   *
+   * (code)
+   * mxLog.show();
+   * var cell = graph.getSelectionCell();
+   * graph.traverse(cell, false, function(vertex, edge)
+   * {
+   *   mxLog.debug(graph.getLabel(vertex));
+   * });
+   * (end)
+   *
+   * Parameters:
+   *
+   * vertex - <mxCell> that represents the vertex where the traversal starts.
+   * directed - Optional boolean indicating if edges should only be traversed
+   * from source to target. Default is true.
+   * func - Visitor function that takes the current vertex and the incoming
+   * edge as arguments. The traversal stops if the function returns false.
+   * edge - Optional <mxCell> that represents the incoming edge. This is
+   * null for the first step of the traversal.
+   * visited - Optional <mxDictionary> from cells to true for the visited cells.
+   * inverse - Optional boolean to traverse in inverse direction. Default is false.
+   * This is ignored if directed is false.
+   */
+  const traverse = (
+    vertex,
+    directed = true,
+    func,
+    edge,
+    visited = Dictionary(),
+    inverse = false
+  ) => {
+    const model = getModel();
+
+    if (isSet(func) && isSet(vertex)) {
+      if (!visited.get(vertex)) {
+        visited.put(vertex, true);
+        const result = func(vertex, edge);
+
+        if (isUnset(result) || result) {
+          const edgeCount = model.getEdgeCount(vertex);
+
+          if (edgeCount > 0) {
+            for (let i = 0; i < edgeCount; i++) {
+              const e = model.getEdgeAt(vertex, i);
+              const isSource = model.getTerminal(e, true) === vertex;
+
+              if (!directed || !inverse === isSource) {
+                const next = model.getTerminal(e, !isSource);
+                traverse(next, directed, func, e, visited, inverse);
+              }
+            }
+          }
+        }
+      }
+    }
+  };
+
+  /**
+   * Group: Selection
+   */
+
+  /**
+   * Function: isCellSelected
+   *
+   * Returns true if the given cell is selected.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> for which the selection state should be returned.
+   */
+  const isCellSelected = (cell) => getSelectionModel().isSelected(cell);
+
+  /**
+   * Function: isSelectionEmpty
+   *
+   * Returns true if the selection is empty.
+   */
+  const isSelectionEmpty = () => getSelectionModel().isEmpty();
+
+  /**
+   * Function: clearSelection
+   *
+   * Clears the selection using <mxGraphSelectionModel.clear>.
+   */
+  const clearSelection = () => getSelectionModel().clear();
+
+  /**
+   * Function: getSelectionCount
+   *
+   * Returns the number of selected cells.
+   */
+  const getSelectionCount = () => getSelectionModel().getCells().length;
+
+  /**
+   * Function: getSelectionCell
+   *
+   * Returns the first cell from the array of selected <mxCells>.
+   */
+  const getSelectionCell = () => getSelectionModel().getCells()[0];
+
+  /**
+   * Function: getSelectionCells
+   *
+   * Returns the array of selected <mxCells>.
+   */
+  const getSelectionCells = () => getSelectionModel().getCells().slice();
+
+  /**
+   * Function: setSelectionCell
+   *
+   * Sets the selection cell.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be selected.
+   */
+  const setSelectionCell = (cell) => getSelectionModel().setCell(cell);
+
+  /**
+   * Function: setSelectionCells
+   *
+   * Sets the selection cell.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be selected.
+   */
+  const setSelectionCells = (cells) => getSelectionModel().setCells(cells);
+
+  /**
+   * Function: addSelectionCell
+   *
+   * Adds the given cell to the selection.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be add to the selection.
+   */
+  const addSelectionCell = (cell) => getSelectionModel().addCell(cell);
+
+  /**
+   * Function: addSelectionCells
+   *
+   * Adds the given cells to the selection.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be added to the selection.
+   */
+  const addSelectionCells = (cells) => getSelectionModel().addCells(cells);
+
+  /**
+   * Function: removeSelectionCell
+   *
+   * Removes the given cell from the selection.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be removed from the selection.
+   */
+  const removeSelectionCell = (cells) => (cell) =>
+    getSelectionModel().removeCell(cell);
+
+  /**
+   * Function: removeSelectionCells
+   *
+   * Removes the given cells from the selection.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be removed from the selection.
+   */
+  const removeSelectionCells = (cells) =>
+    getSelectionModel().removeCells(cells);
+
+  /**
+   * Function: selectRegion
+   *
+   * Selects and returns the cells inside the given rectangle for the
+   * specified event.
+   *
+   * Parameters:
+   *
+   * rect - <mxRectangle> that represents the region to be selected.
+   * evt - Mouseevent that triggered the selection.
+   */
+  const selectRegion = (rect, evt) => {
+    const cells = getCells(
+      rect.getX(),
+      rect.getY(),
+      rect.getWidth(),
+      rect.getHeight()
+    );
+    selectCellsForEvent(cells, evt);
+
+    return cells;
+  };
+
+  /**
+   * Function: selectNextCell
+   *
+   * Selects the next cell.
+   */
+  const selectNextCell = () => selectCell(true);
+
+  /**
+   * Function: selectPreviousCell
+   *
+   * Selects the previous cell.
+   */
+  const selectPreviousCell = () => selectCell();
+
+  /**
+   * Function: selectParentCell
+   *
+   * Selects the parent cell.
+   */
+  const selectParentCell = () => selectCell(false, true);
+
+  /**
+   * Function: selectChildCell
+   *
+   * Selects the first child cell.
+   */
+  const selectChildCell = () => selectCell(false, false, true);
+
+  /**
+   * Function: selectCell
+   *
+   * Selects the next, parent, first child or previous cell, if all arguments
+   * are false.
+   *
+   * Parameters:
+   *
+   * isNext - Boolean indicating if the next cell should be selected.
+   * isParent - Boolean indicating if the parent cell should be selected.
+   * isChild - Boolean indicating if the first child cell should be selected.
+   */
+  const selectCell = (isNext, isParent, isChild) => {
+    const model = getModel();
+    const sel = getSelectionModel();
+    const cell = sel.getCells().length > 0 ? sel.getCells()[0] : null;
+
+    if (sel.getCells().length > 1) {
+      sel.clear();
+    }
+
+    const parent = isSet(cell) ? model.getParent(cell) : getDefaultParent();
+
+    const childCount = model.getChildCount(parent);
+
+    if (isUnset(cell) && childCount > 0) {
+      const child = model.getChildAt(parent, 0);
+      setSelectionCell(child);
+    } else if (
+      (isUnset(cell) || isParent) &&
+      isSet(getView().getState(parent)) &&
+      isSet(model.getGeometry(parent))
+    ) {
+      if (getCurrentRoot() != parent) {
+        setSelectionCell(parent);
+      }
+    } else if (isSet(cell) && isChild) {
+      const tmp = model.getChildCount(cell);
+
+      if (tmp > 0) {
+        const child = model.getChildAt(cell, 0);
+        setSelectionCell(child);
+      }
+    } else if (childCount > 0) {
+      let i = parent.getIndex(cell);
+
+      if (isNext) {
+        i++;
+        const child = model.getChildAt(parent, i % childCount);
+        setSelectionCell(child);
+      } else {
+        i--;
+        const index = i < 0 ? childCount - 1 : i;
+        const child = model.getChildAt(parent, index);
+        setSelectionCell(child);
+      }
+    }
+  };
+
+  /**
+   * Function: selectAll
+   *
+   * Selects all children of the given parent cell or the children of the
+   * default parent if no parent is specified. To select leaf vertices and/or
+   * edges use <selectCells>.
+   *
+   * Parameters:
+   *
+   * parent - Optional <mxCell> whose children should be selected.
+   * Default is <defaultParent>.
+   * descendants - Optional boolean specifying whether all descendants should be
+   * selected. Default is false.
+   */
+  const selectAll = (parent = getDefaultParent(), descendants) => {
+    const cells = descendants
+      ? getModel().filterDescendants(
+          (cell) => ell !== parent && isSet(getView().getState(cell)),
+          parent
+        )
+      : getModel().getChildren(parent);
+
+    if (isSet(cells)) {
+      setSelectionCells(cells);
+    }
+  };
+
+  /**
+   * Function: selectVertices
+   *
+   * Select all vertices inside the given parent or the default parent.
+   */
+  const selectVertices = (parent, selectGroups) =>
+    selectCells(true, false, parent, selectGroups);
+
+  /**
+   * Function: selectEdges
+   *
+   * Select all edges inside the given parent or the default parent.
+   */
+  const selectEdges = (parent) => selectCells(false, true, parent);
+
+  /**
+   * Function: selectCells
+   *
+   * Selects all vertices and/or edges depending on the given boolean
+   * arguments recursively, starting at the given parent or the default
+   * parent if no parent is specified. Use <selectAll> to select all cells.
+   * For vertices, only cells with no children are selected.
+   *
+   * Parameters:
+   *
+   * vertices - Boolean indicating if vertices should be selected.
+   * edges - Boolean indicating if edges should be selected.
+   * parent - Optional <mxCell> that acts as the root of the recursion.
+   * Default is <defaultParent>.
+   * selectGroups - Optional boolean that specifies if groups should be
+   * selected. Default is false.
+   */
+  const selectCells = (
+    vertices,
+    edges,
+    parent = getDefaultParent(),
+    selectGroups
+  ) => {
+    const model = getModel();
+    const filter = (cell) =>
+      isSet(getView().getState(cell)) &&
+      (((selectGroups || model.getChildCount(cell) === 0) &&
+        model.isVertex(cell) &&
+        vertices &&
+        !model.isEdge(model.getParent(cell))) ||
+        (model.isEdge(cell) && edges));
+
+    const cells = model.filterDescendants(filter, parent);
+
+    if (isSet(cells)) {
+      setSelectionCells(cells);
+    }
+  };
+
+  /**
+   * Function: selectCellForEvent
+   *
+   * Selects the given cell by either adding it to the selection or
+   * replacing the selection depending on whether the given mouse event is a
+   * toggle event.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> to be selected.
+   * evt - Optional mouseevent that triggered the selection.
+   */
+  const selectCellForEvent = (cell, evt) => {
+    const isSelected = isCellSelected(cell);
+
+    if (isToggleEvent(evt)) {
+      if (isSelected) {
+        removeSelectionCell(cell);
+      } else {
+        addSelectionCell(cell);
+      }
+    } else if (!isSelected || getSelectionCount() !== 1) {
+      setSelectionCell(cell);
+    }
+  };
+
+  /**
+   * Function: selectCellsForEvent
+   *
+   * Selects the given cells by either adding them to the selection or
+   * replacing the selection depending on whether the given mouse event is a
+   * toggle event.
+   *
+   * Parameters:
+   *
+   * cells - Array of <mxCells> to be selected.
+   * evt - Optional mouseevent that triggered the selection.
+   */
+  const selectCellsForEvent = (cells, evt) => {
+    if (isToggleEvent(evt)) {
+      addSelectionCells(cells);
+    } else {
+      setSelectionCells(cells);
+    }
+  };
+
+  /**
+   * Group: Selection state
+   */
+
+  /**
+   * Function: createHandler
+   *
+   * Creates a new handler for the given cell state. This implementation
+   * returns a new <mxEdgeHandler> of the corresponding cell is an edge,
+   * otherwise it returns an <mxVertexHandler>.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> whose handler should be created.
+   */
+  const createHandler = (state) => {
+    let result = null;
+
+    if (isSet(state)) {
+      if (getModel().isEdge(state.getCell())) {
+        const source = state.getVisibleTerminalState(true);
+        const target = state.getVisibleTerminalState(false);
+        const geo = getCellGeometry(state.cell);
+
+        const edgeStyle = getView().getEdgeStyle(
+          state,
+          isSet(geo) ? geo.getPoints() : null,
+          source,
+          target
+        );
+        result = createEdgeHandler(state, edgeStyle);
+      } else {
+        result = createVertexHandler(state);
+      }
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: createVertexHandler
+   *
+   * Hooks to create a new <mxVertexHandler> for the given <mxCellState>.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> to create the handler for.
+   */
+  const createVertexHandler = (state) => VertexHandler(state);
+
+  /**
+   * Function: createEdgeHandler
+   *
+   * Hooks to create a new <mxEdgeHandler> for the given <mxCellState>.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> to create the handler for.
+   */
+  const createEdgeHandler = (state, edgeStyle) => {
+    let result = null;
+
+    if (
+      edgeStyle === EdgeStyle.Loop ||
+      edgeStyle === EdgeStyle.ElbowConnector ||
+      edgeStyle === EdgeStyle.SideToSide ||
+      edgeStyle === EdgeStyle.TopToBottom
+    ) {
+      result = createElbowEdgeHandler(state);
+    } else if (
+      edgeStyle === EdgeStyle.SegmentConnector ||
+      edgeStyle === EdgeStyle.OrthConnector
+    ) {
+      result = createEdgeSegmentHandler(state);
+    } else {
+      result = EdgeHandler(state);
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: createEdgeSegmentHandler
+   *
+   * Hooks to create a new <mxEdgeSegmentHandler> for the given <mxCellState>.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> to create the handler for.
+   */
+  const createEdgeSegmentHandler = (state) => EdgeSegmentHandler(state);
+
+  /**
+   * Function: createElbowEdgeHandler
+   *
+   * Hooks to create a new <mxElbowEdgeHandler> for the given <mxCellState>.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> to create the handler for.
+   */
+  const createElbowEdgeHandler = (state) => ElbowEdgeHandler(state);
+
+  /**
+   * Group: Graph events
+   */
+
+  /**
+   * Function: addMouseListener
+   *
+   * Adds a listener to the graph event dispatch loop. The listener
+   * must implement the mouseDown, mouseMove and mouseUp methods
+   * as shown in the <mxMouseEvent> class.
+   *
+   * Parameters:
+   *
+   * listener - Listener to be added to the graph event listeners.
+   */
+  const addMouseListener = (listener) => {
+    if (isUnset(getMouseListeners())) {
+      setMouseListeners([]);
+    }
+
+    getMouseListeners().push(listener);
+  };
+
+  /**
+   * Function: removeMouseListener
+   *
+   * Removes the specified graph listener.
+   *
+   * Parameters:
+   *
+   * listener - Listener to be removed from the graph event listeners.
+   */
+  const removeMouseListener = (listener) => {
+    if (isSet(getMouseListeners())) {
+      for (let i = 0; i < getMouseListeners().length; i++) {
+        if (getMouseListeners()[i] === listener) {
+          getMouseListeners().splice(i, 1);
+          break;
+        }
+      }
+    }
+  };
+
+  /**
+   * Function: updateMouseEvent
+   *
+   * Sets the graphX and graphY properties if the given <mxMouseEvent> if
+   * required and returned the event.
+   *
+   * Parameters:
+   *
+   * me - <mxMouseEvent> to be updated.
+   * evtName - Name of the mouse event.
+   */
+  const updateMouseEvent = (mE, evtName) => {
+    if (isUnset(mE.getGraphX()) || isUnset(mE.getGraphY())) {
+      const pt = convertPoint(getContainer(), mE.getX(), mE.getY());
+
+      mE.setGraphX(pt.getX() - getPanDx());
+      mE.setGraphY(pt.getY() - getPanDy());
+
+      // Searches for rectangles using method if native hit detection is disabled on shape
+      if (
+        isUnset(mE.getCell()) &&
+        isMouseDown() &&
+        evtName === Event.MOUSE_MOVE
+      ) {
+        mE.setState(
+          getView().getState(
+            getCellAt(
+              pt.getX(),
+              pt.getY(),
+              null,
+              null,
+              null,
+              (state) =>
+                isUnset(state.getShape()) ||
+                state.getShape().getPaintBackground() !==
+                  RectangleShape.paintBackground ||
+                getValue(state.getStyle(), STYLE_POINTER_EVENTS, '1') === '1' ||
+                (isSet(state.getShape().getFill()) &&
+                  state.getShape().getFill() !== NONE)
+            )
+          )
+        );
+      }
+    }
+
+    return mE;
+  };
+
+  /**
+   * Function: getStateForTouchEvent
+   *
+   * Returns the state for the given touch event.
+   */
+  const getStateForTouchEvent = (evt) => {
+    const x = Event.getClientX(evt);
+    const y = Event.getClientY(evt);
+
+    // Dispatches the drop event to the graph which
+    // consumes and executes the source function
+    const pt = convertPoint(getContainer(), x, y);
+
+    return getView().getState(getCellAt(pt.getX(), pt.getY()));
+  };
+
+  /**
+   * Function: isEventIgnored
+   *
+   * Returns true if the event should be ignored in <fireMouseEvent>.
+   */
+  const isEventIgnored = (evtName, mE, sender) => {
+    const mouseEvent = Event.isMouseEvent(mE.getEvent());
+    let result = false;
+
+    // Drops events that are fired more than once
+    if (mE.getEvent() === getLastEvent()) {
+      result = true;
+    } else {
+      setLastEvent(mE.getEvent());
+    }
+
+    // Installs event listeners to capture the complete gesture from the event source
+    // for non-MS touch events as a workaround for all events for the same geture being
+    // fired from the event source even if that was removed from the DOM.
+    if (isSet(getEventSource()) && evtName !== Event.MOUSE_MOVE) {
+      Event.removeGestureListeners(
+        getEventSource(),
+        null,
+        getMouseMoveRedirect(),
+        getMouseUpRedirect()
+      );
+      setMouseMoveRedirect();
+      setMouseUpRedirect();
+      setEventSource();
+    } else if (
+      !IS_GC &&
+      isSet(getEventSource()) &&
+      mE.getSource() !== getEventSource()
+    ) {
+      result = true;
+    } else if (
+      IS_TOUCH &&
+      evtName === Event.MOUSE_DOWN &&
+      !mouseEvent &&
+      !Event.isPenEvent(mE.getEvent())
+    ) {
+      setEventSource(mE.getSource());
+
+      setMouseMoveRedirect((evt) =>
+        fireMouseEvent(
+          Event.MOUSE_MOVE,
+          MouseEvent(evt, getStateForTouchEvent(evt))
+        )
+      );
+
+      setMouseUpRedirect((evt) =>
+        fireMouseEvent(
+          Event.MOUSE_UP,
+          MouseEvent(evt, getStateForTouchEvent(evt))
+        )
+      );
+
+      Event.addGestureListeners(
+        getEventSource(),
+        null,
+        getMouseMoveRedirect(),
+        getMouseUpRedirect()
+      );
+    }
+
+    // Factored out the workarounds for FF to make it easier to override/remove
+    // Note this method has side-effects!
+    if (isSyntheticEventIgnored(evtName, mE, sender)) {
+      result = true;
+    }
+
+    // Never fires mouseUp/-Down for double clicks
+    if (
+      !Event.isPopupTrigger(getLastEvent()) &&
+      evtName !== Event.MOUSE_MOVE &&
+      getLastEvent().detail === 2
+    ) {
+      return true;
+    }
+
+    // Filters out of sequence events or mixed event types during a gesture
+    if (evtName === Event.MOUSE_UP && isMouseDown()) {
+      setMouseDown(false);
+    } else if (evtName === Event.MOUSE_DOWN && !isMouseDown()) {
+      setMouseDown(true);
+      setMouseTrigger(mouseEvent);
+    }
+    // Drops mouse events that are fired during touch gestures as a workaround for Webkit
+    // and mouse events that are not in sync with the current internal button state
+    else if (
+      !result &&
+      (((!IS_FF || evtName !== Event.MOUSE_MOVE) &&
+        isMouseDown() &&
+        isMouseTrigger() !== mouseEvent) ||
+        (evtName === Event.MOUSE_DOWN && isMouseDown()) ||
+        (evtName === Event.MOUSE_UP && !isMouseDown()))
+    ) {
+      result = true;
+    }
+
+    if (!result && evtName === Event.MOUSE_DOWN) {
+      setLastMouseX(mE.getX());
+      setLastMouseY(mE.getY());
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: isSyntheticEventIgnored
+   *
+   * Hook for ignoring synthetic mouse events after touchend in Firefox.
+   */
+  const isSyntheticEventIgnored = (evtName, mE, sender) => {
+    let result = false;
+    const mouseEvent = Event.isMouseEvent(mE.getEvent());
+
+    // LATER: This does not cover all possible cases that can go wrong in FF
+    if (isIgnoreMouseEvents() && mouseEvent && evtName !== Event.MOUSE_MOVE) {
+      setIgnoreMouseEvents(evtName !== Event.MOUSE_UP);
+      result = true;
+    } else if (IS_FF && !mouseEvent && evtName === Event.MOUSE_UP) {
+      setIgnoreMouseEvents(true);
+    }
+
+    return result;
+  };
+
+  /**
+   * Function: isEventSourceIgnored
+   *
+   * Returns true if the event should be ignored in <fireMouseEvent>. This
+   * implementation returns true for select, option and input (if not of type
+   * checkbox, radio, button, submit or file) event sources if the event is not
+   * a mouse event or a left mouse button press event.
+   *
+   * Parameters:
+   *
+   * evtName - The name of the event.
+   * me - <mxMouseEvent> that should be ignored.
+   */
+  const isEventSourceIgnored = (evtName, mE) => {
+    const source = mE.getSource();
+    const name = isSet(source.getNodeName())
+      ? source.getNodeName().toLowerCase()
+      : '';
+    const candidate =
+      !Event.isMouseEvent(mE.getEvent()) ||
+      Event.isLeftMouseButton(mE.getEvent());
+
+    return (
+      evtName === Event.MOUSE_DOWN &&
+      candidate &&
+      (name === 'select' ||
+        name === 'option' ||
+        (name === 'input' &&
+          source.getType() !== 'checkbox' &&
+          source.getType() !== 'radio' &&
+          source.getType() !== 'button' &&
+          source.getType() !== 'submit' &&
+          source.getType() !== 'file'))
+    );
+  };
+
+  /**
+   * Function: getEventState
+   *
+   * Returns the <mxCellState> to be used when firing the mouse event for the
+   * given state. This implementation returns the given state.
+   *
+   * Parameters:
+   *
+   * <mxCellState> - State whose event source should be returned.
+   */
+  const getEventState = (state) => state;
+
+  /**
+   * Function: fireMouseEvent
+   *
+   * Dispatches the given event in the graph event dispatch loop. Possible
+   * event names are <mxEvent.MOUSE_DOWN>, <mxEvent.MOUSE_MOVE> and
+   * <mxEvent.MOUSE_UP>. All listeners are invoked for all events regardless
+   * of the consumed state of the event.
+   *
+   * Parameters:
+   *
+   * evtName - String that specifies the type of event to be dispatched.
+   * me - <mxMouseEvent> to be fired.
+   * sender - Optional sender argument. Default is this.
+   */
+  const fireMouseEvent = (evtName, mE, sender) => {
+    if (isEventSourceIgnored(evtName, mE)) {
+      if (isSet(getTooltipHandler())) {
+        getTooltipHandler().hide();
+      }
+
+      return;
+    }
+
+    if (isUnset(sender)) {
+      sender = me;
+    }
+
+    // Updates the graph coordinates in the event
+    mE = updateMouseEvent(mE, evtName);
+
+    // Detects and processes double taps for touch-based devices which do not have native double click events
+    // or where detection of double click is not always possible (quirks, IE10+). Note that this can only handle
+    // double clicks on cells because the sequence of events in IE prevents detection on the background, it fires
+    // two mouse ups, one of which without a cell but no mousedown for the second click which means we cannot
+    // detect which mouseup(s) are part of the first click, ie we do not know when the first click ends.
+    if (
+      (!isNativeDblClickEnabled() && !Event.isPopupTrigger(mE.getEvent())) ||
+      (isDoubleTapEnabled() &&
+        IS_TOUCH &&
+        (Event.isTouchEvent(mE.getEvent()) || Event.isPenEvent(mE.getEvent())))
+    ) {
+      const currentTime = new Date().getTime();
+
+      // NOTE: Second mouseDown for double click missing in quirks mode
+      if (
+        (!IS_QUIRKS && evtName === Event.MOUSE_DOWN) ||
+        (IS_QUIRKS && evtName === Event.MOUSE_UP && !isFireDoubleClick())
+      ) {
+        if (
+          isSet(getLastTouchEvent()) &&
+          getLastTouchEvent() !== mE.getEvent() &&
+          currentTime - getLastTouchTime() < getDoubleTapTimeout() &&
+          Math.abs(getLastTouchX() - mE.getX()) < getDoubleTapTolerance() &&
+          Math.abs(getLastTouchY() - mE.getY()) < getDoubleTapTolerance() &&
+          getDoubleClickCounter() < 2
+        ) {
+          setDoubleClickCounter(getDoubleClickCounter() + 1);
+          let doubleClickFired = false;
+
+          if (evtName === Event.MOUSE_UP) {
+            if (
+              mE.getCell() === getLastTouchCell() &&
+              isSet(getLastTouchCell())
+            ) {
+              setLastTouchTime(0);
+              const cell = getLastTouchCell();
+              setLastTouchCell();
+
+              dblClick(mE.getEvent(), cell);
+              doubleClickFired = true;
+            }
+          } else {
+            setFireDoubleClick(true);
+            setLastTouchTime(0);
+          }
+
+          // Do not ignore mouse up in quirks in this case
+          if (!IS_QUIRKS || doubleClickFired) {
+            Event.consume(mE.getEvent());
+            return;
+          }
+        } else if (
+          isUnset(getLastTouchEvent()) ||
+          getLastTouchEvent() !== mE.getEvent()
+        ) {
+          setLastTouchCell(mE.getCell());
+          setLastTouchX(mE.getX());
+          setLastTouchY(mE.getY());
+          setLastTouchTime(currentTime);
+          setLastTouchEvent(mE.getEvent());
+          setDoubleClickCounter(0);
+        }
+      } else if (
+        (isMouseDown() || evtName === Event.MOUSE_UP) &&
+        isFireDoubleClick()
+      ) {
+        setFireDoubleClick(false);
+        const cell = getLastTouchCell();
+        setLastTouchCell();
+        setIsMouseDown(false);
+
+        // Workaround for Chrome/Safari not firing native double click events for double touch on background
+        const valid =
+          isSet(cell) ||
+          ((Event.isTouchEvent(mE.getEvent()) ||
+            Event.isPenEvent(mE.getEvent())) &&
+            (IS_GC || IS_SF));
+
+        if (
+          valid &&
+          Math.abs(getLastTouchX() - mE.getX()) < getDoubleTapTolerance() &&
+          Math.abs(getLastTouchY() - mE.getY()) < getDoubleTapTolerance()
+        ) {
+          dblClick(mE.getEvent(), cell);
+        } else {
+          Event.consume(mE.getEvent());
+        }
+
+        return;
+      }
+    }
+
+    if (!isEventIgnored(evtName, mE, sender)) {
+      // Updates the event state via getEventState
+      mE.setState(getEventState(mE.getState()));
+      fireEvent(
+        EventObject(Event.FIRE_MOUSE_EVENT, 'eventName', evtName, 'event', mE)
+      );
+
+      const container = getContainer();
+
+      if (
+        IS_OP ||
+        IS_SF ||
+        IS_GC ||
+        IS_IE11 ||
+        (IS_IE && IS_SVG) ||
+        mE.getEvent().target !== container
+      ) {
+        if (
+          evtName === Event.MOUSE_MOVE &&
+          isMouseDown() &&
+          isAautoScroll() &&
+          !Event.isMultiTouchEvent(mE.getEvent())
+        ) {
+          scrollPointToVisible(mE.getGraphX(), mE.getGraphY(), isAutoExtend());
+        } else if (
+          evtName === Event.MOUSE_UP &&
+          isIgnoreScrollbars() &&
+          isTranslateToScrollPosition() &&
+          (container.scrollLeft !== 0 || container.scrollTop !== 0)
+        ) {
+          const s = getView().getScale();
+          const tr = getView().getTranslate();
+          getView().setTranslate(
+            tr.getX() - container.scrollLeft / s,
+            tr.getY() - container.scrollTop / s
+          );
+          container.scrollLeft = 0;
+          container.scrollTop = 0;
+        }
+
+        if (isSet(getMouseListeners())) {
+          const args = [sender, mE];
+
+          // Does not change returnValue in Opera
+          if (!mE.getEvent().preventDefault) {
+            mE.getEvent().returnValue = true;
+          }
+
+          for (let i = 0; i < getMouseListeners().length; i++) {
+            const l = getMouseListeners()[i];
+
+            if (evtName === Event.MOUSE_DOWN) {
+              l.mouseDown.apply(l, args);
+            } else if (evtName === Event.MOUSE_MOVE) {
+              l.mouseMove.apply(l, args);
+            } else if (evtName === Event.MOUSE_UP) {
+              l.mouseUp.apply(l, args);
+            }
+          }
+        }
+
+        // Invokes the click handler
+        if (evtName === Event.MOUSE_UP) {
+          click(mE);
+        }
+      }
+
+      // Detects tapAndHold events using a timer
+      if (
+        (Event.isTouchEvent(mE.getEvent()) ||
+          Event.isPenEvent(mE.getEvent())) &&
+        evtName === Event.MOUSE_DOWN &&
+        isTapAndHoldEnabled() &&
+        !isTapAndHoldInProgress()
+      ) {
+        setTapAndHoldInProgress(true);
+        setInitialTouchX(mE.getGraphX());
+        setInitialTouchY(mE.getGraphY());
+
+        const handler = () => {
+          if (isTapAndHoldValid()) {
+            tapAndHold(mE);
+          }
+
+          setTapAndHoldInProgress(false);
+          setTapAndHoldValid(false);
+        };
+
+        if (isTapAndHoldThread()) {
+          window.clearTimeout(getTapAndHoldThread());
+        }
+
+        setTapAndHoldThread(window.setTimeout(handler, getTapAndHoldDelay()));
+
+        setTapAndHoldValid(true);
+      } else if (evtName === Event.MOUSE_UP) {
+        setTapAndHoldInProgress(false);
+        setTapAndHoldValid(false);
+      } else if (isTapAndHoldValid()) {
+        setTapAndHoldValid(
+          Math.abs(getInitialTouchX() - mE.getGraphX()) < getTolerance() &&
+            Math.abs(getInitialTouchY() - mE.getGraphY()) < getTolerance()
+        );
+      }
+
+      // Stops editing for all events other than from cellEditor
+      if (
+        evtName === Event.MOUSE_DOWN &&
+        isEditing() &&
+        !getCellEditor().isEventSource(mE.getEvent())
+      ) {
+        stopEditing(!isInvokesStopCellEditing());
+      }
+
+      consumeMouseEvent(evtName, mE, sender);
+    }
+  };
+
+  /**
+   * Function: consumeMouseEvent
+   *
+   * Consumes the given <mxMouseEvent> if it's a touchStart event.
+   */
+  const consumeMouseEvent = (evtName, me, sender) => {
+    // Workaround for duplicate click in Windows 8 with Chrome/FF/Opera with touch
+    if (evtName === Event.MOUSE_DOWN && Event.isTouchEvent(me.getEvent())) {
+      me.consume(false);
+    }
+  };
+
+  /**
+   * Function: fireGestureEvent
+   *
+   * Dispatches a <mxEvent.GESTURE> event. The following example will resize the
+   * cell under the mouse based on the scale property of the native touch event.
+   *
+   * (code)
+   * graph.addListener(mxEvent.GESTURE, function(sender, eo)
+   * {
+   *   var evt = eo.getProperty('event');
+   *   var state = graph.view.getState(eo.getProperty('cell'));
+   *
+   *   if (graph.isEnabled() && graph.isCellResizable(state.cell) && Math.abs(1 - evt.scale) > 0.2)
+   *   {
+   *     var scale = graph.view.scale;
+   *     var tr = graph.view.translate;
+   *
+   *     var w = state.width * evt.scale;
+   *     var h = state.height * evt.scale;
+   *     var x = state.x - (w - state.width) / 2;
+   *     var y = state.y - (h - state.height) / 2;
+   *
+   *     var bounds = new mxRectangle(graph.snap(x / scale) - tr.x,
+   *     		graph.snap(y / scale) - tr.y, graph.snap(w / scale), graph.snap(h / scale));
+   *     graph.resizeCell(state.cell, bounds);
+   *     eo.consume();
+   *   }
+   * });
+   * (end)
+   *
+   * Parameters:
+   *
+   * evt - Gestureend event that represents the gesture.
+   * cell - Optional <mxCell> associated with the gesture.
+   */
+  const fireGestureEvent = (evt, cell) => {
+    // Resets double tap event handling when gestures take place
+    setLastTouchTime(0);
+    fireEvent(EventObject(Event.GESTURE, 'event', evt, 'cell', cell));
+  };
+
+  /**
+   * Function: destroy
+   *
+   * Destroys the graph and all its resources.
+   */
+  const destroy = () => {
+    if (!isDestroyed()) {
+      setDestroyed(true);
+
+      if (isSet(getToltipHandler())) {
+        getToltipHandler().destroy();
+      }
+
+      if (isSet(getSelectionCellsHandler())) {
+        getSelectionCellsHandler().destroy();
+      }
+
+      if (isSet(getPanningHandler())) {
+        getPanningHandler().destroy();
+      }
+
+      if (isSet(getPopupMenuHandler())) {
+        getPopupMenuHandler().destroy();
+      }
+
+      if (isSet(getConnectionHandler())) {
+        getConnectionHandler().destroy();
+      }
+
+      if (isSet(getGraphHandler())) {
+        getGraphHandler().destroy();
+      }
+
+      if (isSet(getCellEditor())) {
+        getCellEditor().destroy();
+      }
+
+      if (isSet(getView())) {
+        getView().destroy();
+      }
+
+      if (isSet(getModel()) && isSet(getGraphModelChangeListener())) {
+        getModel().removeListener(getGraphModelChangeListener());
+        setGraphModelChangeListener();
+      }
+
+      setContainer();
+    }
+  };
+
+  const me = {
+    createTooltipHandler,
+    createSelectionCellsHandler,
+    createConnectionHandler,
+    createPanningHandler,
+    createPopupMenuHandler,
+    createSelectionModel,
+    createStylesheet,
+    createGraphView,
+    createCellRenderer,
+    createCellEditor,
+
+    /**
+     * Function: getModel
+     *
+     * Returns the <mxGraphModel> that contains the cells.
+     */
+    getModel,
+
+    /**
+     * Function: getView
+     *
+     * Returns the <mxGraphView> that contains the <mxCellStates>.
+     */
+    getView,
+
+    /**
+     * Function: getStylesheet
+     *
+     * Returns the <mxStylesheet> that defines the style.
+     */
+    getStylesheet,
+
+    /**
+     * Function: setStylesheet
+     *
+     * Sets the <mxStylesheet> that defines the style.
+     */
+    setStylesheet,
+
+    /**
+     * Function: getSelectionModel
+     *
+     * Returns the <mxGraphSelectionModel> that contains the selection.
+     */
+    getSelectionModel,
+
+    /**
+     * Function: setSelectionModel
+     *
+     * Sets the <mxSelectionModel> that contains the selection.
+     */
+    setSelectionModel,
+    getSelectionCellsForChanges,
+    graphModelChanged,
+    updateSelection,
+    processChange,
+    removeStateForCell,
+    addCellOverlay,
+    getCellOverlays,
+    removeCellOverlay,
+    removeCellOverlays,
+    clearCellOverlays,
+    setCellWarning,
+    startEditing,
+    startEditingAtCell,
+    getEditingValue,
+    stopEditing,
+    labelChanged,
+    cellLabelChanged,
+    escape,
+    click,
+    isSiblingSelected,
+    dblClick,
+    tapAndHold,
+    scrollPointToVisible,
+    createPanningManager,
+    getBorderSizes,
+    getPreferredPageSize,
+    fit,
+    sizeDidChange,
+    doResizeContainer,
+    updatePageBreaks,
+    getCurrentCellStyle,
+    getCellStyle,
+    postProcessCellStyle,
+    setCellStyle,
+    toggleCellStyle,
+    toggleCellStyles,
+    setCellStyles,
+    toggleCellStyleFlags,
+    setCellStyleFlags,
+    alignCells,
+    flipEdge,
+    addImageBundle,
+    removeImageBundle,
+    getImageFromBundles,
+    orderCells,
+    cellsOrdered,
+    groupCells,
+    getCellsForGroup,
+    getBoundsForGroup,
+    createGroupCell,
+    ungroupCells,
+    getCellsForUngroup,
+    removeCellsAfterUngroup,
+    removeCellsFromParent,
+    updateGroupBounds,
+    getBoundingBox,
+    cloneCell,
+    cloneCells,
+    insertVertex,
+    createVertex,
+    insertEdge,
+    createEdge,
+    addEdge,
+    addCell,
+    addCells,
+    cellsAdded,
+    autoSizeCell,
+    removeCells,
+    cellsRemoved,
+    splitEdge,
+    toggleCells,
+    cellsToggled,
+    foldCells,
+    cellsFolded,
+    swapBounds,
+    updateAlternateBounds,
+    addAllEdges,
+    getAllEdges,
+    updateCellSize,
+    cellSizeUpdated,
+    getPreferredSizeForCell,
+    resizeCell,
+    resizeCells,
+    cellsResized,
+    cellResized,
+    resizeChildCells,
+    constrainChildCells,
+    scaleCell,
+    extendParent,
+    importCells,
+    moveCells,
+    cellsMoved,
+    translateCell,
+    getCellContainmentArea,
+
+    /**
+     * Function: getMaximumGraphBounds
+     *
+     * Returns the bounds inside which the diagram should be kept as an
+     * <mxRectangle>.
+     */
+    getMaximumGraphBounds,
+    constrainChild,
+    resetEdges,
+    resetEdge,
+    getOutlineConstraint,
+    getAllConnectionConstraints,
+    getConnectionConstraint,
+    setConnectionConstraint,
+    getConnectionPoint,
+    connectCell,
+    cellConnected,
+    disconnectGraph,
+    getCurrentRoot,
+    getTranslateForRoot,
+    isPort,
+    getTerminalForPort,
+    getChildOffsetForCell,
+    enterGroup,
+    exitGroup,
+    home,
+    isValidRoot,
+    getGraphBounds,
+    getCellBounds,
+    getBoundingBoxFromGeometry,
+    refresh,
+    snap,
+    snapDelta,
+    panGraph,
+    zoomIn,
+    zoomOut,
+    zoomActual,
+    zoomTo,
+    center,
+    zoom,
+    zoomToRect,
+    scrollCellToVisible,
+    scrollRectToVisible,
+    getCellGeometry,
+    isCellVisible,
+    isCellCollapsed,
+    isCellConnectable,
+    isOrthogonal,
+    isLoop,
+    isCloneEvent,
+    isTransparentClickEvent,
+    isToggleEvent,
+    isGridEnabledEvent,
+    isConstrainedEvent,
+    isIgnoreTerminalEvent,
+    validationAlert,
+    isEdgeValid,
+    getEdgeValidationError,
+    validateEdge,
+    validateGraph,
+    getCellValidationError,
+    validateCell,
+
+    /**
+     * Function: getBackgroundImage
+     *
+     * Returns the <backgroundImage> as an <mxImage>.
+     */
+    getBackgroundImage,
+
+    /**
+     * Function: setBackgroundImage
+     *
+     * Sets the new <backgroundImage>.
+     *
+     * Parameters:
+     *
+     * image - New <mxImage> to be used for the background.
+     */
+    setBackgroundImage,
+    getFoldingImage,
+    convertValueToString,
+    getLabel,
+    isHtmlLabel,
+
+    /**
+     * Function: isHtmlLabels
+     *
+     * Returns <htmlLabels>.
+     */
+    isHtmlLabels,
+
+    /**
+     * Function: setHtmlLabels
+     *
+     * Sets <htmlLabels>.
+     */
+    setHtmlLabels,
+    isWrapping,
+    isLabelClipped,
+    getTooltip,
+    getTooltipForCell,
+    getLinkForCell,
+    getCursorForMouseEvent,
+    getCursorForCell,
+    getStartSize,
+    getSwimlaneDirection,
+    getActualStartSize,
+    getImage,
+    isTransparentState,
+    getVerticalAlign,
+    getIndicatorColor,
+    getIndicatorGradientColor,
+    getIndicatorShape,
+    getIndicatorImage,
+
+    /**
+     * Function: getBorder
+     *
+     * Returns the value of <border>.
+     */
+    getBorder,
+
+    /**
+     * Function: setBorder
+     *
+     * Sets the value of <border>.
+     *
+     * Parameters:
+     *
+     * value - Positive integer that represents the border to be used.
+     */
+    setBorder,
+    isSwimlane,
+
+    /**
+     * Function: isResizeContainer
+     *
+     * Returns <resizeContainer>.
+     */
+    isResizeContainer,
+
+    /**
+     * Function: setResizeContainer
+     *
+     * Sets <resizeContainer>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the container should be resized.
+     */
+    setResizeContainer,
+
+    /**
+     * Function: setEnabled
+     *
+     * Specifies if the graph should allow any interactions. This
+     * implementation updates <enabled>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should be enabled.
+     */
+    isEnabled,
+    setEnabled,
+
+    /**
+     * Function: isEscapeEnabled
+     *
+     * Returns <escapeEnabled>.
+     */
+    isEscapeEnabled,
+    setEscapeEnabled,
+
+    /**
+     * Function: isInvokesStopCellEditing
+     *
+     * Returns <invokesStopCellEditing>.
+     */
+    isInvokesStopCellEditing,
+
+    /**
+     * Function: setInvokesStopCellEditing
+     *
+     * Sets <invokesStopCellEditing>.
+     */
+    setInvokesStopCellEditing,
+
+    /**
+     * Function: isEnterStopsCellEditing
+     *
+     * Returns <enterStopsCellEditing>.
+     */
+    isEnterStopsCellEditing,
+
+    /**
+     * Function: setEnterStopsCellEditing
+     *
+     * Sets <enterStopsCellEditing>.
+     */
+    setEnterStopsCellEditing,
+    isCellLocked,
+
+    /**
+     * Function: isCellsLocked
+     *
+     * Returns true if the given cell may not be moved, sized, bended,
+     * disconnected, edited or selected. This implementation returns true for
+     * all vertices with a relative geometry if <locked> is false.
+     *
+     * Parameters:
+     *
+     * cell - <mxCell> whose locked state should be returned.
+     */
+    isCellsLocked,
+
+    /**
+     * Function: setCellsLocked
+     *
+     * Sets if any cell may be moved, sized, bended, disconnected, edited or
+     * selected.
+     *
+     * Parameters:
+     *
+     * value - Boolean that defines the new value for <cellsLocked>.
+     */
+    setCellsLocked,
+    getCloneableCells,
+    isCellCloneable,
+
+    /**
+     * Function: isCellsCloneable
+     *
+     * Returns <cellsCloneable>, that is, if the graph allows cloning of cells
+     * by using control-drag.
+     */
+    isCellsCloneable,
+
+    /**
+     * Function: setCellsCloneable
+     *
+     * Specifies if the graph should allow cloning of cells by holding down the
+     * control key while cells are being moved. This implementation updates
+     * <cellsCloneable>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should be cloneable.
+     */
+    setCellsCloneable,
+    getExportableCells,
+    canExportCell,
+    getImportableCells,
+    canImportCell,
+    isCellSelectable,
+
+    /**
+     * Function: isCellsSelectable
+     *
+     * Returns <cellsSelectable>.
+     */
+    isCellsSelectable,
+
+    /**
+     * Function: setCellsSelectable
+     *
+     * Sets <cellsSelectable>.
+     */
+    setCellsSelectable,
+    getDeletableCells,
+    isCellDeletable,
+
+    /**
+     * Function: isCellsDeletable
+     *
+     * Returns <cellsDeletable>.
+     */
+    isCellsDeletable,
+
+    /**
+     * Function: setCellsDeletable
+     *
+     * Sets <cellsDeletable>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should allow deletion of cells.
+     */
+    setCellsDeletable,
+    isLabelMovable,
+    isCellRotatable,
+    getMovableCells,
+    isCellMovable,
+
+    /**
+     * Function: isCellsMovable
+     *
+     * Returns <cellsMovable>.
+     */
+    isCellsMovable,
+
+    /**
+     * Function: setCellsMovable
+     *
+     * Specifies if the graph should allow moving of cells. This implementation
+     * updates <cellsMsovable>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should allow moving of cells.
+     */
+    setCellsMovable,
+
+    /**
+     * Function: isGridEnabled
+     *
+     * Returns <gridEnabled> as a boolean.
+     */
+    isGridEnabled,
+
+    /**
+     * Function: setGridEnabled
+     *
+     * Specifies if the grid should be enabled.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the grid should be enabled.
+     */
+    setGridEnabled,
+
+    /**
+     * Function: isPortsEnabled
+     *
+     * Returns <portsEnabled> as a boolean.
+     */
+    isPortsEnabled,
+
+    /**
+     * Function: setPortsEnabled
+     *
+     * Specifies if the ports should be enabled.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the ports should be enabled.
+     */
+    setPortsEnabled,
+
+    /**
+     * Function: getGridSize
+     *
+     * Returns <gridSize>.
+     */
+    getGridSize,
+
+    /**
+     * Function: setGridSize
+     *
+     * Sets <gridSize>.
+     */
+    setGridSize,
+
+    /**
+     * Function: getTolerance
+     *
+     * Returns <tolerance>.
+     */
+    getTolerance,
+
+    /**
+     * Function: setTolerance
+     *
+     * Sets <tolerance>.
+     */
+    setTolerance,
+
+    /**
+     * Function: isVertexLabelsMovable
+     *
+     * Returns <vertexLabelsMovable>.
+     */
+    isVertexLabelsMovable,
+
+    /**
+     * Function: setVertexLabelsMovable
+     *
+     * Sets <vertexLabelsMovable>.
+     */
+    setVertexLabelsMovable,
+
+    /**
+     * Function: isEdgeLabelsMovable
+     *
+     * Returns <edgeLabelsMovable>.
+     */
+    isEdgeLabelsMovable,
+
+    /**
+     * Function: isEdgeLabelsMovable
+     *
+     * Sets <edgeLabelsMovable>.
+     */
+    setEdgeLabelsMovable,
+
+    /**
+     * Function: isSwimlaneNesting
+     *
+     * Returns <swimlaneNesting> as a boolean.
+     */
+    isSwimlaneNesting,
+
+    /**
+     * Function: setSwimlaneNesting
+     *
+     * Specifies if swimlanes can be nested by drag and drop. This is only
+     * taken into account if dropEnabled is true.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if swimlanes can be nested.
+     */
+    setSwimlaneNesting,
+
+    /**
+     * Function: isSwimlaneSelectionEnabled
+     *
+     * Returns <swimlaneSelectionEnabled> as a boolean.
+     */
+    isSwimlaneSelectionEnabled,
+
+    /**
+     * Function: setSwimlaneSelectionEnabled
+     *
+     * Specifies if swimlanes should be selected if the mouse is released
+     * over their content area.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if swimlanes content areas
+     * should be selected when the mouse is released over them.
+     */
+    setSwimlaneSelectionEnabled,
+
+    /**
+     * Function: isMultigraph
+     *
+     * Returns <multigraph> as a boolean.
+     */
+    isMultigraph,
+
+    /**
+     * Function: setMultigraph
+     *
+     * Specifies if the graph should allow multiple connections between the
+     * same pair of vertices.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph allows multiple connections
+     * between the same pair of vertices.
+     */
+    setMultigraph,
+
+    /**
+     * Function: isAllowLoops
+     *
+     * Returns <allowLoops> as a boolean.
+     */
+    isAllowLoops,
+
+    /**
+     * Function: setAllowDanglingEdges
+     *
+     * Specifies if dangling edges are allowed, that is, if edges are allowed
+     * that do not have a source and/or target terminal defined.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if dangling edges are allowed.
+     */
+    setAllowDanglingEdges,
+
+    /**
+     * Function: isAllowDanglingEdges
+     *
+     * Returns <allowDanglingEdges> as a boolean.
+     */
+    isAllowDanglingEdges,
+
+    /**
+     * Function: setConnectableEdges
+     *
+     * Specifies if edges should be connectable.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if edges should be connectable.
+     */
+    setConnectableEdges,
+
+    /**
+     * Function: isConnectableEdges
+     *
+     * Returns <connectableEdges> as a boolean.
+     */
+    isConnectableEdges,
+
+    /**
+     * Function: setCloneInvalidEdges
+     *
+     * Specifies if edges should be inserted when cloned but not valid wrt.
+     * <getEdgeValidationError>. If false such edges will be silently ignored.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if cloned invalid edges should be
+     * inserted into the graph or ignored.
+     */
+    setCloneInvalidEdges,
+
+    /**
+     * Function: isCloneInvalidEdges
+     *
+     * Returns <cloneInvalidEdges> as a boolean.
+     */
+    isCloneInvalidEdges,
+
+    /**
+     * Function: setAllowLoops
+     *
+     * Specifies if loops are allowed.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if loops are allowed.
+     */
+    setAllowLoops,
+
+    /**
+     * Function: isDisconnectOnMove
+     *
+     * Returns <disconnectOnMove> as a boolean.
+     */
+    isDisconnectOnMove,
+
+    /**
+     * Function: setDisconnectOnMove
+     *
+     * Specifies if edges should be disconnected when moved. (Note: Cloned
+     * edges are always disconnected.)
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if edges should be disconnected
+     * when moved.
+     */
+    setDisconnectOnMove,
+
+    /**
+     * Function: isDropEnabled
+     *
+     * Returns <dropEnabled> as a boolean.
+     */
+    isDropEnabled,
+
+    /**
+     * Function: setDropEnabled
+     *
+     * Specifies if the graph should allow dropping of cells onto or into other
+     * cells.
+     *
+     * Parameters:
+     *
+     * dropEnabled - Boolean indicating if the graph should allow dropping
+     * of cells into other cells.
+     */
+    setDropEnabled,
+
+    /**
+     * Function: isSplitEnabled
+     *
+     * Returns <splitEnabled> as a boolean.
+     */
+    isSplitEnabled,
+
+    /**
+     * Function: setSplitEnabled
+     *
+     * Specifies if the graph should allow dropping of cells onto or into other
+     * cells.
+     *
+     * Parameters:
+     *
+     * dropEnabled - Boolean indicating if the graph should allow dropping
+     * of cells into other cells.
+     */
+    setSplitEnabled,
+    isCellResizable,
+
+    /**
+     * Function: isCellsResizable
+     *
+     * Returns <cellsResizable>.
+     */
+    isCellsResizable,
+
+    /**
+     * Function: setCellsResizable
+     *
+     * Specifies if the graph should allow resizing of cells. This
+     * implementation updates <cellsResizable>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should allow resizing of
+     * cells.
+     */
+    setCellsResizable,
+
+    /**
+     * Function: isTerminalPointMovable
+     *
+     * Returns true if the given terminal point is movable. This is independent
+     * from <isCellConnectable> and <isCellDisconnectable> and controls if terminal
+     * points can be moved in the graph if the edge is not connected. Note that it
+     * is required for this to return true to connect unconnected edges. This
+     * implementation returns true.
+     *
+     * Parameters:
+     *
+     * cell - <mxCell> whose terminal point should be moved.
+     * source - Boolean indicating if the source or target terminal should be moved.
+     */
+    isTerminalPointMovable,
+    isCellBendable,
+
+    /**
+     * Function: isCellsBendable
+     *
+     * Returns <cellsBenadable>.
+     */
+    isCellsBendable,
+
+    /**
+     * Function: setCellsBendable
+     *
+     * Specifies if the graph should allow bending of edges. This
+     * implementation updates <bendable>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should allow bending of
+     * edges.
+     */
+    setCellsBendable,
+    isCellEditable,
+
+    /**
+     * Function: isCellsEditable
+     *
+     * Returns <cellsEditable>.
+     */
+    isCellsEditable,
+
+    /**
+     * Function: setCellsEditable
+     *
+     * Specifies if the graph should allow in-place editing for cell labels.
+     * This implementation updates <cellsEditable>.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if the graph should allow in-place
+     * editing.
+     */
+    setCellsEditable,
+    isCellDisconnectable,
+
+    /**
+     * Function: isCellsDisconnectable
+     *
+     * Returns <cellsDisconnectable>.
+     */
+    isCellsDisconnectable,
+
+    /**
+     * Function: setCellsDisconnectable
+     *
+     * Sets <cellsDisconnectable>.
+     */
+    setCellsDisconnectable,
+    isValidSource,
+    isValidTarget,
+    isValidConnection,
+    setConnectable,
+    isConnectable,
+    setTooltips,
+    setPanning,
+    isEditing,
+    isAutoSizeCell,
+
+    /**
+     * Function: isAutoSizeCells
+     *
+     * Returns <autoSizeCells>.
+     */
+    isAutoSizeCells,
+
+    /**
+     * Function: setAutoSizeCells
+     *
+     * Specifies if cell sizes should be automatically updated after a label
+     * change. This implementation sets <autoSizeCells> to the given parameter.
+     * To update the size of cells when the cells are added, set
+     * <autoSizeCellsOnAdd> to true.
+     *
+     * Parameters:
+     *
+     * value - Boolean indicating if cells should be resized
+     * automatically.
+     */
+    setAutoSizeCells,
+    isExtendParent,
+
+    /**
+     * Function: isExtendParents
+     *
+     * Returns <extendParents>.
+     */
+    isExtendParents,
+
+    /**
+     * Function: setExtendParents
+     *
+     * Sets <extendParents>.
+     *
+     * Parameters:
+     *
+     * value - New boolean value for <extendParents>.
+     */
+    setExtendParents,
+
+    /**
+     * Function: isExtendParentsOnAdd
+     *
+     * Returns <extendParentsOnAdd>.
+     */
+    isExtendParentsOnAdd,
+
+    /**
+     * Function: setExtendParentsOnAdd
+     *
+     * Sets <extendParentsOnAdd>.
+     *
+     * Parameters:
+     *
+     * value - New boolean value for <extendParentsOnAdd>.
+     */
+    setExtendParentsOnAdd,
+
+    /**
+     * Function: isExtendParentsOnMove
+     *
+     * Returns <extendParentsOnMove>.
+     */
+    isExtendParentsOnMove,
+
+    /**
+     * Function: setExtendParentsOnMove
+     *
+     * Sets <extendParentsOnMove>.
+     *
+     * Parameters:
+     *
+     * value - New boolean value for <extendParentsOnAdd>.
+     */
+    setExtendParentsOnMove,
+
+    /**
+     * Function: isRecursiveResize
+     *
+     * Returns <recursiveResize>.
+     *
+     * Parameters:
+     *
+     * state - <mxCellState> that is being resized.
+     */
+    isRecursiveResize,
+
+    /**
+     * Function: setRecursiveResize
+     *
+     * Sets <recursiveResize>.
+     *
+     * Parameters:
+     *
+     * value - New boolean value for <recursiveResize>.
+     */
+    setRecursiveResize,
+    isConstrainChild,
+
+    /**
+     * Function: isConstrainChildren
+     *
+     * Returns <constrainChildren>.
+     */
+    isConstrainChildren,
+
+    /**
+     * Function: setConstrainChildren
+     *
+     * Sets <constrainChildren>.
+     */
+    setConstrainChildren,
+
+    /**
+     * Function: isConstrainRelativeChildren
+     *
+     * Returns <constrainRelativeChildren>.
+     */
+    isConstrainRelativeChildren,
+
+    /**
+     * Function: setConstrainRelativeChildren
+     *
+     * Sets <constrainRelativeChildren>.
+     */
+    setConstrainRelativeChildren,
+
+    /**
+     * Function: isConstrainChildren
+     *
+     * Returns <allowNegativeCoordinates>.
+     */
+    isAllowNegativeCoordinates,
+
+    /**
+     * Function: setConstrainChildren
+     *
+     * Sets <allowNegativeCoordinates>.
+     */
+    setAllowNegativeCoordinates,
+    getOverlap,
+    isAllowOverlapParent,
+    getFoldableCells,
+    isCellFoldable,
+    isValidDropTarget,
+    isSplitTarget,
+    getDropTarget,
+    getDefaultParent,
+
+    /**
+     * Function: setDefaultParent
+     *
+     * Sets the <defaultParent> to the given cell. Set this to null to return
+     * the first child of the root in getDefaultParent.
+     */
+    setDefaultParent,
+    getSwimlane,
+    getSwimlaneAt,
+    getCellAt,
+    intersects,
+    hitsSwimlaneContent,
+    getChildVertices,
+    getChildEdges,
+    getChildCells,
+    getConnections,
+    getIncomingEdges,
+    getOutgoingEdges,
+    getEdges,
+    isValidAncestor,
+    getOpposites,
+    getEdgesBetween,
+    getPointForEvent,
+    getCells,
+    getCellsBeyond,
+    findTreeRoots,
+    traverse,
+    isCellSelected,
+    isSelectionEmpty,
+    clearSelection,
+    getSelectionCount,
+    getSelectionCell,
+    getSelectionCells,
+    setSelectionCell,
+    setSelectionCells,
+    addSelectionCell,
+    addSelectionCells,
+    removeSelectionCell,
+    removeSelectionCells,
+    selectRegion,
+    selectNextCell,
+    selectPreviousCell,
+    selectParentCell,
+    selectChildCell,
+    selectCell,
+    selectAll,
+    selectVertices,
+    selectEdges,
+    selectCells,
+    selectCellForEvent,
+    selectCellsForEvent,
+    createHandler,
+    createVertexHandler,
+    createEdgeHandler,
+    createEdgeSegmentHandler,
+    createElbowEdgeHandler,
+    addMouseListener,
+    removeMouseListener,
+    updateMouseEvent,
+    getStateForTouchEvent,
+    isEventIgnored,
+    isSyntheticEventIgnored,
+    isEventSourceIgnored,
+    getEventState,
+    fireMouseEvent,
+    consumeMouseEvent,
+    fireGestureEvent,
+    destroy
+  };
+
+  // Initializes the main members that do not require a container
+  setModel(isSet(model) ? model : GraphModel());
+  setMultiplicities([]);
+  setImageBundles([]);
+  setCellRenderer(createCellRenderer());
+  setSelectionModel(createSelectionModel());
+  setStylesheet(isSet(stylesheet) ? stylesheet : createStylesheet());
+  setView(createGraphView());
+
+  // Adds a graph model listener to update the view
+  setGraphModelChangeListener((sender, evt) =>
+    graphModelChanged(evt.getProperty('edit').changes)
+  );
+
+  getModel().addListener(Event.CHANGE, graphModelChangeListener);
+
+  // Installs basic event handlers with disabled default settings.
+  createHandlers();
+
+  // Initializes the display if a container was specified
+  if (isSet(container)) {
+    init(container);
+  }
+
+  getView().revalidate();
+
+  return me;
 };
+
+export default Graph;
