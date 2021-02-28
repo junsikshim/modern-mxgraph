@@ -5,7 +5,7 @@
  */
 
 import { clone as cloneCell } from '../util/Utils';
-import Constants from '../util/Constants';
+import {} from '../util/Constants';
 import { addProp, withConstructor } from '../Helpers';
 
 /**

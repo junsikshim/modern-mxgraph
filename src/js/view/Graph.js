@@ -889,7 +889,7 @@ const Graph = (container, model, _, stylesheet) => {
    * Specifies the default parent to be used to insert new cells.
    * This is used in <getDefaultParent>. Default is null.
    */
-  const [getDefaultParent, setDefaultParent] = addProp();
+  const [_getDefaultParent, setDefaultParent] = addProp();
 
   /**
    * Variable: alternateEdgeStyle
@@ -1553,32 +1553,32 @@ const Graph = (container, model, _, stylesheet) => {
    * Variable: collapsedImage
    *
    * Specifies the <mxImage> to indicate a collapsed state.
-   * Default value is mxClient.imageBasePath + '/collapsed.gif'
+   * Default value is mximageBasePath + '/collapsed.gif'
    */
   const [getCollapsedImage, setCollapsedImage] = addProp(
-    Image(Client.imageBasePath + '/collapsed.gif', 9, 9)
+    Image(imageBasePath + '/collapsed.gif', 9, 9)
   );
 
   /**
    * Variable: expandedImage
    *
    * Specifies the <mxImage> to indicate a expanded state.
-   * Default value is mxClient.imageBasePath + '/expanded.gif'
+   * Default value is mximageBasePath + '/expanded.gif'
    */
   const [getExpandedImage, setExpandedImage] = addProp(
-    Image(Client.imageBasePath + '/expanded.gif', 9, 9)
+    Image(imageBasePath + '/expanded.gif', 9, 9)
   );
 
   /**
    * Variable: warningImage
    *
    * Specifies the <mxImage> for the image to be used to display a warning
-   * overlay. See <setCellWarning>. Default value is mxClient.imageBasePath +
+   * overlay. See <setCellWarning>. Default value is mximageBasePath +
    * '/warning'.  The extension for the image depends on the platform. It is
    * '.png' on the Mac and '.gif' on all other platforms.
    */
   const [getWarningImage, setWarningImage] = addProp(
-    Image(Client.imageBasePath + '/warning.png', 16, 16)
+    Image(imageBasePath + '/warning.png', 16, 16)
   );
   const [getContainer, setContainer] = addProp();
   const [getShiftPreview1, setShiftPreview1] = addProp();

@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import Client from '../Client';
+import {} from '../Client';
 
 /**
  * Class: Event

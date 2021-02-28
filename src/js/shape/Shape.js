@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import Client from '../Client';
+import {} from '../Client';
 import { noop } from '../Helpers';
 import {
   DIALECT_SVG,
@@ -29,14 +29,12 @@ import {
 import Rectangle from '../util/Rectangle';
 import SvgCanvas2D from '../util/SvgCanvas2D';
 import {
-  addProp,
   addTransparentBackgroundFilter,
   getDirectedBounds,
   getValue,
-  isSet,
-  isUnset,
   mod
 } from '../util/Utils';
+import { addProp, isSet } from '../Helpers';
 
 /**
  * Class: Shape
@@ -231,7 +229,7 @@ const Shape = (stencil) => {
    */
   const [isUseSvgBoundingBox, setUseSvgBoundingBox] = addProp(false);
   const [getStrokeWidth, setStrokeWidth] = addProp(1);
-  const [getRotation, setRotation] = addProp(0);
+  const [_getRotation, setRotation] = addProp(0);
   const [getOpacity, setOpacity] = addProp(100);
   const [getFillOpacity, setFillOpacity] = addProp(100);
   const [getStrokeOpacity, setStrokeOpacity] = addProp(100);
@@ -1336,7 +1334,7 @@ const Shape = (stencil) => {
    *
    * Returns the rotation from the style.
    */
-  const getRotation = () => (isSet(getRotation()) ? getRotation() : 0);
+  const getRotation = () => (isSet(_getRotation()) ? _getRotation() : 0);
 
   /**
    * Function: getTextRotation

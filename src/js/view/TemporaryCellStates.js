@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../util/Utils';
+import { addProp, isSet, isUnset } from '../Helpers';
 
 /**
  * Class: TemporaryCellStates
