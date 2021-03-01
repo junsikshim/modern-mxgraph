@@ -4,11 +4,11 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { IS_IE } from '../Client';
+import { imageBasePath, IS_IE } from '../Client';
 import { addProp, isSet, isUnset } from '../Helpers';
 import Cell from '../model/Cell';
 import Geometry from '../model/Geometry';
-import {
+import GraphModel, {
   ChildChange,
   GeometryChange,
   RootChange,
@@ -27,6 +27,7 @@ import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
 import EventSource from '../util/EventSource';
+import Image from '../util/Image';
 import Rectangle from '../util/Rectangle';
 import {
   findNearestSegment,
@@ -34,6 +35,7 @@ import {
   parseCssNumber,
   sortCells
 } from '../util/Utils';
+import EdgeStyle from './EdgeStyle';
 import GraphView from './GraphView';
 
 /**
@@ -1585,7 +1587,7 @@ const Graph = (container, model, _, stylesheet) => {
   const [getShiftPreview2, setShiftPreview2] = addProp();
   const [getMouseMoveRedirect, setMouseMoveRedirect] = addProp();
   const [getMouseUpRedirect, setMouseUpRedirect] = addProp();
-  const [getEventSource, setEventSource] = addProps();
+  const [getEventSource, setEventSource] = addProp();
 
   /**
    * Function: init
@@ -1756,9 +1758,12 @@ const Graph = (container, model, _, stylesheet) => {
         let cell = null;
 
         if (change.constructor === ChildChange) {
-          cell = change.child;
-        } else if (isSet(change.cell) && change.cell.constructor === Cell) {
-          cell = change.cell;
+          cell = change.getChild();
+        } else if (
+          isSet(change.getCell()) &&
+          change.getCell().constructor === Cell
+        ) {
+          cell = change.getCell();
         }
 
         if (isSet(cell)) {
@@ -9160,6 +9165,22 @@ const Graph = (container, model, _, stylesheet) => {
   };
 
   /**
+   * Function: isTerminalPointMovable
+   *
+   * Returns true if the given terminal point is movable. This is independent
+   * from <isCellConnectable> and <isCellDisconnectable> and controls if terminal
+   * points can be moved in the graph if the edge is not connected. Note that it
+   * is required for this to return true to connect unconnected edges. This
+   * implementation returns true.
+   *
+   * Parameters:
+   *
+   * cell - <mxCell> whose terminal point should be moved.
+   * source - Boolean indicating if the source or target terminal should be moved.
+   */
+  const isTerminalPointMovable = (cell, source) => true;
+
+  /**
    * Function: isCellBendable
    *
    * Returns true if the given cell is bendable. This returns <cellsBendable>
@@ -9241,7 +9262,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * cell - <mxCell> that represents a possible target or null.
    */
-  const isValidTarget = isValidSource(cell);
+  const isValidTarget = (cell) => isValidSource(cell);
 
   /**
    * Function: isValidConnection
@@ -10803,7 +10824,7 @@ const Graph = (container, model, _, stylesheet) => {
       if (getModel().isEdge(state.getCell())) {
         const source = state.getVisibleTerminalState(true);
         const target = state.getVisibleTerminalState(false);
-        const geo = getCellGeometry(state.cell);
+        const geo = getCellGeometry(state.getCell());
 
         const edgeStyle = getView().getEdgeStyle(
           state,

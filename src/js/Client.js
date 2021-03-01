@@ -312,28 +312,21 @@ export const isBrowserSupported = function () {
  * id - unique id for the link element to check if it already exists
  */
 export const link = (rel, href, doc = document, id) => {
-  // Workaround for Operation Aborted in IE6 if base tag is used in head
-  if (IS_IE6) {
-    doc.write(
-      '<link rel="' +
-        rel +
-        '" href="' +
-        href +
-        '" charset="UTF-8" type="text/css"/>'
-    );
-  } else {
-    const link = doc.createElement('link');
+  const link = doc.createElement('link');
 
-    link.setAttribute('rel', rel);
-    link.setAttribute('href', href);
-    link.setAttribute('charset', 'UTF-8');
-    link.setAttribute('type', 'text/css');
+  link.setAttribute('rel', rel);
+  link.setAttribute('href', href);
+  link.setAttribute('charset', 'UTF-8');
+  link.setAttribute('type', 'text/css');
 
-    if (id) {
-      link.setAttribute('id', id);
-    }
-
-    const head = doc.getElementsByTagName('head')[0];
-    head.appendChild(link);
+  if (id) {
+    link.setAttribute('id', id);
   }
+
+  const head = doc.getElementsByTagName('head')[0];
+  head.appendChild(link);
 };
+
+export const basePath = '.';
+
+export const imageBasePath = basePath + '/images';

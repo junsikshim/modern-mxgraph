@@ -19,25 +19,26 @@
 
     <!-- Example code -->
     <script>
-      console.log(window.mxgraph);
+      const { Graph, Client, Utils, Event } = window.mxgraph;
+
       // import { isBrowserSupported } from 'Client';
       // Program starts here. Creates a sample graph in the
       // DOM node with the specified ID. This function is invoked
       // from the onLoad event handler of the document (see below).
       function main(container) {
         // Checks if the browser is supported
-        if (!mxClient.isBrowserSupported()) {
+        if (!Client.isBrowserSupported()) {
           // Displays an error message if the browser is not supported.
-          mxUtils.error('Browser is not supported!', 200, false);
+          Utils.error('Browser is not supported!', 200, false);
         } else {
           // Disables the built-in context menu
-          mxEvent.disableContextMenu(container);
+          Event.disableContextMenu(container);
 
           // Creates the graph inside the given container
-          var graph = new mxGraph(container);
+          var graph = Graph(container);
 
           // Enables rubberband selection
-          new mxRubberband(graph);
+          //new mxRubberband(graph);
 
           // Gets the default parent for inserting new cells. This
           // is normally the first child of the root (ie. layer 0).
