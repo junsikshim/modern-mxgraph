@@ -6,7 +6,9 @@
 
 import { addProp, isSet } from '../Helpers';
 import Connector from '../shape/Connector';
+import Ellipse from '../shape/Ellipse';
 import RectangleShape from '../shape/RectangleShape';
+import Rhombus from '../shape/Rhombus';
 import StencilRegistry from '../shape/StencilRegistry';
 import {
   SHAPE_ACTOR,
@@ -26,7 +28,9 @@ import {
   SHAPE_SWIMLANE,
   SHAPE_TRIANGLE
 } from '../util/Constants';
-import Text from './Text';
+import Cylinder from './Cylinder';
+import Text from '../shape/Text';
+import ImageShape from '../shape/ImageShape';
 
 /**
  * Variable: defaultShapes
@@ -1631,16 +1635,16 @@ CellRenderer.registerShape(SHAPE_ELLIPSE, Ellipse);
 CellRenderer.registerShape(SHAPE_RHOMBUS, Rhombus);
 CellRenderer.registerShape(SHAPE_CYLINDER, Cylinder);
 CellRenderer.registerShape(SHAPE_CONNECTOR, Connector);
-CellRenderer.registerShape(SHAPE_ACTOR, Actor);
-CellRenderer.registerShape(SHAPE_TRIANGLE, Triangle);
-CellRenderer.registerShape(SHAPE_HEXAGON, Hexagon);
-CellRenderer.registerShape(SHAPE_CLOUD, Cloud);
-CellRenderer.registerShape(SHAPE_LINE, Line);
-CellRenderer.registerShape(SHAPE_ARROW, Arrow);
-CellRenderer.registerShape(SHAPE_ARROW_CONNECTOR, ArrowConnector);
-CellRenderer.registerShape(SHAPE_DOUBLE_ELLIPSE, DoubleEllipse);
-CellRenderer.registerShape(SHAPE_SWIMLANE, Swimlane);
+// CellRenderer.registerShape(SHAPE_ACTOR, Actor);
+// CellRenderer.registerShape(SHAPE_TRIANGLE, Triangle);
+// CellRenderer.registerShape(SHAPE_HEXAGON, Hexagon);
+// CellRenderer.registerShape(SHAPE_CLOUD, Cloud);
+// CellRenderer.registerShape(SHAPE_LINE, Line);
+// CellRenderer.registerShape(SHAPE_ARROW, Arrow);
+// CellRenderer.registerShape(SHAPE_ARROW_CONNECTOR, ArrowConnector);
+// CellRenderer.registerShape(SHAPE_DOUBLE_ELLIPSE, DoubleEllipse);
+// CellRenderer.registerShape(SHAPE_SWIMLANE, Swimlane);
 CellRenderer.registerShape(SHAPE_IMAGE, ImageShape);
-CellRenderer.registerShape(SHAPE_LABEL, Label);
+// CellRenderer.registerShape(SHAPE_LABEL, Label);
 
 export default CellRenderer;

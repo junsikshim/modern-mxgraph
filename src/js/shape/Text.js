@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2006-2015, JGraph Ltd
+ * Copyright (c) 2006-2015, Gaudenz Alder
+ * Copyright (c) 2021, Junsik Shim
+ */
+
 import { addProp, isSet } from '../Helpers';
 import Shape from '../shape/Shape';
 import {
@@ -22,6 +28,60 @@ import {
   getAlignmentAsPoint
 } from '../util/Utils';
 
+/**
+ * Class: Text
+ *
+ * Extends <mxShape> to implement a text shape. To change vertical text from
+ * bottom to top to top to bottom, the following code can be used:
+ *
+ * (code)
+ * mxText.prototype.verticalTextRotation = 90;
+ * (end)
+ *
+ * Constructor: Text
+ *
+ * Constructs a new text shape.
+ *
+ * Parameters:
+ *
+ * value - String that represents the text to be displayed. This is stored in
+ * <value>.
+ * bounds - <mxRectangle> that defines the bounds. This is stored in
+ * <mxShape.bounds>.
+ * align - Specifies the horizontal alignment. Default is ''. This is stored in
+ * <align>.
+ * valign - Specifies the vertical alignment. Default is ''. This is stored in
+ * <valign>.
+ * color - String that specifies the text color. Default is 'black'. This is
+ * stored in <color>.
+ * family - String that specifies the font family. Default is
+ * <mxConstants.DEFAULT_FONTFAMILY>. This is stored in <family>.
+ * size - Integer that specifies the font size. Default is
+ * <mxConstants.DEFAULT_FONTSIZE>. This is stored in <size>.
+ * fontStyle - Specifies the font style. Default is 0. This is stored in
+ * <fontStyle>.
+ * spacing - Integer that specifies the global spacing. Default is 2. This is
+ * stored in <spacing>.
+ * spacingTop - Integer that specifies the top spacing. Default is 0. The
+ * sum of the spacing and this is stored in <spacingTop>.
+ * spacingRight - Integer that specifies the right spacing. Default is 0. The
+ * sum of the spacing and this is stored in <spacingRight>.
+ * spacingBottom - Integer that specifies the bottom spacing. Default is 0.The
+ * sum of the spacing and this is stored in <spacingBottom>.
+ * spacingLeft - Integer that specifies the left spacing. Default is 0. The
+ * sum of the spacing and this is stored in <spacingLeft>.
+ * horizontal - Boolean that specifies if the label is horizontal. Default is
+ * true. This is stored in <horizontal>.
+ * background - String that specifies the background color. Default is null.
+ * This is stored in <background>.
+ * border - String that specifies the label border color. Default is null.
+ * This is stored in <border>.
+ * wrap - Specifies if word-wrapping should be enabled. Default is false.
+ * This is stored in <wrap>.
+ * clipped - Specifies if the label should be clipped. Default is false.
+ * This is stored in <clipped>.
+ * overflow - Value of the overflow style. Default is 'visible'.
+ */
 const Text = (
   data,
   bounds,
@@ -86,16 +146,92 @@ const Text = (
   const [getOverflow, setOverflow] = addProp(overflow);
   const [getLabelPadding, setLabelPadding] = addProp(labelPadding);
   const [getTextDirection, setTextDirection] = addProp(textDirection);
+
+  /**
+   * Variable: baseSpacingTop
+   *
+   * Specifies the spacing to be added to the top spacing. Default is 0. Use the
+   * value 5 here to get the same label positions as in mxGraph 1.x.
+   */
   const [getBaseSpacingTop, setBaseSpacingTop] = addProp(0);
+
+  /**
+   * Variable: baseSpacingBottom
+   *
+   * Specifies the spacing to be added to the bottom spacing. Default is 0. Use the
+   * value 1 here to get the same label positions as in mxGraph 1.x.
+   */
   const [getBaseSpacingBottom, setBaseSpacingBottom] = addProp(0);
+
+  /**
+   * Variable: baseSpacingRight
+   *
+   * Specifies the spacing to be added to the right spacing. Default is 0.
+   */
   const [getBaseSpacingRight, setBaseSpacingRight] = addProp(0);
+
+  /**
+   * Variable: baseSpacingLeft
+   *
+   * Specifies the spacing to be added to the left spacing. Default is 0.
+   */
   const [getBaseSpacingLeft, setBaseSpacingLeft] = addProp(0);
+
+  /**
+   * Variable: replaceLinefeeds
+   *
+   * Specifies if linefeeds in HTML labels should be replaced with BR tags.
+   * Default is true.
+   */
   const [isReplaceLinefeeds, setReplaceLineFeeds] = addProp(true);
+
+  /**
+   * Variable: verticalTextRotation
+   *
+   * Rotation for vertical text. Default is -90 (bottom to top).
+   */
   const [getVerticalTextRotation, setVerticalTextRotation] = addProp(-90);
+
+  /**
+   * Variable: ignoreClippedStringSize
+   *
+   * Specifies if the string size should be measured in <updateBoundingBox> if
+   * the label is clipped and the label position is center and middle. If this is
+   * true, then the bounding box will be set to <bounds>. Default is true.
+   * <ignoreStringSize> has precedence over this switch.
+   */
   const [isIgnoreClippedStringSize, setIgnoreClippedStringSize] = addProp(true);
+
+  /**
+   * Variable: ignoreStringSize
+   *
+   * Specifies if the actual string size should be measured. If disabled the
+   * boundingBox will not ignore the actual size of the string, otherwise
+   * <bounds> will be used instead. Default is false.
+   */
   const [isIgnoreStringSize, setIgnoreStringSize] = addProp(false);
+
+  /**
+   * Variable: textWidthPadding
+   *
+   * Specifies the padding to be added to the text width for the bounding box.
+   * This is needed to make sure no clipping is applied to borders. Default is 4
+   * for IE 8 standards mode and 3 for all others.
+   */
   const [getTextWidthPadding, setTextWidthPadding] = addProp(3);
+
+  /**
+   * Variable: lastData
+   *
+   * Contains the last rendered text value. Used for caching.
+   */
   const [getLastData, setLastData] = addProp();
+
+  /**
+   * Variable: cacheEnabled
+   *
+   * Specifies if caching for HTML labels should be enabled. Default is true.
+   */
   const [isCacheEnabled, setCacheEnabled] = addProp(true);
   const [getMargin, setMargin] = addProp();
   const [getUnrotatedBoundingBox, setUnrotatedBoundingBox] = addProp();
@@ -103,10 +239,26 @@ const Text = (
   setBounds(bounds);
   setRotation(0);
 
+  /**
+   * Function: isHtmlAllowed
+   *
+   * Returns true if HTML is allowed for this shape. This implementation returns
+   * true if the browser is not in IE8 standards mode.
+   */
   const isHtmlAllowed = () => true;
 
+  /**
+   * Function: getSvgScreenOffset
+   *
+   * Disables offset in IE9 for crisper image output.
+   */
   const getSvgScreenOffset = () => 0;
 
+  /**
+   * Function: checkBounds
+   *
+   * Returns true if the bounds are not null and all of its variables are numeric.
+   */
   const checkBounds = () => {
     const scale = getScale();
     const bounds = getBounds();
@@ -123,6 +275,11 @@ const Text = (
     );
   };
 
+  /**
+   * Function: paint
+   *
+   * Generic rendering code.
+   */
   const paint = (c, update) => {
     // Scale is passed-through to canvas
     const s = getScale();
@@ -182,6 +339,11 @@ const Text = (
     }
   };
 
+  /**
+   * Function: redraw
+   *
+   * Renders the text using the given DOM nodes.
+   */
   const redraw = () => {
     if (
       isVisible() &&
@@ -217,6 +379,11 @@ const Text = (
     }
   };
 
+  /**
+   * Function: resetStyles
+   *
+   * Resets all styles.
+   */
   const resetStyles = () => {
     _resetStyles();
 
@@ -238,6 +405,15 @@ const Text = (
     setMargin();
   };
 
+  /**
+   * Function: apply
+   *
+   * Extends mxShape to update the text styles.
+   *
+   * Parameters:
+   *
+   * state - <mxCellState> of the corresponding cell.
+   */
   const apply = (state) => {
     const style = getStyle();
     const old = getSpacing();
@@ -285,6 +461,14 @@ const Text = (
     setFlipH();
   };
 
+  /**
+   * Function: getAutoDirection
+   *
+   * Used to determine the automatic text direction. Returns
+   * <mxConstants.TEXT_DIRECTION_LTR> or <mxConstants.TEXT_DIRECTION_RTL>
+   * depending on the contents of <value>. This is not invoked for HTML, wrapped
+   * content or if <value> is a DOM node.
+   */
   const getAutoDirection = () => {
     // Looks for strong (directional) characters
     const tmp = /[A-Za-z\u05d0-\u065f\u066a-\u06ef\u06fa-\u07ff\ufb1d-\ufdff\ufe70-\ufefc]/.exec(
@@ -297,6 +481,11 @@ const Text = (
       : TEXT_DIRECTION_LTR;
   };
 
+  /**
+   * Function: getContentNode
+   *
+   * Returns the node that contains the rendered input.
+   */
   const getContentNode = () => {
     const result = getNode();
 
@@ -313,6 +502,11 @@ const Text = (
     return result;
   };
 
+  /**
+   * Function: updateBoundingBox
+   *
+   * Updates the <boundingBox> for this shape using the given node and position.
+   */
   const updateBoundingBox = () => {
     const node = getNode();
     setBoundingBox(getBounds().clone());
@@ -450,18 +644,39 @@ const Text = (
     }
   };
 
+  /**
+   * Function: getShapeRotation
+   *
+   * Returns 0 to avoid using rotation in the canvas via updateTransform.
+   */
   const getShapeRotation = () => 0;
 
+  /**
+   * Function: getTextRotation
+   *
+   * Returns the rotation for the text label of the corresponding shape.
+   */
   const getTextRotation = () =>
     isSet(getState()) && isSet(getState().getShape())
       ? getState().getShape().getTextRotation()
       : 0;
 
+  /**
+   * Function: isPaintBoundsInverted
+   *
+   * Inverts the bounds if <mxShape.isBoundsInverted> returns true or if the
+   * horizontal style is false.
+   */
   const isPaintBoundsInverted = () =>
     !isHorizontal() &&
     isSet(getState()) &&
     getState().getView().getGraph().getModel().isVertex(getState().getCell());
 
+  /**
+   * Function: configureCanvas
+   *
+   * Sets the state of the canvas for drawing the shape.
+   */
   const configureCanvas = (c, x, y, w, h) => {
     _configureCanvas(c, x, y, w, h);
 
@@ -473,6 +688,11 @@ const Text = (
     c.setFontStyle(getFontStyle());
   };
 
+  /**
+   * Function: getHtmlValue
+   *
+   * Private helper function to create SVG elements
+   */
   const getHtmlValue = () => {
     let val = htmlEntities(getData(), false);
 
@@ -483,6 +703,11 @@ const Text = (
     return val;
   };
 
+  /**
+   * Function: getTextCss
+   *
+   * Private helper function to create SVG elements
+   */
   const getTextCss = () => {
     const lh = ABSOLUTE_LINE_HEIGHT
       ? getSize() * LINE_HEIGHT + 'px'
@@ -527,8 +752,18 @@ const Text = (
     return css;
   };
 
+  /**
+   * Function: redrawHtmlShape
+   *
+   * Updates the HTML node(s) to reflect the latest bounds and scale.
+   */
   const redrawHtmlShape = () => redrawHtmlShapeWithCss3();
 
+  /**
+   * Function: redrawHtmlShapeWithCss3
+   *
+   * Updates the HTML node(s) to reflect the latest bounds and scale.
+   */
   const redrawHtmlShapeWithCss3 = () => {
     const bounds = getBounds();
     const scale = getScale();
@@ -604,9 +839,19 @@ const Text = (
     );
   };
 
+  /**
+   * Function: getMargin
+   *
+   * Returns the spacing as an <mxPoint>.
+   */
   const updateMargin = () =>
     setMargin(getAlignmentAsPoint(getAlign(), getValign()));
 
+  /**
+   * Function: getSpacing
+   *
+   * Returns the spacing as an <mxPoint>.
+   */
   const getSpacing = () => {
     const align = getAlign();
     const valign = getValign();
@@ -633,7 +878,23 @@ const Text = (
   };
 
   const me = {
-    paint
+    isHtmlAllowed,
+    getSvgScreenOffset,
+    checkBounds,
+    paint,
+    redraw,
+    resetStyles,
+    apply,
+    getAutoDirection,
+    getContentNode,
+    updateBoundingBox,
+    getShapeRotation,
+    getTextRotation,
+    isPaintBoundsInverted,
+    configureCanvas,
+    redrawHtmlShape,
+    updateMargin,
+    getSpacing
   };
 
   return me;

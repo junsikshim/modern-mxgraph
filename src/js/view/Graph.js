@@ -5,6 +5,7 @@
  */
 
 import { imageBasePath, IS_IE } from '../Client';
+import TooltipHandler from '../handler/TooltipHandler';
 import { addProp, isSet, isUnset } from '../Helpers';
 import Cell from '../model/Cell';
 import Geometry from '../model/Geometry';
@@ -37,7 +38,9 @@ import {
 } from '../util/Utils';
 import CellRenderer from './CellRenderer';
 import EdgeStyle from './EdgeStyle';
+import GraphSelectionModel from './GraphSelectionModel';
 import GraphView from './GraphView';
+import Stylesheet from './Stylesheet';
 
 /**
  * Class: Graph
@@ -1589,6 +1592,8 @@ const Graph = (container, model, _, stylesheet) => {
   const [getMouseMoveRedirect, setMouseMoveRedirect] = addProp();
   const [getMouseUpRedirect, setMouseUpRedirect] = addProp();
   const [getEventSource, setEventSource] = addProp();
+  const [getGraphModelChangeListener, setGraphModelChangeListener] = addProp();
+  const [getTooltipHandler, setTooltipHandler] = addProp();
 
   /**
    * Function: init
@@ -12616,7 +12621,7 @@ const Graph = (container, model, _, stylesheet) => {
     graphModelChanged(evt.getProperty('edit').changes)
   );
 
-  getModel().addListener(Event.CHANGE, graphModelChangeListener);
+  getModel().addListener(Event.CHANGE, getGraphModelChangeListener());
 
   // Installs basic event handlers with disabled default settings.
   createHandlers();
