@@ -35,6 +35,7 @@ import {
   parseCssNumber,
   sortCells
 } from '../util/Utils';
+import CellRenderer from './CellRenderer';
 import EdgeStyle from './EdgeStyle';
 import GraphView from './GraphView';
 
