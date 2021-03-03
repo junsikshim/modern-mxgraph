@@ -9,6 +9,7 @@ module.exports = {
     hot: true,
     port: 7070
   },
+  devtool: 'eval-source-map',
   output: {
     filename: 'modern-mxgraph.js',
     path: path.resolve(__dirname, 'dist'),
