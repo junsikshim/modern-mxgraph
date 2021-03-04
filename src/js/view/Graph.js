@@ -5,6 +5,7 @@
  */
 
 import { imageBasePath, IS_IE } from '../Client';
+import SelectionCellsHandler from '../handler/SelectionCellsHandler';
 import TooltipHandler from '../handler/TooltipHandler';
 import { addProp, isSet, isUnset } from '../Helpers';
 import Cell from '../model/Cell';
@@ -1594,6 +1595,8 @@ const Graph = (container, model, _, stylesheet) => {
   const [getEventSource, setEventSource] = addProp();
   const [getGraphModelChangeListener, setGraphModelChangeListener] = addProp();
   const [getTooltipHandler, setTooltipHandler] = addProp();
+  const [getSelectionCellHandler, setSelectionCellHandler] = addProp();
+  const [getConnectionHandler, setConnectionHandler] = addProp();
 
   /**
    * Function: init

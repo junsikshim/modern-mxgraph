@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2006-2015, JGraph Ltd
+ * Copyright (c) 2006-2015, Gaudenz Alder
+ * Copyright (c) 2021, Junsik Shim
+ */
+
 import {
   DIRECTION_EAST,
   DIRECTION_NORTH,

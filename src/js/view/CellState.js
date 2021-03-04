@@ -5,7 +5,7 @@
  */
 
 import Rectangle from '../util/Rectangle';
-import { addProp, isSet, isUnset } from '../util/Utils';
+import { addProp, isSet, isUnset } from '../Helpers';
 
 /**
  * Class: CellState
