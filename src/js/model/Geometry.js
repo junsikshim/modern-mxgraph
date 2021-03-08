@@ -99,7 +99,7 @@ const Geometry = (x, y, width, height) => {
    * Stores alternate values for x, y, width and height in a rectangle. See
    * <swap> to exchange the values. Default is null.
    */
-  const [getAlternateBounds, setAlternateBounds] = addProp(null);
+  const [getAlternateBounds, setAlternateBounds] = addProp();
 
   /**
    * Variable: sourcePoint
@@ -108,7 +108,7 @@ const Geometry = (x, y, width, height) => {
    * corresponding edge does not have a source vertex. Otherwise it is
    * ignored. Default is  null.
    */
-  const [getSourcePoint, setSourcePoint] = addProp(null);
+  const [getSourcePoint, setSourcePoint] = addProp();
 
   /**
    * Variable: targetPoint
@@ -117,7 +117,7 @@ const Geometry = (x, y, width, height) => {
    * corresponding edge does not have a target vertex. Otherwise it is
    * ignored. Default is null.
    */
-  const [getTargetPoint, setTargetPoint] = addProp(null);
+  const [getTargetPoint, setTargetPoint] = addProp();
 
   /**
    * Variable: points
@@ -127,7 +127,7 @@ const Geometry = (x, y, width, height) => {
    * use <targetPoint> and <sourcePoint> or set the terminals of the edge to
    * a non-null value. Default is null.
    */
-  const [getPoints, setPoints] = addProp(null);
+  const [getPoints, setPoints] = addProp();
 
   /**
    * Variable: offset
@@ -138,7 +138,7 @@ const Geometry = (x, y, width, height) => {
    * coordinates. For absolute geometries (for vertices), this defines the
    * offset for the label. Default is null.
    */
-  const [getOffset, setOffset] = addProp(null);
+  const [getOffset, setOffset] = addProp();
 
   /**
    * Variable: relative
@@ -155,7 +155,7 @@ const Geometry = (x, y, width, height) => {
    *
    * Default is false.
    */
-  const [getRelative, setRelative] = addProp(false);
+  const [isRelative, setRelative] = addProp(false);
 
   /**
    * Function: swap
@@ -235,7 +235,7 @@ const Geometry = (x, y, width, height) => {
     const sin = Math.sin(rad);
 
     // Rotates the geometry
-    if (!getRelative()) {
+    if (!isRelative()) {
       const ct = Point(getCenterX(), getCenterY());
       const pt = getRotatedPoint(ct, cos, sin, cx);
 
@@ -294,7 +294,7 @@ const Geometry = (x, y, width, height) => {
     const ty = parseFloat(dy);
 
     // Translates the geometry
-    if (!getRelative()) {
+    if (!isRelative()) {
       setX(parseFloat(getX()) + tx);
       setY(parseFloat(getY()) + ty);
     }
@@ -376,7 +376,7 @@ const Geometry = (x, y, width, height) => {
     }
 
     // Translates the geometry
-    if (!getRelative()) {
+    if (!isRelative()) {
       setX(parseFloat(getX()) * tx);
       setY(parseFloat(getY()) * ty);
 
@@ -399,7 +399,7 @@ const Geometry = (x, y, width, height) => {
    */
   const equals = (obj) =>
     rectEquals(obj) &&
-    getRelative() === obj.getRelative() &&
+    isRelative() === obj.isRelative() &&
     ((!getSourcePoint() && !obj.getSourcePoint()) ||
       (getSourcePoint() && getSourcePoint().equals(obj.getSourcePoint()))) &&
     ((!getTargetPoint() && !obj.getTargetPoint()) ||
@@ -422,7 +422,8 @@ const Geometry = (x, y, width, height) => {
     getTargetPoint,
     getPoints,
     getOffset,
-    getRelative,
+    isRelative,
+    setRelative,
     swap,
     getTerminalPoint,
     setTerminalPoint,

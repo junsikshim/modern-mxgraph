@@ -6,6 +6,7 @@
 
 import Rectangle from '../util/Rectangle';
 import { addProp, isSet, isUnset } from '../Helpers';
+import Point from '../util/Point';
 
 /**
  * Class: CellState
@@ -319,7 +320,7 @@ const CellState = (view, cell, style = {}) => {
         getHeight() / s
       )
     );
-    setPaintBounds(Rectangle.fromRectangle(getCellBounds));
+    setPaintBounds(Rectangle.fromRectangle(getCellBounds()));
 
     if (isSet(getShape()) && getShape().isPaintBoundsInverted()) {
       getPaintBounds().rotate90();
@@ -427,6 +428,19 @@ const CellState = (view, cell, style = {}) => {
     getPaintBounds,
     updateCachedBounds,
     setState,
+    isInvalid,
+    setInvalid,
+    getStyle,
+    setStyle,
+    isInvalidStyle,
+    setInvalidStyle,
+    getAbsoluteOffset,
+    getOrigin,
+    setLength,
+    getCell,
+    getView,
+    getShape,
+    getText,
     clone,
     destroy
   };

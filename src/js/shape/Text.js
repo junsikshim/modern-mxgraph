@@ -127,16 +127,16 @@ const Text = (
   const [getFontStyle, setFontStyle] = addProp(fontStyle);
   const [_getSpacing, setSpacing] = addProp(parseInt(spacing));
   const [getSpacingTop, setSpacingTop] = addProp(
-    getSpacing() + parseInt(spacingTop)
+    _getSpacing() + parseInt(spacingTop)
   );
   const [getSpacingRight, setSpacingRight] = addProp(
-    getSpacing() + parseInt(spacingRight)
+    _getSpacing() + parseInt(spacingRight)
   );
   const [getSpacingBottom, setSpacingBottom] = addProp(
-    getSpacing() + parseInt(spacingBottom)
+    _getSpacing() + parseInt(spacingBottom)
   );
   const [getSpacingLeft, setSpacingLeft] = addProp(
-    getSpacing() + parseInt(spacingLeft)
+    _getSpacing() + parseInt(spacingLeft)
   );
   const [isHorizontal, setHorizontal] = addProp(horizontal);
   const [getBackground, setBackground] = addProp(background);

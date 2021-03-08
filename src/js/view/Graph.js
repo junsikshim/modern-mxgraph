@@ -5,6 +5,10 @@
  */
 
 import { imageBasePath, IS_IE } from '../Client';
+import ConnectionHandler from '../handler/ConnectionHandler';
+import GraphHandler from '../handler/GraphHandler';
+import PanningHandler from '../handler/PanningHandler';
+import PopupMenuHandler from '../handler/PopupMenuHandler';
 import SelectionCellsHandler from '../handler/SelectionCellsHandler';
 import TooltipHandler from '../handler/TooltipHandler';
 import { addProp, isSet, isUnset } from '../Helpers';
@@ -23,20 +27,25 @@ import {
   PAGE_FORMAT_A4_PORTRAIT,
   STYLE_FILLCOLOR,
   STYLE_IMAGE,
-  STYLE_INDICATOR_GRADIENTCOLOR
+  STYLE_INDICATOR_GRADIENTCOLOR,
+  STYLE_SOURCE_PORT,
+  STYLE_TARGET_PORT
 } from '../util/Constants';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
 import EventSource from '../util/EventSource';
 import Image from '../util/Image';
+import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import {
   findNearestSegment,
   hasScrollbars,
   parseCssNumber,
-  sortCells
+  sortCells,
+  setCellStyles as _setCellStyles
 } from '../util/Utils';
+import CellEditor from './CellEditor';
 import CellRenderer from './CellRenderer';
 import EdgeStyle from './EdgeStyle';
 import GraphSelectionModel from './GraphSelectionModel';
@@ -675,7 +684,7 @@ import Stylesheet from './Stylesheet';
  * stylesheet - Optional <mxStylesheet> to be used in the graph.
  */
 const Graph = (container, model, _, stylesheet) => {
-  const { fireEvent } = EventSource();
+  const { fireEvent, addListener } = EventSource();
 
   /**
    * Variable: mouseListeners
@@ -1597,6 +1606,11 @@ const Graph = (container, model, _, stylesheet) => {
   const [getTooltipHandler, setTooltipHandler] = addProp();
   const [getSelectionCellHandler, setSelectionCellHandler] = addProp();
   const [getConnectionHandler, setConnectionHandler] = addProp();
+  const [getGraphHandler, setGraphHandler] = addProp();
+  const [getPanningHandler, setPanningHandler] = addProp();
+  const [getPopupMenuHandler, setPopupMenuHandler] = addProp();
+  const [getHorizontalPageBreaks, setHorizontalPageBreaks] = addProp();
+  const [getVerticalPageBreaks, setVerticalPageBreaks] = addProp();
 
   /**
    * Function: init
@@ -2891,7 +2905,7 @@ const Graph = (container, model, _, stylesheet) => {
     const scale = view.getScale();
 
     if (isSet(getContainer())) {
-      const border = this.getBorder();
+      const border = getBorder();
 
       let width = Math.max(0, bounds.getX()) + bounds.getWidth() + 2 * border;
       let height = Math.max(0, bounds.getY()) + bounds.getHeight() + 2 * border;
@@ -3279,7 +3293,7 @@ const Graph = (container, model, _, stylesheet) => {
    * the selection cells.
    */
   const setCellStyles = (key, value, cells = getSelectionCells()) =>
-    setCellStyles(getModel(), cells, key, value);
+    _setCellStyles(getModel(), cells, key, value);
 
   /**
    * Function: toggleCellStyleFlags
@@ -7964,7 +7978,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * cell - <mxCell> whose visible state should be returned.
    */
-  const isCellVisible = (cell) => getModel.isVisible(cell);
+  const isCellVisible = (cell) => getModel().isVisible(cell);
 
   /**
    * Function: isCellCollapsed
@@ -9607,7 +9621,7 @@ const Graph = (container, model, _, stylesheet) => {
     let parent = getCurrentRoot();
 
     if (isUnset(parent)) {
-      parent = getDefaultParent();
+      parent = _getDefaultParent();
 
       if (isUnset(parent)) {
         const root = getModel().getRoot();
@@ -11541,6 +11555,7 @@ const Graph = (container, model, _, stylesheet) => {
   };
 
   const me = {
+    addListener,
     createTooltipHandler,
     createSelectionCellsHandler,
     createConnectionHandler,
@@ -11551,6 +11566,7 @@ const Graph = (container, model, _, stylesheet) => {
     createGraphView,
     createCellRenderer,
     createCellEditor,
+    getContainer,
 
     /**
      * Function: getModel
@@ -12607,6 +12623,9 @@ const Graph = (container, model, _, stylesheet) => {
     fireMouseEvent,
     consumeMouseEvent,
     fireGestureEvent,
+    getCellRenderer,
+    isPageVisible,
+    setPageVisible,
     destroy
   };
 

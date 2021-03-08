@@ -35,7 +35,7 @@ const CellPath = {
 
       while (parent) {
         const index = parent.getIndex(cell);
-        result = index + PATH_SEPARATOR + result;
+        result = index + CellPath.PATH_SEPARATOR + result;
 
         cell = parent;
         parent = cell.getParent();
@@ -65,7 +65,7 @@ const CellPath = {
   getParentPath: (path) => {
     if (!path) return null;
 
-    const index = path.lastIndexOf(PATH_SEPARATOR);
+    const index = path.lastIndexOf(CellPath.PATH_SEPARATOR);
 
     if (index >= 0) return path.substring(0, index);
     else if (path.length > 0) return '';
@@ -88,7 +88,7 @@ const CellPath = {
     let parent = root;
 
     if (path) {
-      const tokens = path.split(PATH_SEPARATOR);
+      const tokens = path.split(CellPath.PATH_SEPARATOR);
 
       for (let i = 0; i < tokens.length; i++) {
         parent = parent.getChildAt(parseInt(tokens[i]));

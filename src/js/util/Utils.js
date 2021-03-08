@@ -5,6 +5,7 @@
  */
 
 import { IS_GC, IS_IE, IS_MT, IS_OT, IS_SF } from '../Client';
+import { isSet, isUnset } from '../Helpers';
 import CellPath from '../model/CellPath';
 import TemporaryCellStates from '../view/TemporaryCellStates';
 import {

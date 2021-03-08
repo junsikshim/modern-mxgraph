@@ -5,8 +5,7 @@
  */
 
 import { clone as cloneCell } from '../util/Utils';
-import {} from '../util/Constants';
-import { addProp, withConstructor } from '../Helpers';
+import { addProp, isUnset, withConstructor } from '../Helpers';
 
 /**
  * Class: Cell
@@ -98,7 +97,7 @@ const Cell = (value, geometry, style) => {
    *
    * Holds the Id. Default is null.
    */
-  const [getId, setId] = addProp(null);
+  const [getId, setId] = addProp();
 
   /**
    * Variable: vertex
@@ -140,21 +139,21 @@ const Cell = (value, geometry, style) => {
    *
    * Reference to the parent cell.
    */
-  const [getParent, setParent] = addProp(null);
+  const [getParent, setParent] = addProp();
 
   /**
    * Variable: source
    *
    * Reference to the source terminal.
    */
-  const [getSource, setSource] = addProp(null);
+  const [getSource, setSource] = addProp();
 
   /**
    * Variable: target
    *
    * Reference to the target terminal.
    */
-  const [getTarget, setTarget] = addProp(null);
+  const [getTarget, setTarget] = addProp();
 
   /**
    * Variable: children
@@ -258,12 +257,12 @@ const Cell = (value, geometry, style) => {
    * index - Optional integer that specifies the index at which the child
    * should be inserted into the child array.
    */
-  const insert = (child, index = null) => {
-    if (!child) return null;
+  const insert = (child, index) => {
+    if (!child) return;
 
     let i = index;
 
-    if (index === null) {
+    if (isUnset(index)) {
       i = getChildCount();
 
       if (child.getParent() === me) i--;
@@ -292,7 +291,7 @@ const Cell = (value, geometry, style) => {
    * removed.
    */
   const remove = (index) => {
-    let child = null;
+    let child;
     const children = getChildren();
 
     if (children && index >= 0) {
@@ -300,7 +299,7 @@ const Cell = (value, geometry, style) => {
 
       if (child) {
         children.splice(index, 1);
-        child.setParent(null);
+        child.setParent();
       }
     }
 
@@ -397,7 +396,7 @@ const Cell = (value, geometry, style) => {
         if (index >= 0) edges.splice(index, 1);
       }
 
-      edge.setTerminal(null, isOutgoing);
+      edge.setTerminal(undefined, isOutgoing);
     }
 
     return edge;
@@ -436,7 +435,7 @@ const Cell = (value, geometry, style) => {
       obj.nodeType === Constants.NODETYPE_ELEMENT &&
       obj.hasAttribute
       ? obj.hasAttribute(name)
-      : obj.getAttribute(name) !== null;
+      : obj.getAttribute(name) !== undefined;
   };
 
   /**
@@ -456,9 +455,9 @@ const Cell = (value, geometry, style) => {
     const val =
       obj && obj.nodeType === Constants.NODETYPE_ELEMENT
         ? obj.getAttribute(name)
-        : null;
+        : undefined;
 
-    return val !== null ? val : defaultValue;
+    return val !== undefined ? val : defaultValue;
   };
 
   /**
@@ -501,7 +500,7 @@ const Cell = (value, geometry, style) => {
   const cloneValue = () => {
     const v = getValue();
 
-    if (!v) return null;
+    if (!v) return;
 
     if (typeof v.clone === 'function') return v.clone();
     // changing to Number.isNaN breaks the logic

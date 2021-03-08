@@ -12,7 +12,7 @@ import ObjectIdentity from '../util/ObjectIdentity';
 import Point from '../util/Point';
 import UndoableEdit from '../util/UndoableEdit';
 import { isNumeric } from '../util/Utils';
-import { addProp } from '../Helpers';
+import { addProp, isSet } from '../Helpers';
 import CellPath from './CellPath';
 import Cell from './Cell';
 
@@ -905,7 +905,7 @@ const GraphModel = (root) => {
    *
    * cell - <mxCell> whose number of children should be returned.
    */
-  const getChildCount = (cell) => (cell ? cell.getChildCount() : 0);
+  const getChildCount = (cell) => (isSet(cell) ? cell.getChildCount() : 0);
 
   /**
    * Function: getChildAt
@@ -917,7 +917,8 @@ const GraphModel = (root) => {
    * cell - <mxCell> that represents the parent.
    * index - Integer that specifies the index of the child to be returned.
    */
-  const getChildAt = (cell, index) => (cell ? cell.getChildAt(index) : null);
+  const getChildAt = (cell, index) =>
+    isSet(cell) ? cell.getChildAt(index) : undefined;
 
   /**
    * Function: getChildren
@@ -929,7 +930,7 @@ const GraphModel = (root) => {
    *
    * cell - <mxCell> the represents the parent.
    */
-  const getChildren = (cell) => (cell ? cell.getChildren() : null);
+  const getChildren = (cell) => (isSet(cell) ? cell.getChildren() : undefined);
 
   /**
    * Function: getChildVertices

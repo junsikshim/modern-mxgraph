@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import { isUnset } from '../Helpers';
 import { getFunctionName } from './Utils';
 
 /**
@@ -37,9 +38,9 @@ const ObjectIdentity = {
    * is specified.
    */
   get: (obj) => {
-    if (!obj) return null;
+    if (!obj) return;
 
-    if (obj[ObjectIdentity.FIELD_NAME] === null) {
+    if (isUnset(obj[ObjectIdentity.FIELD_NAME])) {
       if (typeof obj === 'object') {
         const ctor = getFunctionName(obj);
         obj[ObjectIdentity.FIELD_NAME] = `${ctor}#${counter++}`;

@@ -155,9 +155,13 @@ const Rectangle = (x, y, width = 0, height = 0) => {
 
   const me = {
     getX,
+    setX,
     getY,
+    setY,
     getWidth,
+    setWidth,
     getHeight,
+    setHeight,
     setRect,
     getCenterX,
     getCenterY,

@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 import Connector from '../shape/Connector';
 import Ellipse from '../shape/Ellipse';
 import RectangleShape from '../shape/RectangleShape';

@@ -4,9 +4,9 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 import ImageShape from '../shape/ImageShape';
-import { STYLE_ROTATION } from '../util/Constants';
+import { NS_SVG, STYLE_ROTATION } from '../util/Constants';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
@@ -21,6 +21,7 @@ import {
   ptSegDistSq,
   toRadians
 } from '../util/Utils';
+import CellState from './CellState';
 
 /**
  * Class: mxGraphView
@@ -74,7 +75,7 @@ import {
  */
 const GraphView = (graph) => {
   // Extends EventSource.
-  const { fireEvent } = EventSource();
+  const { fireEvent, addListener } = EventSource();
 
   /**
    * Variable: captureDocumentGesture
@@ -178,6 +179,8 @@ const GraphView = (graph) => {
   const [getDecoratorPane, setDecoratorPane] = addProp();
   const [getMoveHandler, setMoveHandler] = addProp();
   const [getEndHandler, setEndHandler] = addProp();
+  const [getBackgroundImage, setBackgroundImage] = addProp();
+  const [getBackgroundPageShape, setBackgroundPageShape] = addProp();
 
   /**
    * Function: getBounds
@@ -478,9 +481,7 @@ const GraphView = (graph) => {
         )
       )
     );
-    setGraphBounds(
-      isSet(getGraphBounds()) ? getGraphBounds() : getEmptyBounds()
-    );
+    setGraphBounds(isSet(graphBounds) ? graphBounds : getEmptyBounds());
     validateBackground();
 
     resetValidationState();
@@ -511,7 +512,7 @@ const GraphView = (graph) => {
    * Default is true.
    */
   const getBoundingBox = (state, recurse = true) => {
-    let bbox = null;
+    let bbox;
 
     if (isSet(state)) {
       const text = state.getText();
@@ -2044,7 +2045,7 @@ const GraphView = (graph) => {
    * if it does not yet exist. Default is false.
    */
   const getState = (cell, create = false) => {
-    let state = null;
+    let state;
 
     if (isSet(cell)) {
       state = getStates().get(cell);
@@ -2459,6 +2460,8 @@ const GraphView = (graph) => {
   };
 
   const me = {
+    addListener,
+
     /**
      * Function: getGraphBounds
      *
@@ -2611,6 +2614,8 @@ const GraphView = (graph) => {
     installListeners,
     createSvg,
     updateContainerStyle,
+    getGraph,
+    getCurrentRoot,
     destroy
   };
 

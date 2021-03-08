@@ -181,6 +181,8 @@ const Shape = (stencil) => {
    */
   const [isPointerEvents, setPointerEvents] = addProp(true);
 
+  const [isOriginalPointerEvents, setOriginalPointerEvents] = addProp();
+
   /**
    * Variable: svgPointerEvents
    *
@@ -1458,6 +1460,8 @@ const Shape = (stencil) => {
     getLabelBounds,
     getLabelMargins,
     checkBounds,
+    getBounds,
+    setBounds,
     redrawShape,
     createCanvas,
     createSvgCanvas,
@@ -1495,6 +1499,7 @@ const Shape = (stencil) => {
     augmentBoundingBox,
     isPaintBoundsInverted,
     getRotation,
+    setRotation,
     getTextRotation,
     getShapeRotation,
     createTransparentSvgRectangle,
