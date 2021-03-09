@@ -12,7 +12,7 @@ import ObjectIdentity from '../util/ObjectIdentity';
 import Point from '../util/Point';
 import UndoableEdit from '../util/UndoableEdit';
 import { isNumeric } from '../util/Utils';
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, withConstructor } from '../Helpers';
 import CellPath from './CellPath';
 import Cell from './Cell';
 
@@ -298,7 +298,7 @@ const GraphModel = (root) => {
    *
    * True if the program flow is currently inside endUpdate.
    */
-  const [getEndingUpdate, setEndingUpdate] = addProp(false);
+  const [isEndingUpdate, setEndingUpdate] = addProp(false);
 
   /**
    * Function: clear
@@ -1714,13 +1714,12 @@ const GraphModel = (root) => {
       fireEvent(EventObject(Event.END_EDIT));
     }
 
-    if (!getEndingUpdate()) {
-      setUpdateLevel(0);
-      setEndingUpdate(false);
+    if (!isEndingUpdate()) {
+      setEndingUpdate(getUpdateLevel() === 0);
       fireEvent(EventObject(Event.END_UPDATE, 'edit', getCurrentEdit()));
 
       try {
-        if (getEndingUpdate() && !getCurrentEdit().isEmpty()) {
+        if (isEndingUpdate() && !getCurrentEdit().isEmpty()) {
           fireEvent(EventObject(Event.BEFORE_UNDO, 'edit', getCurrentEdit()));
           const tmp = getCurrentEdit();
           setCurrentEdit(createUndoableEdit());
@@ -2002,6 +2001,7 @@ const GraphModel = (root) => {
   };
 
   const me = {
+    fireEvent,
     addListener,
     removeListener,
     clear,
@@ -2130,7 +2130,7 @@ export const RootChange = (model, root) => {
     execute
   };
 
-  return me;
+  return withConstructor(me, RootChange);
 };
 
 /**
@@ -2217,10 +2217,12 @@ export const ChildChange = (model, parent, child, index) => {
   };
 
   const me = {
-    execute
+    execute,
+    getChild,
+    getPrevious
   };
 
-  return me;
+  return withConstructor(me, ChildChange);
 };
 
 /**
@@ -2256,10 +2258,12 @@ export const TerminalChange = (model, cell, terminal, source) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell,
+    getPrevious
   };
 
-  return me;
+  return withConstructor(me, TerminalChange);
 };
 
 /**
@@ -2292,10 +2296,11 @@ export const ValueChange = (model, cell, value) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell
   };
 
-  return me;
+  return withConstructor(me, ValueChange);
 };
 
 /**
@@ -2331,7 +2336,7 @@ export const StyleChange = (model, cell, style) => {
     execute
   };
 
-  return me;
+  return withConstructor(me, StyleChange);
 };
 
 /**
@@ -2364,10 +2369,13 @@ export const GeometryChange = (model, cell, geometry) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell,
+    getPrevious,
+    getGeometry
   };
 
-  return me;
+  return withConstructor(me, GeometryChange);
 };
 
 /**
@@ -2402,10 +2410,11 @@ export const CollapseChange = (model, cell, collapsed) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell
   };
 
-  return me;
+  return withConstructor(me, CollapseChange);
 };
 
 /**
@@ -2440,10 +2449,11 @@ export const VisibleChange = (model, cell, visible) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell
   };
 
-  return me;
+  return withConstructor(me, VisibleChange);
 };
 
 /**
@@ -2504,10 +2514,11 @@ export const CellAttributeChange = (cell, attribute, value) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell
   };
 
-  return me;
+  return withConstructor(me, CellAttributeChange);
 };
 
 export default GraphModel;

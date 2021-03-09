@@ -37,7 +37,7 @@ import Shape from './Shape';
  * 1. This is stored in <strokewidth>.
  */
 const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
-  const { getStyle, isRounded, isGlass, getRotation, isOutline } = Shape();
+  const _shape = Shape();
 
   const [getBounds, setBounds] = addProp(bounds);
   const [getFill, setFill] = addProp(fill);
@@ -52,14 +52,14 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
   const isHtmlAllowed = () => {
     let events = true;
 
-    if (isSet(getStyle())) {
-      events = getValue(getStyle(), STYLE_POINTER_EVENTS, true);
+    if (isSet(_shape.getStyle())) {
+      events = getValue(_shape.getStyle(), STYLE_POINTER_EVENTS, true);
     }
 
     return (
-      !isRounded() &&
-      !isGlass() &&
-      getRotation() === 0 &&
+      !_shape.isRounded() &&
+      !_shape.isGlass() &&
+      _shape.getRotation() === 0 &&
       (events || (isSet(getFill()) && getFill() !== NONE))
     );
   };
@@ -72,8 +72,8 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
   const paintBackground = (c, x, y, w, h) => {
     let events = true;
 
-    if (isSet(getStyle())) {
-      events = getValue(getStyle(), STYLE_POINTER_EVENTS, true);
+    if (isSet(_shape.getStyle())) {
+      events = getValue(_shape.getStyle(), STYLE_POINTER_EVENTS, true);
     }
 
     if (
@@ -81,25 +81,25 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
       (isSet(getFill()) && getFill() !== NONE) ||
       (isSet(getStroke()) && getStroke() !== NONE)
     ) {
-      if (!events && (getFill() == null || getFill() == NONE)) {
+      if (!events && (isUnset(getFill()) || getFill() === NONE)) {
         c.pointerEvents = false;
       }
 
       if (this.isRounded) {
         var r = 0;
 
-        if (getValue(getStyle(), STYLE_ABSOLUTE_ARCSIZE, false)) {
+        if (getValue(_shape.getStyle(), STYLE_ABSOLUTE_ARCSIZE, false)) {
           r = Math.min(
             w / 2,
             Math.min(
               h / 2,
-              getValue(getStyle(), STYLE_ARCSIZE, LINE_ARCSIZE) / 2
+              getValue(_shape.getStyle(), STYLE_ARCSIZE, LINE_ARCSIZE) / 2
             )
           );
         } else {
           var f =
             getValue(
-              getStyle(),
+              _shape.getStyle(),
               STYLE_ARCSIZE,
               RECTANGLE_ROUNDING_FACTOR * 100
             ) / 100;
@@ -141,6 +141,7 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
   };
 
   const me = {
+    ..._shape,
     isHtmlAllowed,
     paintBackground,
     isRoundable,

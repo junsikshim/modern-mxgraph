@@ -6,6 +6,7 @@
 
 import { addProp } from '../Helpers';
 import Point from './Point';
+import { clone as cloneRect } from './Utils';
 
 /**
  * Class: Rectangle
@@ -153,6 +154,8 @@ const Rectangle = (x, y, width = 0, height = 0) => {
     obj.getWidth() === getWidth() &&
     obj.getHeight() === getHeight();
 
+  const clone = () => cloneRect(me);
+
   const me = {
     getX,
     setX,
@@ -170,7 +173,8 @@ const Rectangle = (x, y, width = 0, height = 0) => {
     grow,
     getPoint,
     rotate90,
-    equals
+    equals,
+    clone
   };
 
   return me;

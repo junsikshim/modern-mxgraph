@@ -9,15 +9,39 @@ import Shape from '../shape/Shape';
 import {
   ALIGN_CENTER,
   ALIGN_MIDDLE,
+  ALIGN_RIGHT,
   DEFAULT_FONTFAMILY,
   DEFAULT_FONTSIZE,
   DEFAULT_FONTSTYLE,
   DEFAULT_TEXT_DIRECTION,
+  FONT_BOLD,
+  FONT_ITALIC,
+  FONT_STRIKETHROUGH,
+  FONT_UNDERLINE,
+  STYLE_ALIGN,
+  STYLE_FONTCOLOR,
+  STYLE_FONTFAMILY,
+  STYLE_FONTSIZE,
+  STYLE_FONTSTYLE,
+  STYLE_HORIZONTAL,
+  STYLE_LABEL_BACKGROUNDCOLOR,
+  STYLE_LABEL_BORDERCOLOR,
+  STYLE_LABEL_POSITION,
   STYLE_ROTATION,
+  STYLE_SPACING,
+  STYLE_SPACING_BOTTOM,
+  STYLE_SPACING_LEFT,
+  STYLE_SPACING_RIGHT,
+  STYLE_SPACING_TOP,
+  STYLE_TEXT_DIRECTION,
+  STYLE_TEXT_OPACITY,
+  STYLE_VERTICAL_ALIGN,
+  STYLE_VERTICAL_LABEL_POSITION,
   TEXT_DIRECTION_AUTO,
   TEXT_DIRECTION_LTR,
   TEXT_DIRECTION_RTL
 } from '../util/Constants';
+import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import SvgCanvas2D from '../util/SvgCanvas2D';
 import {
@@ -105,18 +129,7 @@ const Text = (
   labelPadding = 0,
   textDirection
 ) => {
-  const {
-    getBounds,
-    setBounds,
-    getRotation,
-    setRotation,
-    getScale,
-    setScale,
-    getNode,
-    resetStyles: _resetStyles,
-    apply: _apply,
-    getStyle
-  } = Shape();
+  const _shape = Shape();
 
   const [getData, setData] = addProp(data);
   const [getColor, setColor] = addProp(color);
@@ -236,8 +249,8 @@ const Text = (
   const [getMargin, setMargin] = addProp();
   const [getUnrotatedBoundingBox, setUnrotatedBoundingBox] = addProp();
 
-  setBounds(bounds);
-  setRotation(0);
+  _shape.setBounds(bounds);
+  _shape.setRotation(0);
 
   /**
    * Function: isHtmlAllowed
@@ -260,8 +273,8 @@ const Text = (
    * Returns true if the bounds are not null and all of its variables are numeric.
    */
   const checkBounds = () => {
-    const scale = getScale();
-    const bounds = getBounds();
+    const scale = _shape.getScale();
+    const bounds = _shape.getBounds();
 
     return (
       !isNaN(scale) &&
@@ -282,11 +295,12 @@ const Text = (
    */
   const paint = (c, update) => {
     // Scale is passed-through to canvas
-    const s = getScale();
-    const x = getBounds().getX() / s;
-    const y = getBounds().getY() / s;
-    const w = getBounds().getWidth() / s;
-    const h = getBounds().getHeight() / s;
+    const s = _shape.getScale();
+    const bounds = _shape.getBounds();
+    const x = bounds.getX() / s;
+    const y = bounds.getY() / s;
+    const w = bounds.getWidth() / s;
+    const h = bounds.getHeight() / s;
 
     updateTransform(c, x, y, w, h);
     configureCanvas(c, x, y, w, h);
@@ -303,7 +317,7 @@ const Text = (
         getOverflow(),
         isClipped(),
         getTextRotation(),
-        getNode()
+        _shape.getNode()
       );
     } else {
       // Checks if text contains HTML markup
@@ -318,7 +332,7 @@ const Text = (
       }
 
       if (dir !== TEXT_DIRECTION_LTR && dir !== TEXT_DIRECTION_RTL) {
-        dir = null;
+        dir = undefined;
       }
 
       c.text(
@@ -346,20 +360,20 @@ const Text = (
    */
   const redraw = () => {
     if (
-      isVisible() &&
+      _shape.isVisible() &&
       checkBounds() &&
       isCacheEnabled() &&
       getLastData() === getData() &&
       isNode(getData())
     ) {
-      if (getNode().nodeName === 'DIV' && isHtmlAllowed()) {
+      if (_shape.getNode().nodeName === 'DIV' && isHtmlAllowed()) {
         redrawHtmlShapeWithCss3();
 
         updateBoundingBox();
       } else {
         const canvas = createCanvas();
 
-        if (isSet(canvas) && isSet(canvas.updateText)) {
+        if (isSet(canvas) && isSet(canvas.isUpdateText())) {
           // Specifies if events should be handled
           canvas.setPointerEvents(getPointerEvents());
 
@@ -369,7 +383,7 @@ const Text = (
         }
       }
     } else {
-      redraw();
+      _shape.redraw();
 
       if (isNode(getData())) {
         setLastData(getData());
@@ -385,7 +399,7 @@ const Text = (
    * Resets all styles.
    */
   const resetStyles = () => {
-    _resetStyles();
+    _shape.resetStyles();
 
     setColor('black');
     setAlign(ALIGN_CENTER);
@@ -415,9 +429,10 @@ const Text = (
    * state - <mxCellState> of the corresponding cell.
    */
   const apply = (state) => {
-    const style = getStyle();
+    const style = _shape.getStyle();
     const old = getSpacing();
-    _apply(state);
+
+    _shape.apply(state);
 
     if (isSet(style)) {
       setFontStyle(getValue(style, STYLE_FONTSTYLE, getFontStyle()));
@@ -453,12 +468,12 @@ const Text = (
       setTextDirection(
         getValue(style, STYLE_TEXT_DIRECTION, DEFAULT_TEXT_DIRECTION)
       );
-      setOpacity(getValue(style, STYLE_TEXT_OPACITY, 100));
+      _shape.setOpacity(getValue(style, STYLE_TEXT_OPACITY, 100));
       updateMargin();
     }
 
-    setFlipV();
-    setFlipH();
+    _shape.setFlipV();
+    _shape.setFlipH();
   };
 
   /**
@@ -487,7 +502,7 @@ const Text = (
    * Returns the node that contains the rendered input.
    */
   const getContentNode = () => {
-    const result = getNode();
+    const result = _shape.getNode();
 
     if (isSet(result)) {
       // Rendered with no foreignObject
@@ -508,18 +523,18 @@ const Text = (
    * Updates the <boundingBox> for this shape using the given node and position.
    */
   const updateBoundingBox = () => {
-    const node = getNode();
-    setBoundingBox(getBounds().clone());
+    const node = _shape.getNode();
+    setBoundingBox(_shape.getBounds().clone());
     const rot = getTextRotation();
-    const style = getStyle();
-    const scale = getScale();
+    const style = _shape.getStyle();
+    const scale = _shape.getScale();
 
     const h = isSet(style)
       ? getValue(style, STYLE_LABEL_POSITION, ALIGN_CENTER)
-      : null;
+      : undefined;
     const v = isSet(style)
       ? getValue(style, STYLE_VERTICAL_LABEL_POSITION, ALIGN_MIDDLE)
-      : null;
+      : undefined;
 
     if (
       !isIgnoreStringSize() &&
@@ -530,8 +545,8 @@ const Text = (
         h !== ALIGN_CENTER ||
         v !== ALIGN_MIDDLE)
     ) {
-      let ow = null;
-      let oh = null;
+      let ow;
+      let oh;
 
       if (isSet(node.ownerSVGElement)) {
         if (
@@ -569,7 +584,9 @@ const Text = (
           }
         }
       } else {
-        const td = isSet(getState()) ? getState().getView().textDiv : null;
+        const td = isSet(_shape.getState())
+          ? _shape.getState().getView().textDiv
+          : undefined;
 
         // Use cached offset size
         if (isSet(getOffsetWidth()) && isSet(getOffsetHeight())) {
@@ -605,7 +622,12 @@ const Text = (
 
       if (isSet(ow) && isSet(oh)) {
         setBoundingBox(
-          Rectangle(getBounds().getX(), getBounds().getY(), ow, oh)
+          Rectangle(
+            _shape.getBounds().getX(),
+            _shape.getBounds().getY(),
+            ow,
+            oh
+          )
         );
       }
     }
@@ -657,8 +679,8 @@ const Text = (
    * Returns the rotation for the text label of the corresponding shape.
    */
   const getTextRotation = () =>
-    isSet(getState()) && isSet(getState().getShape())
-      ? getState().getShape().getTextRotation()
+    isSet(_shape.getState()) && isSet(_shape.getState().getShape())
+      ? _shape.getState().getShape().getTextRotation()
       : 0;
 
   /**
@@ -669,8 +691,13 @@ const Text = (
    */
   const isPaintBoundsInverted = () =>
     !isHorizontal() &&
-    isSet(getState()) &&
-    getState().getView().getGraph().getModel().isVertex(getState().getCell());
+    isSet(_shape.getState()) &&
+    _shape
+      .getState()
+      .getView()
+      .getGraph()
+      .getModel()
+      .isVertex(_shape.getState().getCell());
 
   /**
    * Function: configureCanvas
@@ -765,8 +792,8 @@ const Text = (
    * Updates the HTML node(s) to reflect the latest bounds and scale.
    */
   const redrawHtmlShapeWithCss3 = () => {
-    const bounds = getBounds();
-    const scale = getScale();
+    const bounds = _shape.getBounds();
+    const scale = _shape.getScale();
     const w = Math.max(0, Math.round(bounds.width / scale));
     const h = Math.max(0, Math.round(bounds.height / scale));
     const flex =
@@ -778,7 +805,7 @@ const Text = (
       'px; pointer-events: none; ';
     const block = getTextCss();
     const margin = getMargin();
-    const node = getNode();
+    const node = _shape.getNode();
 
     SvgCanvas2D.createCss(
       w + 2,
@@ -788,8 +815,8 @@ const Text = (
       isWrap(),
       getOverflow(),
       isClipped(),
-      isSet(getBackground()) ? htmlEntities(getBackground()) : null,
-      isSet(getBorder()) ? htmlEntities(getBorder()) : null,
+      isSet(getBackground()) ? htmlEntities(getBackground()) : undefined,
+      isSet(getBorder()) ? htmlEntities(getBorder()) : undefined,
       flex,
       block,
       scale,
@@ -878,6 +905,7 @@ const Text = (
   };
 
   const me = {
+    ..._shape,
     isHtmlAllowed,
     getSvgScreenOffset,
     checkBounds,
@@ -894,7 +922,27 @@ const Text = (
     configureCanvas,
     redrawHtmlShape,
     updateMargin,
-    getSpacing
+    getSpacing,
+    getData,
+    setData,
+    getLastData,
+    setLastData,
+    getMargin,
+    setMargin,
+    getSpacingLeft,
+    setSpacingLeft,
+    getSpacingRight,
+    setSpacingRight,
+    getSpacingTop,
+    setSpacingTop,
+    getSpacingBottom,
+    setSpacingBottom,
+    isWrap,
+    setWrap,
+    isClipped,
+    setClipped,
+    getOverflow,
+    setOverflow
   };
 
   return me;

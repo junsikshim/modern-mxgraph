@@ -318,7 +318,8 @@ const GraphSelectionModel = (graph) => {
     removeCells,
     changeSelection,
     cellAdded,
-    cellRemoved
+    cellRemoved,
+    getCells
   };
 
   return me;

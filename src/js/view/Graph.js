@@ -34,18 +34,44 @@ import GraphModel, {
 } from '../model/GraphModel';
 import {
   ALIGN_MIDDLE,
+  DEFAULT_STARTSIZE,
+  DIRECTION_EAST,
+  DIRECTION_NORTH,
+  DIRECTION_SOUTH,
+  DIRECTION_WEST,
+  NONE,
   PAGE_FORMAT_A4_PORTRAIT,
   SHAPE_LABEL,
   SHAPE_SWIMLANE,
+  STYLE_DIRECTION,
+  STYLE_ENTRY_DX,
+  STYLE_ENTRY_DY,
+  STYLE_ENTRY_PERIMETER,
+  STYLE_ENTRY_X,
+  STYLE_ENTRY_Y,
+  STYLE_EXIT_DX,
+  STYLE_EXIT_DY,
+  STYLE_EXIT_PERIMETER,
+  STYLE_EXIT_X,
+  STYLE_EXIT_Y,
   STYLE_FILLCOLOR,
+  STYLE_FLIPH,
+  STYLE_FLIPV,
+  STYLE_HORIZONTAL,
   STYLE_IMAGE,
   STYLE_IMAGE_HEIGHT,
   STYLE_IMAGE_WIDTH,
   STYLE_INDICATOR_GRADIENTCOLOR,
+  STYLE_NOLABEL,
+  STYLE_ORTHOGONAL,
+  STYLE_OVERFLOW,
+  STYLE_POINTER_EVENTS,
   STYLE_SHAPE,
   STYLE_SOURCE_PORT,
+  STYLE_STARTSIZE,
   STYLE_TARGET_PORT,
-  STYLE_VERTICAL_ALIGN
+  STYLE_VERTICAL_ALIGN,
+  STYLE_WHITE_SPACE
 } from '../util/Constants';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
@@ -60,10 +86,13 @@ import {
   parseCssNumber,
   sortCells,
   setCellStyles as _setCellStyles,
-  convertPoint
+  convertPoint,
+  getValue,
+  isNode
 } from '../util/Utils';
 import CellEditor from './CellEditor';
 import CellRenderer from './CellRenderer';
+import ConnectionConstraint from './ConnectionConstraint';
 import EdgeStyle from './EdgeStyle';
 import GraphSelectionModel from './GraphSelectionModel';
 import GraphView from './GraphView';
@@ -1621,7 +1650,7 @@ const Graph = (container, model, _, stylesheet) => {
   const [getEventSource, setEventSource] = addProp();
   const [getGraphModelChangeListener, setGraphModelChangeListener] = addProp();
   const [getTooltipHandler, setTooltipHandler] = addProp();
-  const [getSelectionCellHandler, setSelectionCellHandler] = addProp();
+  const [getSelectionCellsHandler, setSelectionCellsHandler] = addProp();
   const [getConnectionHandler, setConnectionHandler] = addProp();
   const [getGraphHandler, setGraphHandler] = addProp();
   const [getPanningHandler, setPanningHandler] = addProp();
@@ -1674,7 +1703,7 @@ const Graph = (container, model, _, stylesheet) => {
   const createHandlers = () => {
     setTooltipHandler(createTooltipHandler());
     getTooltipHandler().setEnabled(false);
-    setSelectionCellHandler(createSelectionCellsHandler());
+    setSelectionCellsHandler(createSelectionCellsHandler());
     setConnectionHandler(createConnectionHandler());
     getConnectionHandler().setEnabled(false);
     setGraphHandler(createGraphHandler());
@@ -11058,8 +11087,8 @@ const Graph = (container, model, _, stylesheet) => {
               undefined,
               (state) =>
                 isUnset(state.getShape()) ||
-                state.getShape().getPaintBackground() !==
-                  RectangleShape.paintBackground ||
+                // state.getShape().paintBackground !==
+                //   rectangleShape.paintBackground ||
                 getValue(state.getStyle(), STYLE_POINTER_EVENTS, '1') === '1' ||
                 (isSet(state.getShape().getFill()) &&
                   state.getShape().getFill() !== NONE)
@@ -12675,6 +12704,15 @@ const Graph = (container, model, _, stylesheet) => {
     isMouseDown,
     getTooltipHandler,
     getPopupMenuHandler,
+    getSelectionCellsHandler,
+    isNativeDblClickEnabled,
+    setNativeDblClickEnabled,
+    isFoldingEnabled,
+    setFoldingEnabled,
+    isKeepEdgesInForeground,
+    setKeepEdgesInForeground,
+    isKeepEdgesInBackground,
+    setKeepEdgesInBackground,
     destroy
   };
 
@@ -12689,7 +12727,7 @@ const Graph = (container, model, _, stylesheet) => {
 
   // Adds a graph model listener to update the view
   setGraphModelChangeListener((sender, evt) =>
-    graphModelChanged(evt.getProperty('edit').changes)
+    graphModelChanged(evt.getProperty('edit').getChanges())
   );
 
   getModel().addListener(Event.CHANGE, getGraphModelChangeListener());

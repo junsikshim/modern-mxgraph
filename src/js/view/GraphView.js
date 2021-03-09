@@ -15,7 +15,34 @@ import {
 } from '../Client';
 import { addProp, isSet, isUnset } from '../Helpers';
 import ImageShape from '../shape/ImageShape';
-import { NS_SVG, STYLE_ROTATION } from '../util/Constants';
+import {
+  ALIGN_BOTTOM,
+  ALIGN_CENTER,
+  ALIGN_LEFT,
+  ALIGN_MIDDLE,
+  ALIGN_RIGHT,
+  ALIGN_TOP,
+  NS_SVG,
+  STYLE_ALIGN,
+  STYLE_EDGE,
+  STYLE_FLIPH,
+  STYLE_FLIPV,
+  STYLE_LABEL_POSITION,
+  STYLE_LABEL_WIDTH,
+  STYLE_LOOP,
+  STYLE_NOEDGESTYLE,
+  STYLE_ORTHOGONAL_LOOP,
+  STYLE_PERIMETER,
+  STYLE_PERIMETER_SPACING,
+  STYLE_ROTATION,
+  STYLE_ROUTING_CENTER_X,
+  STYLE_ROUTING_CENTER_Y,
+  STYLE_SOURCE_PERIMETER_SPACING,
+  STYLE_SOURCE_PORT,
+  STYLE_TARGET_PERIMETER_SPACING,
+  STYLE_TARGET_PORT,
+  STYLE_VERTICAL_LABEL_POSITION
+} from '../util/Constants';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
@@ -867,7 +894,7 @@ const GraphView = (graph) => {
         origin.setY(origin.getY() + pState.getOrigin().getY());
       }
 
-      const offset = getGraph().getChildOffsetForCell(state.getCell());
+      let offset = getGraph().getChildOffsetForCell(state.getCell());
 
       if (isSet(offset)) {
         origin.setX(origin.getX() + offset.getX());
@@ -1446,7 +1473,7 @@ const GraphView = (graph) => {
     let next = getNextPoint(edge, end, source);
 
     const orth = getGraph().isOrthogonal(edge);
-    const alpha = toRadians(Number(start.style[STYLE_ROTATION] || '0'));
+    const alpha = toRadians(Number(start.getStyle()[STYLE_ROTATION] || '0'));
     const center = Point(start.getCenterX(), start.getCenterY());
 
     if (alpha !== 0) {
@@ -1706,7 +1733,7 @@ const GraphView = (graph) => {
    */
   const getVisibleTerminal = (edge, source) => {
     const model = getGraph().getModel();
-    const result = model.getTerminal(edge, source);
+    let result = model.getTerminal(edge, source);
     let best = result;
 
     while (isSet(result) && result !== getCurrentRoot()) {
@@ -1743,16 +1770,16 @@ const GraphView = (graph) => {
    * state - <mxCellState> whose bounds should be updated.
    */
   const updateEdgeBounds = (state) => {
-    const points = state.absolutePoints;
+    const points = state.getAbsolutePoints();
     const p0 = points[0];
     const pe = points[points.length - 1];
 
     if (!p0.equals(pe)) {
       const dx = pe.getX() - p0.getX();
       const dy = pe.getY() - p0.getY();
-      state.terminalDistance = Math.sqrt(dx * dx + dy * dy);
+      state.setTerminalDistance(Math.sqrt(dx * dx + dy * dy));
     } else {
-      state.terminalDistance = 0;
+      state.setTerminalDistance(0);
     }
 
     let length = 0;

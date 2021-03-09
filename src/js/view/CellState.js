@@ -42,7 +42,9 @@ const CellState = (view, cell, style = {}) => {
     getWidth,
     setWidth,
     getHeight,
-    setHeight
+    setHeight,
+    getCenterX,
+    getCenterY
   } = Rectangle();
 
   /**
@@ -172,6 +174,8 @@ const CellState = (view, cell, style = {}) => {
   const [getUnscaledHeight, setUnscaledHeight] = addProp();
   const [getCellBounds, setCellBounds] = addProp();
   const [getPaintBounds, setPaintBounds] = addProp();
+  const [getOverlays, setOverlays] = addProp();
+  const [getControl, setControl] = addProp();
 
   /**
    * Function: getPerimeterBounds
@@ -435,13 +439,40 @@ const CellState = (view, cell, style = {}) => {
     isInvalidStyle,
     setInvalidStyle,
     getAbsoluteOffset,
+    setAbsoluteOffset,
+    getAbsolutePoints,
+    setAbsolutePoints,
     getOrigin,
     setLength,
     getCell,
+    setCell,
     getView,
+    setView,
     getShape,
+    setShape,
     getText,
+    setText,
     clone,
+    getX,
+    setX,
+    getY,
+    setY,
+    getWidth,
+    setWidth,
+    getHeight,
+    setHeight,
+    getUnscaledWidth,
+    setUnscaledWidth,
+    getUnscaledHeight,
+    setUnscaledHeight,
+    getShape,
+    setShape,
+    getOverlays,
+    setOverlays,
+    getControl,
+    setControl,
+    getCenterX,
+    getCenterY,
     destroy
   };
 

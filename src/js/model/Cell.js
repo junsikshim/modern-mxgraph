@@ -169,6 +169,8 @@ const Cell = (value, geometry, style) => {
    */
   const [getEdges, setEdges] = addProp([]);
 
+  const [getOverlays, setOverlays] = addProp();
+
   /**
    * Function: valueChanged
    *
@@ -702,6 +704,8 @@ const Cell = (value, geometry, style) => {
     setAttribute,
     clone,
     cloneValue,
+    getOverlays,
+    setOverlays,
     toString
   };
 

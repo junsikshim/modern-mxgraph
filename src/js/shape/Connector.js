@@ -96,7 +96,7 @@ const Connector = (points, stroke, strokewidth) => {
    * paint the marker.
    */
   const createMarker = (c, pts, source) => {
-    let result = null;
+    let result;
     const n = pts.length;
     const type = getValue(
       getStyle(),

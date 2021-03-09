@@ -5,25 +5,45 @@
  */
 
 import {} from '../Client';
-import { noop } from '../Helpers';
+import { isUnset, noop } from '../Helpers';
 import {
   DIALECT_SVG,
+  DIRECTION_EAST,
   DIRECTION_NORTH,
   DIRECTION_SOUTH,
   DIRECTION_WEST,
   LINE_ARCSIZE,
   NONE,
+  NS_SVG,
   RECTANGLE_ROUNDING_FACTOR,
   SHADOW_OFFSET_X,
   SHADOW_OFFSET_Y,
   STYLE_ABSOLUTE_ARCSIZE,
   STYLE_ARCSIZE,
   STYLE_BACKGROUND_OUTLINE,
+  STYLE_DASHED,
+  STYLE_DIRECTION,
+  STYLE_ENDARROW,
+  STYLE_ENDSIZE,
   STYLE_FILLCOLOR,
+  STYLE_FILL_OPACITY,
   STYLE_FIX_DASH,
+  STYLE_FLIPH,
+  STYLE_FLIPV,
+  STYLE_GLASS,
+  STYLE_GRADIENTCOLOR,
+  STYLE_GRADIENT_DIRECTION,
   STYLE_HORIZONTAL,
+  STYLE_OPACITY,
+  STYLE_ROTATION,
   STYLE_ROUNDED,
   STYLE_SHADOW,
+  STYLE_SPACING,
+  STYLE_STARTARROW,
+  STYLE_STARTSIZE,
+  STYLE_STROKECOLOR,
+  STYLE_STROKEWIDTH,
+  STYLE_STROKE_OPACITY,
   VML_SHADOWCOLOR
 } from '../util/Constants';
 import Rectangle from '../util/Rectangle';
@@ -250,6 +270,16 @@ const Shape = (stencil) => {
   const [getDirection, setDirection] = addProp();
   const [isRounded, setRounded] = addProp(false);
   const [isGlass, setGlass] = addProp(false);
+  const [isShadow, setShadow] = addProp(false);
+  const [isDashed, setDashed] = addProp(false);
+  const [getImage, setImage] = addProp();
+  const [getIndicatorColor, setIndicatorColor] = addProp();
+  const [getIndicatorStrokeColor, setIndicatorStrokeColor] = addProp();
+  const [getIndicatorGradientColor, setIndicatorGradientColor] = addProp();
+  const [getIndicatorDirection, setIndicatorDirection] = addProp();
+  const [getIndicatorImage, setIndicatorImage] = addProp();
+  const [getIndicatorShape, setIndicatorShape] = addProp();
+  const [getOldGradients, setOldGradients] = addProp();
 
   /**
    * Function: init
@@ -515,7 +545,7 @@ const Shape = (stencil) => {
 
     if (isSet(canvas)) {
       // Specifies if events should be handled
-      canvas.setPointerEvents(getPointerEvents());
+      canvas.setPointerEvents(isPointerEvents());
 
       beforePaint(canvas);
       paint(canvas);
@@ -544,7 +574,7 @@ const Shape = (stencil) => {
     }
 
     if (isSet(canvas) && isOutline()) {
-      canvas.setStrokeWidth(getStrokewidth());
+      canvas.setStrokeWidth(getStrokeWidth());
       canvas.setStrokeColor(getStroke());
 
       if (isSet(isDashed())) {
@@ -658,12 +688,12 @@ const Shape = (stencil) => {
 
       if (isDashed()) {
         node.style.borderStyle = 'dashed';
-      } else if (getStrokewidth() > 0) {
+      } else if (getStrokeWidth() > 0) {
         node.style.borderStyle = 'solid';
       }
 
       node.style.borderWidth =
-        Math.max(1, Math.ceil(getStrokewidth() * getScale())) + 'px';
+        Math.max(1, Math.ceil(getStrokeWidth() * getScale())) + 'px';
     } else {
       node.style.borderWidth = '0px';
     }
@@ -686,7 +716,7 @@ const Shape = (stencil) => {
    * Allow optimization by replacing VML with HTML.
    */
   const updateHtmlBounds = (node) => {
-    let sw = Math.ceil(getStrokewidth() * getScale());
+    let sw = Math.ceil(getStrokeWidth() * getScale());
     node.style.borderWidth = Math.max(1, sw) + 'px';
     node.style.overflow = 'hidden';
 
@@ -806,7 +836,7 @@ const Shape = (stencil) => {
       getStencil().drawShape(c, me, x, y, w, h);
     } else {
       // Stencils have separate strokewidth
-      c.setStrokeWidth(getStrokewidth());
+      c.setStrokeWidth(getStrokeWidth());
 
       if (isSet(getPoints())) {
         // Paints edge shape
@@ -889,7 +919,7 @@ const Shape = (stencil) => {
       c.setFillColor(fill);
     }
 
-    c.setStrokeColor(stroke);
+    c.setStrokeColor(getStroke());
   };
 
   /**
@@ -980,7 +1010,7 @@ const Shape = (stencil) => {
    * Paints the glass gradient effect.
    */
   const paintGlassEffect = (c, x, y, w, h, arc) => {
-    const sw = Math.ceil(getStrokewidth() / 2);
+    const sw = Math.ceil(getStrokeWidth() / 2);
     const size = 0.4;
 
     c.setGradient('#ffffff', '#ffffff', x, y, w, h * 0.6, 'south', 0.9, 0.1);
@@ -1125,8 +1155,9 @@ const Shape = (stencil) => {
     setStartArrow();
     setEndArrow();
     setDirection();
-    setShadow();
-    setDashed();
+    setShadow(false);
+    setDashed(false);
+    setRounded(false);
     setGlass();
   };
 
@@ -1199,7 +1230,7 @@ const Shape = (stencil) => {
         getDirection() === DIRECTION_SOUTH
       ) {
         const tmp = isFlipH();
-        setFlipH(getFlipV());
+        setFlipH(isFlipV());
         setFlipV(tmp);
       }
 
@@ -1259,7 +1290,7 @@ const Shape = (stencil) => {
           );
 
           // Adds strokeWidth
-          getBoundingBox().grow((getStrokewidth() * getScale()) / 2);
+          getBoundingBox().grow((getStrokeWidth() * getScale()) / 2);
 
           return;
         }
@@ -1483,6 +1514,8 @@ const Shape = (stencil) => {
     getArcSize,
     paintGlassEffect,
     addPoints,
+    getPoints,
+    setPoints,
     resetStyles,
     apply,
     setCursor,
@@ -1497,6 +1530,8 @@ const Shape = (stencil) => {
     updateBoundingBox,
     createBoundingBox,
     augmentBoundingBox,
+    getBoundingBox,
+    setBoundingBox,
     isPaintBoundsInverted,
     getRotation,
     setRotation,
@@ -1505,6 +1540,41 @@ const Shape = (stencil) => {
     createTransparentSvgRectangle,
     setTransparentBackgroundImage,
     releaseSvgGradients,
+    getMinSvgStrokeWidth,
+    setMinSvgStrokeWidth,
+    isAntiAlias,
+    setAntiAlias,
+    isShadow,
+    setShadow,
+    getImage,
+    setImage,
+    getIndicatorColor,
+    setIndicatorColor,
+    getIndicatorStrokeColor,
+    setIndicatorStrokeColor,
+    getIndicatorGradientColor,
+    setIndicatorGradientColor,
+    getIndicatorDirection,
+    setIndicatorDirection,
+    getIndicatorImage,
+    setIndicatorImage,
+    getIndicatorShape,
+    setIndicatorShape,
+    getNode,
+    getScale,
+    setScale,
+    getOpacity,
+    setOpacity,
+    getStyle,
+    setStyle,
+    getState,
+    setState,
+    isFlipH,
+    setFlipH,
+    isFlipV,
+    setFlipV,
+    isVisible,
+    setVisible,
     destroy
   };
 

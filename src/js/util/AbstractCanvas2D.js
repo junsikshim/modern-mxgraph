@@ -307,7 +307,7 @@ const AbstractCanvas2D = () => {
    *
    * Sets the current stroke alpha.
    */
-  const setStrokeAlpha = (value) => getState().setStrokeAlpha(value);
+  const setStrokeAlpha = (value) => (getState().strokeAlpha = value);
 
   /**
    * Function: setFillColor
@@ -606,8 +606,12 @@ const AbstractCanvas2D = () => {
     curveTo,
     arcTo,
     close,
-    end
+    end,
+    isPointerEvents,
+    setPointerEvents
   };
+
+  reset();
 
   return me;
 };

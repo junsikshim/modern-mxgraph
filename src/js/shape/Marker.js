@@ -47,7 +47,7 @@ const Marker = {
 
     return isSet(funct)
       ? funct(canvas, shape, type, pe, unitX, unitY, size, source, sw, filled)
-      : null;
+      : undefined;
   }
 };
 

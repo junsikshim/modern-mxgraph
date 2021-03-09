@@ -11,6 +11,9 @@ import RectangleShape from '../shape/RectangleShape';
 import Rhombus from '../shape/Rhombus';
 import StencilRegistry from '../shape/StencilRegistry';
 import {
+  ALIGN_CENTER,
+  ALIGN_MIDDLE,
+  DEFAULT_TEXT_DIRECTION,
   SHAPE_ACTOR,
   SHAPE_ARROW,
   SHAPE_ARROW_CONNECTOR,
@@ -26,11 +29,42 @@ import {
   SHAPE_RECTANGLE,
   SHAPE_RHOMBUS,
   SHAPE_SWIMLANE,
-  SHAPE_TRIANGLE
+  SHAPE_TRIANGLE,
+  STYLE_ALIGN,
+  STYLE_FILLCOLOR,
+  STYLE_FONTCOLOR,
+  STYLE_FONTFAMILY,
+  STYLE_FONTSIZE,
+  STYLE_FONTSTYLE,
+  STYLE_GRADIENTCOLOR,
+  STYLE_HORIZONTAL,
+  STYLE_INDICATOR_DIRECTION,
+  STYLE_INDICATOR_STROKECOLOR,
+  STYLE_LABEL_BACKGROUNDCOLOR,
+  STYLE_LABEL_BORDERCOLOR,
+  STYLE_LABEL_PADDING,
+  STYLE_LABEL_POSITION,
+  STYLE_LABEL_WIDTH,
+  STYLE_OVERFLOW,
+  STYLE_ROTATION,
+  STYLE_SHAPE,
+  STYLE_SPACING,
+  STYLE_SPACING_BOTTOM,
+  STYLE_SPACING_LEFT,
+  STYLE_SPACING_RIGHT,
+  STYLE_SPACING_TOP,
+  STYLE_STROKECOLOR,
+  STYLE_TEXT_DIRECTION,
+  STYLE_TEXT_OPACITY,
+  STYLE_VERTICAL_ALIGN,
+  STYLE_VERTICAL_LABEL_POSITION
 } from '../util/Constants';
 import Cylinder from './Cylinder';
 import Text from '../shape/Text';
 import ImageShape from '../shape/ImageShape';
+import Rectangle from '../util/Rectangle';
+import { IS_IOS, IS_SVG, IS_TOUCH, NO_FO } from '../Client';
+import { getValue, isNode } from '../util/Utils';
 
 /**
  * Variable: defaultShapes
@@ -380,12 +414,8 @@ const CellRenderer = () => {
     const style = state.getStyle();
 
     if (style[STYLE_FONTSIZE] > 0 || isUnset(style[STYLE_FONTSIZE])) {
-      // Avoids using DOM node for empty labels
-      var isForceHtml =
-        graph.isHtmlLabel(state.getCell()) || (isSet(value) && isNode(value));
-
       state.setText(
-        defaultTextShape(
+        getDefaultTextShape()(
           value,
           Rectangle(),
           style[STYLE_ALIGN] || ALIGN_CENTER,
@@ -844,16 +874,16 @@ const CellRenderer = () => {
       state.setText();
     }
 
-    const text = getText();
+    const text = state.getText();
 
     if (isSet(text)) {
       // Forced is true if the style has changed, so to get the updated
       // result in getLabelBounds we apply the new style to the shape
       if (forced) {
         // Checks if a full repaint is needed
-        if (isSet(text.getLastValue()) && isTextShapeInvalid(state, stext)) {
+        if (isSet(text.getLastData()) && isTextShapeInvalid(state, stext)) {
           // Forces a full repaint
-          text.setLastValue();
+          text.setLastData();
         }
 
         text.resetStyles();
@@ -877,7 +907,7 @@ const CellRenderer = () => {
         isUnset(text.getBounds()) ||
         !text.getBounds.equals(bounds)
       ) {
-        text.setValue(value);
+        text.setData(value);
         text.setBounds(bounds);
         text.setScale(nextScale);
         text.setWrap(wrapping);
@@ -1035,7 +1065,7 @@ const CellRenderer = () => {
       );
 
       if (hpos === ALIGN_CENTER && vpos === ALIGN_MIDDLE) {
-        bounds = state.shape.getLabelBounds(bounds);
+        bounds = state.getShape().getLabelBounds(bounds);
       }
     }
 
@@ -1304,9 +1334,8 @@ const CellRenderer = () => {
     const shapes = getShapesForState(state);
 
     for (let i = 0; i < shapes.length; i++) {
-      const n = shapes[i].getNode();
-
-      if (isSet(shapes[i]) && isSet(n)) {
+      if (isSet(shapes[i]) && isSet(shapes[i].getNode())) {
+        const n = shapes[i].getNode();
         const html =
           n.parentNode !== state.getView().getDrawPane() &&
           n.parentNode !== state.getView().getOverlayPane();

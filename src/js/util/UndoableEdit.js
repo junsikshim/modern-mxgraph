@@ -52,7 +52,7 @@ import { addProp } from '../Helpers';
  *
  * Constructs a new undoable edit for the given source.
  */
-const UndoableEdit = (source = null, significant = true) => {
+const UndoableEdit = (source, significant) => {
   /**
    * Variable: source
    *
@@ -96,7 +96,7 @@ const UndoableEdit = (source = null, significant = true) => {
    *
    * Returns true if the this edit contains no changes.
    */
-  const isEmpty = getChanges().length === 0;
+  const isEmpty = () => getChanges().length === 0;
 
   /**
    * Function: add

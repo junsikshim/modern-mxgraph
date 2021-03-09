@@ -379,7 +379,7 @@ const Stencil = (desc) => {
     // (start, segment, end blocks), pluggable markers, how to implement
     // swimlanes (title area) with this API, add icon, horizontal/vertical
     // label, indicator for all shapes, rotation
-    const direction = getValue(shape.getStyle(), STYLE_DIRECTION, null);
+    const direction = getValue(shape.getStyle(), STYLE_DIRECTION, undefined);
     const aspect = computeAspect(shape.getStyle(), x, y, w, h, direction);
     const minScale = Math.min(aspect.getWidth(), aspect.getHeight());
     const sw =
@@ -709,7 +709,7 @@ const Stencil = (desc) => {
             node.getAttribute('valign') || 'top',
             false,
             '',
-            null,
+            undefined,
             false,
             rotation
           );

@@ -27,6 +27,7 @@ import {
 } from './Constants';
 import { write } from './Utils';
 import { addProp, isSet, withConstructor } from '../Helpers';
+import { IS_CHROMEAPP, IS_EDGE, IS_IE, IS_IE11 } from '../Client';
 
 /**
  * Class: SvgCanvas2D
@@ -81,12 +82,7 @@ import { addProp, isSet, withConstructor } from '../Helpers';
  * stroke-miterlimit globally. Default is false.
  */
 const SvgCanvas2D = (root, styleEnabled = false) => {
-  const {
-    reset: absReset,
-    begin: absBegin,
-    getState,
-    isRotateHtml
-  } = AbstractCanvas2D();
+  const _canvas = AbstractCanvas2D();
 
   /**
    * Variable: root
@@ -100,7 +96,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
    *
    * Local cache of gradients for quick lookups.
    */
-  const [getGradient, setGradient] = addProp([]);
+  const [getGradients, setGradients] = addProp([]);
 
   /**
    * Variable: defs
@@ -132,10 +128,10 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   const [isCacheOffsetSize, setCacheOffsetSize] = addProp(true);
   const [useDomParser, setUseDomParser] = addProp(true);
   const [useAbsoluteIds, setUseAbsoluteIds] = addProp(
-    !Client.IS_CHROMEAPP &&
-      !Client.IS_IE &&
-      !Client.IS_IE11 &&
-      !Client.IS_EDGE &&
+    !IS_CHROMEAPP &&
+      !IS_IE &&
+      !IS_IE11 &&
+      !IS_EDGE &&
       document.getElementsByTagName('base').length > 0
   );
 
@@ -151,7 +147,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   };
 
   const reset = () => {
-    absReset();
+    _canvas.Reset();
     setGradients([]);
   };
 
@@ -230,7 +226,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       clip,
       rotation
     );
-    const s = getState();
+    const s = _canvas.getState();
 
     if (isSet(text) && s.fontSize > 0) {
       const dy = valign === ALIGN_TOP ? 1 : valign === ALIGN_BOTTOM ? 0 : 0.3;
@@ -394,7 +390,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
   const addNode = (filled, stroked) => {
     const node = getNode();
-    const s = getState();
+    const s = _canvas.getState();
 
     if (isSet(node)) {
       if (node.nodeName === 'path') {
@@ -410,7 +406,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
         updateFill();
       } else if (!isStyleEnabled()) {
         // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=814952
-        if (node.nodeName === 'ellipse' && Client.IS_FF) {
+        if (node.nodeName === 'ellipse' && IS_FF) {
           node.setAttribute('fill', 'transparent');
         } else {
           node.setAttribute('fill', 'none');
@@ -440,11 +436,11 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       }
 
       // Adds pointer events
-      if (isPointerEvents()) {
+      if (_canvas.isPointerEvents()) {
         node.setAttribute('pointer-events', getPointerEventsValue());
       }
       // Enables clicks for nodes inside a link element
-      else if (!isPointerEvents() && isUnset(getOriginalRoot())) {
+      else if (!_canvas.isPointerEvents() && isUnset(getOriginalRoot())) {
         node.setAttribute('pointer-events', 'none');
       }
 
@@ -468,7 +464,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
   const updateFill = () => {
     const node = getNode();
-    const s = getState();
+    const s = _canvas.getState();
 
     if (s.alpha < 1 || s.fillAlpha < 1) {
       node.setAttribute('fill-opacity', s.alpha * s.fillAlpha);
@@ -500,12 +496,15 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   const getCurrentStrokeWidth = () =>
     Math.max(
       getMinStrokeWidth(),
-      Math.max(0.01, format(getState().strokeWidth * getState().scale))
+      Math.max(
+        0.01,
+        format(_canvas.getState().strokeWidth * _canvas.getState().scale)
+      )
     );
 
   const updateStroke = () => {
     const node = getNode();
-    const s = getState();
+    const s = _canvas.getState();
 
     node.setAttribute('stroke', String(s.strokeColor).toLowerCase());
 
@@ -533,7 +532,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
   const updateStrokeAttributes = () => {
     const node = getNode();
-    const s = getState();
+    const s = _canvas.getState();
 
     // Linejoin miter is default in SVG
     if (isSet(s.lineJoin) && s.lineJoin !== 'miter') {
@@ -563,8 +562,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   const createDashPattern = (scale) => {
     const pat = [];
 
-    if (typeof getState().dashPattern === 'string') {
-      const dash = getState().dashPattern.split(' ');
+    if (typeof _canvas.getState().dashPattern === 'string') {
+      const dash = _canvas.getState().dashPattern.split(' ');
 
       if (dash.length > 0) {
         for (let i = 0; i < dash.length; i++) {
@@ -590,19 +589,19 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     // other browsers need a stroke color to perform the hit-detection but
     // do not ignore the visibility attribute. Side-effect is that Opera's
     // hit detection for horizontal/vertical edges seems to ignore the tol.
-    tol.setAttribute('stroke', Client.IS_OT ? 'none' : 'white');
+    tol.setAttribute('stroke', IS_OT ? 'none' : 'white');
 
     return tol;
   };
 
   const createShadow = (node) => {
     const shadow = node.cloneNode(true);
-    const s = getState();
+    const s = _canvas.getState();
 
     // Firefox uses transparent for no fill in ellipses
     if (
       shadow.getAttribute('fill') !== 'none' &&
-      (!Client.IS_FF || shadow.getAttribute('fill') !== 'transparent')
+      (!IS_FF || shadow.getAttribute('fill') !== 'transparent')
     ) {
       shadow.setAttribute('fill', s.shadowColor);
     }
@@ -651,7 +650,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
   const rotate = (theta, flipH, flipV, cx, cy) => {
     if (theta !== 0 || flipH || flipV) {
-      const s = getState();
+      const s = _canvas.getState();
       cx += s.dx;
       cy += s.dy;
 
@@ -705,12 +704,12 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   };
 
   const begin = () => {
-    absBegin();
+    _canvas.begin();
     setNode(createElement('path'));
   };
 
   const rect = (x, y, w, h) => {
-    const s = getState();
+    const s = _canvas.getState();
     const n = createElement('rect');
     n.setAttribute('x', format((x + s.dx) * s.scale));
     n.setAttribute('y', format((y + s.dy) * s.scale));
@@ -724,16 +723,16 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     rect(x, y, w, h);
 
     if (dx > 0) {
-      getNode().setAttribute('rx', format(dx * getState().scale));
+      getNode().setAttribute('rx', format(dx * _canvas.getState().scale));
     }
 
     if (dy > 0) {
-      getNode().setAttribute('ry', format(dy * getState().scale));
+      getNode().setAttribute('ry', format(dy * _canvas.getState().scale));
     }
   };
 
   const ellipse = (x, y, w, h) => {
-    const s = getState();
+    const s = _canvas.getState();
     const n = createElement('ellipse');
     // No rounding for consistent output with 1.x
     n.setAttribute('cx', format((x + w / 2 + s.dx) * s.scale));
@@ -757,7 +756,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
     // LATER: Add option for embedding images as base64.
 
-    const s = getState();
+    const s = _canvas.getState();
     x += s.dx;
     y += s.dy;
 
@@ -817,7 +816,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       node.setAttribute('transform', tr);
     }
 
-    if (!isPointerEvents()) {
+    if (!_canvas.isPointerEvents()) {
       node.setAttribute('pointer-events', 'none');
     }
 
@@ -900,7 +899,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     }
 
     // IE uses this code for export as it cannot render foreignObjects
-    if (!Client.IS_IE && !Client.IS_IE11 && document.createElementNS) {
+    if (!IS_IE && !IS_IE11 && document.createElementNS) {
       const div = document.createElementNS(
         'http://www.w3.org/1999/xhtml',
         'div'
@@ -1062,7 +1061,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     rotation,
     g
   ) => {
-    const state = getState();
+    const state = _canvas.getState();
     const s = state.scale;
 
     createCss(
@@ -1100,7 +1099,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
         const box = div.firstChild;
         const text = box.firstChild;
         const r =
-          (isRotateHtml() ? state.rotation : 0) +
+          (_canvas.isRotateHtml() ? state.rotation : 0) +
           (isSet(rotation) ? rotation : 0);
         let t =
           (getFoOffset() !== 0
@@ -1154,7 +1153,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   };
 
   const getTextCss = () => {
-    const s = getState();
+    const s = _canvas.getState();
     const lh = ABSOLUTE_LINE_HEIGHT
       ? s.fontSize * LINE_HEIGHT + 'px'
       : LINE_HEIGHT * getLineHeightCorrection();
@@ -1169,7 +1168,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       '; line-height: ' +
       lh +
       '; pointer-events: ' +
-      (isPointerEvents() ? getPointerEventsValue() : 'none') +
+      (_canvas.isPointerEvents() ? getPointerEventsValue() : 'none') +
       '; ';
 
     if ((s.fontStyle & FONT_BOLD) === FONT_BOLD) {
@@ -1244,8 +1243,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
         }
       } else {
         plainText(
-          x + getState().dx,
-          y + getState().dy,
+          x + _canvas.getState().dx,
+          y + _canvas.getState().dy,
           w,
           h,
           str,
@@ -1305,14 +1304,14 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     rotation = 0,
     dir
   ) => {
-    const s = getState();
+    const s = _canvas.getState();
     const size = s.fontSize;
     const node = createElement('g');
     let tr = s.transform || '';
     updateFont(node);
 
     // Ignores pointer events
-    if (!isPointerEvents() && isUnset(getOriginalRoot())) {
+    if (!_canvas.isPointerEvents() && isUnset(getOriginalRoot())) {
       node.setAttribute('pointer-events', 'none');
     }
 
@@ -1366,10 +1365,10 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       }
 
       if (
-        !Client.IS_CHROMEAPP &&
-        !Client.IS_IE &&
-        !Client.IS_IE11 &&
-        !Client.IS_EDGE &&
+        !IS_CHROMEAPP &&
+        !IS_IE &&
+        !IS_IE11 &&
+        !IS_EDGE &&
         getRoot().ownerDocument === document
       ) {
         // Workaround for potential base tag
@@ -1466,7 +1465,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   };
 
   const updateFont = (node) => {
-    const s = getState();
+    const s = _canvas.getState();
 
     node.setAttribute('fill', s.fontColor);
 
@@ -1508,7 +1507,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     valign,
     overflow
   ) => {
-    const s = getState();
+    const s = _canvas.getState();
 
     if (isSet(s.fontBackgroundColor) || isSet(s.fontBorderColor)) {
       let bbox;
@@ -1536,7 +1535,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
         // Uses getBBox only if inside document for correct size
         try {
           bbox = node.getBBox();
-          const ie = Client.IS_IE && Client.IS_SVG;
+          const ie = IS_IE && IS_SVG;
           bbox = Rectangle(
             bbox.getX(),
             bbox.getY() + (ie ? 0 : 1),
@@ -1629,6 +1628,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   const fillAndStroke = () => addNode(true, true);
 
   const me = {
+    ..._canvas,
+    getRoot,
     format,
     getBaseUrl,
     reset,
@@ -1655,7 +1656,15 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     addTextBackground,
     stroke,
     fill,
-    fillAndStroke
+    fillAndStroke,
+    getStrokeTolerance,
+    setStrokeTolerance,
+    getPointerEventsValue,
+    setPointerEventsValue,
+    getMinStrokeWidth,
+    setMinStrokeWidth,
+    getGradients,
+    setGradients
   };
 
   let svg;
