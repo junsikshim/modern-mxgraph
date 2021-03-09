@@ -23,16 +23,16 @@
 | /handler/mxCellHighlight         | 315   | Converted |            |
 | /handler/mxCellMarker            | 431   | Converted |            |
 | /handler/mxCellTracker           | 146   |           |            |
-| /handler/mxConnectionHandler     | 2250  |           |            |
+| /handler/mxConnectionHandler     | 2250  | Converted |            |
 | /handler/mxConstraintHandler     | 518   |           |            |
 | /handler/mxEdgeHandler           | 2545  |           |            |
 | /handler/mxEdgeSegmentHandler    | 414   |           |            |
 | /handler/mxElbowEdgeHandler      | 231   |           |            |
-| /handler/mxGraphHandler          | 1866  |           |            |
+| /handler/mxGraphHandler          | 1866  | Converted |            |
 | /handler/mxHandle                | 353   |           |            |
 | /handler/mxKeyHandler            | 429   |           |            |
-| /handler/mxPanningHandler        | 495   |           |            |
-| /handler/mxPopupMenuHandler      | 219   |           |            |
+| /handler/mxPanningHandler        | 495   | Converted |            |
+| /handler/mxPopupMenuHandler      | 219   | Converted |            |
 | /handler/mxRubberband            | 430   |           |            |
 | /handler/mxSelectionCellsHandler | 345   | Converted |            |
 | /handler/mxTooltipHandler        | 354   | Converted |            |
@@ -115,7 +115,7 @@
 | /model/mxCellPath   | 164  | Converted |            |
 | /model/mxGeometry   | 416  | Converted |            |
 | /model/mxGraphModel | 2706 | Converted |            |
-| Total               | 4112 | 4112      |            |
+| Total               | 4112 |           |            |
 
 ### /shape
 
@@ -143,7 +143,7 @@
 | /shape/mxSwimlane        | 506  |           |            |
 | /shape/mxText            | 1438 | Converted |            |
 | /shape/mxTriangle        | 44   |           |            |
-| Total                    | 6931 | 5130      |            |
+| Total                    | 6931 |           |            |
 
 ### /util
 
@@ -172,7 +172,7 @@
 | /util/mxObjectIdentity   | 73    | Converted |            |
 | /util/mxPanningManager   | 266   |           |            |
 | /util/mxPoint            | 55    | Converted |            |
-| /util/mxPopupMenu        | 621   |           |            |
+| /util/mxPopupMenu        | 621   | Converted |            |
 | /util/mxRectangle        | 182   | Converted |            |
 | /util/mxResources        | 451   | Skipped   |            |
 | /util/mxSvgCanvas2D      | 1950  | Converted |            |
@@ -185,7 +185,7 @@
 | /util/mxWindow           | 1133  |           |            |
 | /util/mxXmlCanvas2D      | 1218  | Skipped   |            |
 | mxXmlRequest             | 456   | Skipped   |            |
-| Total                    | 21567 | 15980     |            |
+| Total                    | 21567 |           |            |
 
 ### /view
 
@@ -196,13 +196,13 @@
 | /view/mxCellRenderer         | 1640  | Converted |            |
 | /view/mxCellState            | 448   | Converted |            |
 | /view/mxCellStatePreview     | 204   |           |            |
-| /view/mxConnectionConstraint | 68    |           |            |
+| /view/mxConnectionConstraint | 68    | Converted |            |
 | /view/mxEdgeStyle            | 1653  | Converted |            |
 | /view/mxGraph                | 13230 | Converted |            |
 | /view/mxGraphSelectionModel  | 437   | Converted |            |
 | /view/mxGraphView            | 3023  | Converted |            |
 | /view/mxLayoutManager        | 501   |           |            |
-| /view/mxMultiplicity         | 258   |           |            |
+| /view/mxMultiplicity         | 258   | Converted |            |
 | /view/mxOutline              | 763   |           |            |
 | /view/mxPerimeter            | 922   | Converted |            |
 | /view/mxPrintPreview         | 1235  |           |            |
@@ -210,4 +210,4 @@
 | /view/mxStylesheet           | 267   | Converted |            |
 | /view/mxSwimlaneManager      | 451   |           |            |
 | /view/mxTemporaryCellStates  | 134   | Converted |            |
-| Total                        | 26761 | 21826     |            |
+| Total                        | 26761 |           |            |
