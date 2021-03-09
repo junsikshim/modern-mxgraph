@@ -4,6 +4,15 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import {
+  IS_GC,
+  IS_IE,
+  IS_IE11,
+  IS_OP,
+  IS_POINTER,
+  IS_SF,
+  IS_TOUCH
+} from '../Client';
 import { addProp, isSet, isUnset } from '../Helpers';
 import ImageShape from '../shape/ImageShape';
 import { NS_SVG, STYLE_ROTATION } from '../util/Constants';
@@ -11,11 +20,13 @@ import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
 import EventSource from '../util/EventSource';
+import MouseEvent from '../util/MouseEvent';
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import UndoableEdit from '../util/UndoableEdit';
 import {
   getCurrentStyle,
+  getOffset,
   getRotatedPoint,
   getValue,
   ptSegDistSq,
@@ -2142,10 +2153,10 @@ const GraphView = (graph) => {
 
     return (
       source === getGraph().getContainer() ||
-      source.getParentNode() === getBackgroundPane() ||
-      (isSet(source.getParentNode()) &&
-        source.getParentNode().parentNode === getBackgroundPane()) ||
-      source === getCanvas().getParentNode() ||
+      source.parentNode === getBackgroundPane() ||
+      (isSet(source.parentNode) &&
+        source.parentNode.parentNode === getBackgroundPane()) ||
+      source === getCanvas().parentNode ||
       source === getCanvas() ||
       source === getBackgroundPane() ||
       source === getDrawPane() ||
@@ -2214,7 +2225,7 @@ const GraphView = (graph) => {
     if (isSet(container)) {
       // Support for touch device gestures (eg. pinch to zoom)
       // Double-tap handling is implemented in mxGraph.fireMouseEvent
-      if (Client.IS_TOUCH) {
+      if (IS_TOUCH) {
         Event.addListener(container, 'gesturestart', (evt) => {
           graph.fireGestureEvent(evt);
           Event.consume(evt);
@@ -2241,11 +2252,7 @@ const GraphView = (graph) => {
           // Condition to avoid scrollbar events starting a rubberband selection
           if (
             isContainerEvent(evt) &&
-            ((!Client.IS_IE &&
-              !Client.IS_IE11 &&
-              !Client.IS_GC &&
-              !Client.IS_OP &&
-              !Client.IS_SF) ||
+            ((!IS_IE && !IS_IE11 && !IS_GC && !IS_OP && !IS_SF) ||
               !isScrollEvent(evt))
           ) {
             graph.fireMouseEvent(Event.MOUSE_DOWN, MouseEvent(evt));
@@ -2287,7 +2294,7 @@ const GraphView = (graph) => {
         // Workaround for touch events which started on some DOM node
         // on top of the container, in which case the cells under the
         // mouse for the move and up events are not detected.
-        if (Client.IS_TOUCH) {
+        if (IS_TOUCH) {
           const x = Event.getClientX(evt);
           const y = Event.getClientY(evt);
 
@@ -2308,7 +2315,7 @@ const GraphView = (graph) => {
       // in Firefox and Chrome
       graph.addMouseListener({
         mouseDown: function (sender, me) {
-          graph.popupMenuHandler.hideMenu();
+          graph.getPopupMenuHandler().hideMenu();
         },
         mouseMove: function () {},
         mouseUp: function () {}
@@ -2317,10 +2324,10 @@ const GraphView = (graph) => {
       setMoveHandler((evt) => {
         // Hides the tooltip if mouse is outside container
         if (
-          isSet(graph.tooltipHandler) &&
-          graph.tooltipHandler.isHideOnHover()
+          isSet(graph.getTooltipHandler()) &&
+          graph.getTooltipHandler().isHideOnHover()
         ) {
-          graph.tooltipHandler.hide();
+          graph.getTooltipHandler().hide();
         }
 
         if (
@@ -2397,7 +2404,7 @@ const GraphView = (graph) => {
     root.appendChild(canvas);
 
     // Workaround for scrollbars in IE11 and below
-    if (Client.IS_IE || Client.IS_IE11) {
+    if (IS_IE || IS_IE11) {
       root.style.overflow = 'hidden';
     }
 
@@ -2421,7 +2428,7 @@ const GraphView = (graph) => {
     }
 
     // Disables built-in pan and zoom in IE10 and later
-    if (Client.IS_POINTER) {
+    if (IS_POINTER) {
       container.style.touchAction = 'none';
     }
   };

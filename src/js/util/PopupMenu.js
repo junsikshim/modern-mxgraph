@@ -6,6 +6,8 @@
 
 import { imageBasePath } from '../Client';
 import { addProp, isSet } from '../Helpers';
+import Event from './Event';
+import EventObject from './EventObject';
 import EventSource from './EventSource';
 import { fit, getDocumentScrollOrigin, write } from './Utils';
 
@@ -330,6 +332,11 @@ const PopupMenu = (factoryMethod) => {
       tr.div = d;
       return d;
     };
+    tr.getActiveRow = () => tr.activeRow;
+    tr.setActiveRow = (r) => {
+      tr.activeRow = r;
+      return r;
+    };
 
     return tr;
   };
@@ -602,6 +609,11 @@ const PopupMenu = (factoryMethod) => {
     showMenu,
     hideMenu,
     hideSubmenu,
+    getActiveRow,
+    setActiveRow,
+    getDiv,
+    getTable,
+    getTbody,
     destroy
   };
 

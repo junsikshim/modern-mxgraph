@@ -4,7 +4,17 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { imageBasePath, IS_IE } from '../Client';
+import {
+  imageBasePath,
+  IS_FF,
+  IS_GC,
+  IS_IE,
+  IS_IE11,
+  IS_MAC,
+  IS_OP,
+  IS_SF,
+  IS_TOUCH
+} from '../Client';
 import ConnectionHandler from '../handler/ConnectionHandler';
 import GraphHandler from '../handler/GraphHandler';
 import PanningHandler from '../handler/PanningHandler';
@@ -25,11 +35,17 @@ import GraphModel, {
 import {
   ALIGN_MIDDLE,
   PAGE_FORMAT_A4_PORTRAIT,
+  SHAPE_LABEL,
+  SHAPE_SWIMLANE,
   STYLE_FILLCOLOR,
   STYLE_IMAGE,
+  STYLE_IMAGE_HEIGHT,
+  STYLE_IMAGE_WIDTH,
   STYLE_INDICATOR_GRADIENTCOLOR,
+  STYLE_SHAPE,
   STYLE_SOURCE_PORT,
-  STYLE_TARGET_PORT
+  STYLE_TARGET_PORT,
+  STYLE_VERTICAL_ALIGN
 } from '../util/Constants';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
@@ -43,7 +59,8 @@ import {
   hasScrollbars,
   parseCssNumber,
   sortCells,
-  setCellStyles as _setCellStyles
+  setCellStyles as _setCellStyles,
+  convertPoint
 } from '../util/Utils';
 import CellEditor from './CellEditor';
 import CellRenderer from './CellRenderer';
@@ -1611,6 +1628,9 @@ const Graph = (container, model, _, stylesheet) => {
   const [getPopupMenuHandler, setPopupMenuHandler] = addProp();
   const [getHorizontalPageBreaks, setHorizontalPageBreaks] = addProp();
   const [getVerticalPageBreaks, setVerticalPageBreaks] = addProp();
+  const [getLastEvent, setLastEvent] = addProp();
+  const [isIgnoreMouseEvents, setIgnoreMouseEvents] = addProp(true);
+  const [isMouseTrigger, setMouseTrigger] = addProp(false);
 
   /**
    * Function: init
@@ -2378,7 +2398,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const click = (mE) => {
     const evt = mE.getEvent();
-    const cell = mE.getCell();
+    let cell = mE.getCell();
     const mxe = EventObject(Event.CLICK, 'event', evt, 'cell', cell);
 
     if (mE.isConsumed()) {
@@ -3938,7 +3958,7 @@ const Graph = (container, model, _, stylesheet) => {
   ) => {
     const model = getModel();
 
-    this.model.beginUpdate();
+    model.beginUpdate();
 
     try {
       for (let i = cells.length - 1; i >= 0; i--) {
@@ -4681,7 +4701,7 @@ const Graph = (container, model, _, stylesheet) => {
 
         for (let i = 0; i < cells.length; i++) {
           // Disconnects edges which are not being removed
-          const edges = this.getAllEdges([cells[i]]);
+          const edges = getAllEdges([cells[i]]);
 
           const disconnectTerminal = (edge, source) => {
             let geo = model.getGeometry(edge);
@@ -7050,7 +7070,7 @@ const Graph = (container, model, _, stylesheet) => {
 
       // Selects the previous root in the graph
       if (isSet(state)) {
-        this.setSelectionCell(current);
+        setSelectionCell(current);
       }
     }
   };
@@ -9734,7 +9754,7 @@ const Graph = (container, model, _, stylesheet) => {
 
       for (let i = childCount - 1; i >= 0; i--) {
         const cell = getModel().getChildAt(parent, i);
-        const result = this.getCellAt(x, y, cell, vertices, edges, ignoreFn);
+        const result = getCellAt(x, y, cell, vertices, edges, ignoreFn);
 
         if (isSet(result)) {
           return result;
@@ -10074,7 +10094,7 @@ const Graph = (container, model, _, stylesheet) => {
 
     if (isSet(edges)) {
       for (let i = 0; i < edges.length; i++) {
-        const state = this.view.getState(edges[i]);
+        const state = view.getState(edges[i]);
 
         const source = isSet(state)
           ? state.getVisibleTerminal(true)
@@ -11135,11 +11155,6 @@ const Graph = (container, model, _, stylesheet) => {
       result = true;
     }
 
-    if (!result && evtName === Event.MOUSE_DOWN) {
-      setLastMouseX(mE.getX());
-      setLastMouseY(mE.getY());
-    }
-
     return result;
   };
 
@@ -11178,9 +11193,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const isEventSourceIgnored = (evtName, mE) => {
     const source = mE.getSource();
-    const name = isSet(source.getNodeName())
-      ? source.getNodeName().toLowerCase()
-      : '';
+    const name = isSet(source.nodeName) ? source.nodeName.toLowerCase() : '';
     const candidate =
       !Event.isMouseEvent(mE.getEvent()) ||
       Event.isLeftMouseButton(mE.getEvent());
@@ -11191,11 +11204,11 @@ const Graph = (container, model, _, stylesheet) => {
       (name === 'select' ||
         name === 'option' ||
         (name === 'input' &&
-          source.getType() !== 'checkbox' &&
-          source.getType() !== 'radio' &&
-          source.getType() !== 'button' &&
-          source.getType() !== 'submit' &&
-          source.getType() !== 'file'))
+          source.type !== 'checkbox' &&
+          source.type !== 'radio' &&
+          source.type !== 'button' &&
+          source.type !== 'submit' &&
+          source.type !== 'file'))
     );
   };
 
@@ -11347,13 +11360,13 @@ const Graph = (container, model, _, stylesheet) => {
         IS_SF ||
         IS_GC ||
         IS_IE11 ||
-        (IS_IE && IS_SVG) ||
+        IS_IE ||
         mE.getEvent().target !== container
       ) {
         if (
           evtName === Event.MOUSE_MOVE &&
           isMouseDown() &&
-          isAautoScroll() &&
+          isAutoScroll() &&
           !Event.isMultiTouchEvent(mE.getEvent())
         ) {
           scrollPointToVisible(mE.getGraphX(), mE.getGraphY(), isAutoExtend());
@@ -12626,6 +12639,9 @@ const Graph = (container, model, _, stylesheet) => {
     getCellRenderer,
     isPageVisible,
     setPageVisible,
+    isMouseDown,
+    getTooltipHandler,
+    getPopupMenuHandler,
     destroy
   };
 

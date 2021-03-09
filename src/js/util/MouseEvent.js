@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import Client from '../Client';
+import { IS_IE } from '../Client';
 import { isAncestorNode } from './Utils';
 import { addProp, isSet } from '../Helpers';
 
@@ -154,7 +154,7 @@ const MouseEvent = (evt, state) => {
 
     // Workaround for images being dragged in IE
     // Does not change returnValue in Opera
-    if (Client.IS_IE) evt.returnValue = true;
+    if (IS_IE) evt.returnValue = true;
 
     // Sets local consumed state
     setConsumed(true);
@@ -174,6 +174,7 @@ const MouseEvent = (evt, state) => {
      * Returns <state>.
      */
     getState,
+    setState,
     getSourceState,
 
     /**
@@ -190,6 +191,7 @@ const MouseEvent = (evt, state) => {
      * Returns <graphX>.
      */
     getGraphX,
+    setGraphX,
 
     /**
      * Function: getGraphY
@@ -197,6 +199,7 @@ const MouseEvent = (evt, state) => {
      * Returns <graphY>.
      */
     getGraphY,
+    setGraphY,
 
     getSource,
 

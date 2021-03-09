@@ -2043,16 +2043,16 @@ export const getScrollOrigin = (
   const doc = isSet(node) ? node.ownerDocument : document;
   const b = doc.body;
   const d = doc.documentElement;
-  const result = new mxPoint();
+  const result = Point();
   let fixed = false;
 
-  while (isSe(node) && node !== b && node !== d) {
+  while (isSet(node) && node !== b && node !== d) {
     if (!isNaN(node.scrollLeft) && !isNaN(node.scrollTop)) {
       result.setX(result.getX() + node.scrollLeft);
       result.setY(result.getY() + node.scrollTop);
     }
 
-    var style = mxUtils.getCurrentStyle(node);
+    const style = getCurrentStyle(node);
 
     if (isSet(style)) {
       fixed = fixed || style.position == 'fixed';

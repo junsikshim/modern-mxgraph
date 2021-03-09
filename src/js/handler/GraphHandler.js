@@ -26,6 +26,7 @@ import {
   setCellStyleFlags,
   toRadians
 } from '../util/Utils';
+import CellHighlight from './CellHighlight';
 
 /**
  * Class: GraphHandler
@@ -322,6 +323,20 @@ const GraphHandler = (graph) => {
       }
     }
   });
+
+  const [isLivePreviewUsed, setLivePreviewUsed] = addProp(false);
+  const [isLivePreviewActive, setLivePreviewActive] = addProp(false);
+  const [getCell, setCell] = addProp();
+  const [getCellCount, setCellCount] = addProp(0);
+  const [getHighlight, setHighlight] = addProp();
+  const [isSuspended, setSuspended] = addProp(false);
+  const [isCloning, setCloning] = addProp(false);
+  const [getAllCells, setAllCells] = addProp();
+  const [getPBounds, setPBounds] = addProp();
+  const [getGuides, setGuides] = addProp();
+  const [getTarget, setTarget] = addProp();
+  const [getFirst, setFirst] = addProp();
+  const [_getCells, setCells] = addProp();
 
   /**
    * Function: isPropagateSelectionCell
@@ -697,14 +712,14 @@ const GraphHandler = (graph) => {
     setCell(cell);
     setFirst(convertPoint(graph.getContainer(), x, y));
     setCells(isSet(cells) ? cells : getCells(getCell()));
-    setBounds(graph.getView().getBounds(getCells()));
-    setPBounds(getPreviewBounds(getCells()));
+    setBounds(graph.getView().getBounds(_getCells()));
+    setPBounds(getPreviewBounds(_getCells()));
     setAllCells(Dictionary());
     setCloning(false);
     setCellCount(0);
 
-    for (let i = 0; i < getCells().length; i++) {
-      setCellCount(getCellCount() + addStates(getCells()[i], getAllCells()));
+    for (let i = 0; i < _getCells().length; i++) {
+      setCellCount(getCellCount() + addStates(_getCells()[i], getAllCells()));
     }
 
     if (isGuidesEnabled()) {
@@ -915,7 +930,7 @@ const GraphHandler = (graph) => {
 
         if (graph.isDropEnabled() && isHighlightEnabled()) {
           // Contains a call to getCellAt to find the cell under the mouse
-          target = graph.getDropTarget(getCells(), mE.getEvent(), cell, clone);
+          target = graph.getDropTarget(_getCells(), mE.getEvent(), cell, clone);
         }
 
         let state = graph.getView().getState(target);
@@ -934,7 +949,7 @@ const GraphHandler = (graph) => {
           if (
             isConnectOnDrop() &&
             isSet(cell) &&
-            getCells().length === 1 &&
+            _getCells().length === 1 &&
             graph.getModel().isVertex(cell) &&
             graph.isCellConnectable(cell)
           ) {
@@ -1038,7 +1053,7 @@ const GraphHandler = (graph) => {
    */
   const updatePreview = (remote) => {
     if (isLivePreviewUsed() && !remote) {
-      if (isSet(getCells())) {
+      if (isSet(_getCells())) {
         setHandlesVisibleForCells(
           getGraph().getSelectionCellsHandler().getHandledSelectionCells(),
           false
@@ -1476,11 +1491,11 @@ const GraphHandler = (graph) => {
 
           if (
             graph.isSplitEnabled() &&
-            graph.isSplitTarget(target, getCells(), mE.getEvent())
+            graph.isSplitTarget(target, _getCells(), mE.getEvent())
           ) {
             graph.splitEdge(
               target,
-              getCells(),
+              _getCells(),
               null,
               dx,
               dy,
@@ -1488,7 +1503,7 @@ const GraphHandler = (graph) => {
               mE.getGraphY()
             );
           } else {
-            moveCells(getCells(), dx, dy, clone, getTarget(), mE.getEvent());
+            moveCells(_getCells(), dx, dy, clone, getTarget(), mE.getEvent());
           }
         }
       } else if (

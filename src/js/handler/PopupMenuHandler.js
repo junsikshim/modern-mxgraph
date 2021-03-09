@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 import PopupMenu from '../util/PopupMenu';
 import { getScrollOrigin } from '../util/Utils';
 
@@ -19,7 +19,14 @@ import { getScrollOrigin } from '../util/Utils';
  */
 const PopupMenuHandler = (graph, factoryMethod) => {
   // Extends PopupMenu.
-  const { init: _init, destroy: _destroy, getDiv } = PopupMenu(factoryMethod);
+  const {
+    init: _init,
+    destroy: _destroy,
+    getDiv,
+    isEnabled,
+    hideMenu,
+    popup
+  } = PopupMenu(factoryMethod);
 
   /**
    * Variable: graph
@@ -79,6 +86,8 @@ const PopupMenuHandler = (graph, factoryMethod) => {
   const [getGestureHandler, setGestureHandler] = addProp((sender, eo) =>
     setInTolerance(false)
   );
+
+  const [isPopupTrigger, setPopupTrigger] = addProp(true);
 
   /**
    * Function: init
@@ -166,7 +175,7 @@ const PopupMenuHandler = (graph, factoryMethod) => {
       }
 
       // Hides the tooltip if there is one
-      graph.tooltipHandler.hide();
+      graph.getTooltipHandler().hide();
 
       // Menu is shifted by 1 pixel so that the mouse up event
       // is routed via the underlying shape instead of the DIV
@@ -218,6 +227,7 @@ const PopupMenuHandler = (graph, factoryMethod) => {
     mouseMove,
     mouseUp,
     getCellForPopupEvent,
+    hideMenu,
     destroy
   };
 
