@@ -160,7 +160,7 @@ const CellRenderer = () => {
    * state - <mxCellState> for which the shape should be created.
    */
   const createShape = (state) => {
-    let shape = null;
+    let shape;
 
     if (isSet(state.getStyle())) {
       // Checks if there is a stencil for the name and creates
@@ -200,7 +200,7 @@ const CellRenderer = () => {
    *
    * Returns the shape for the given name from <defaultShapes>.
    */
-  const getShape = (name) => (isSet(name) ? defaultShapes[name] : null);
+  const getShape = (name) => (isSet(name) ? defaultShapes[name] : undefined);
 
   /**
    * Function: getShapeConstructor
@@ -302,7 +302,7 @@ const CellRenderer = () => {
     if (isSet(shape)) {
       const graph = state.getView().getGraph();
       const value = shape[field];
-      let referenced = null;
+      let referenced;
 
       if (value === 'inherit') {
         referenced = graph.getModel().getParent(state.getCell());
@@ -338,7 +338,7 @@ const CellRenderer = () => {
 
       if (isSet(referenced)) {
         const rstate = graph.getView().getState(referenced);
-        shape[field] = null;
+        shape[field] = undefined;
 
         if (isSet(rstate)) {
           const rshape =
@@ -502,7 +502,7 @@ const CellRenderer = () => {
   const createCellOverlays = (state) => {
     const graph = state.getView().getGraph();
     const overlays = graph.getCellOverlays(state.getCell());
-    let dict = null;
+    let dict;
 
     if (isSet(overlays)) {
       dict = Dictionary();
@@ -510,7 +510,7 @@ const CellRenderer = () => {
       for (let i = 0; i < overlays.length; i++) {
         const shape = isSet(state.getOverlays())
           ? state.getOverlays().remove(overlays[i])
-          : null;
+          : undefined;
 
         if (isUnset(shape)) {
           const tmp = ImageShape(Rectangle(), overlays[i].getImage().getSrc());
@@ -627,7 +627,7 @@ const CellRenderer = () => {
     return (evt) => {
       if (isForceControlClickHandler() || graph.isEnabled()) {
         const collapse = !graph.isCellCollapsed(state.getCell());
-        graph.foldCells(collapse, false, [state.getCell()], null, evt);
+        graph.foldCells(collapse, false, [state.getCell()], undefined, evt);
         Event.consume(evt);
       }
     };
@@ -672,7 +672,7 @@ const CellRenderer = () => {
     }
 
     if (handleEvents) {
-      let first = null;
+      let first;
 
       Event.addGestureListeners(
         node,
@@ -1040,7 +1040,7 @@ const CellRenderer = () => {
     }
 
     // Label width style overrides actual label width
-    const lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, null);
+    const lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, undefined);
 
     if (isSet(lw)) {
       bounds.setWidth(parseFloat(lw) * scale);
@@ -1082,7 +1082,7 @@ const CellRenderer = () => {
 
       const hpos = getValue(style, STYLE_LABEL_POSITION, ALIGN_CENTER);
       const vpos = getValue(style, STYLE_VERTICAL_LABEL_POSITION, ALIGN_MIDDLE);
-      const lw = getValue(style, STYLE_LABEL_WIDTH, null);
+      const lw = getValue(style, STYLE_LABEL_WIDTH, undefined);
 
       bounds.setWidth(
         Math.max(
@@ -1285,7 +1285,7 @@ const CellRenderer = () => {
           );
     }
 
-    return null;
+    return;
   };
 
   /**

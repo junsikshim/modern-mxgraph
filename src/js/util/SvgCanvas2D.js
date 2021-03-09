@@ -198,7 +198,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     overflow,
     clip,
     rotation
-  ) => (isSet(str) ? getFoAltText() : null);
+  ) => (isSet(str) ? getFoAltText() : undefined);
 
   const createAlternateContent = (
     fo,
@@ -272,7 +272,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
       return alt;
     } else {
-      return null;
+      return;
     }
   };
 
@@ -295,7 +295,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     e = e.toLowerCase() + '-' + alpha2;
 
     // Wrong gradient directions possible?
-    let dir = null;
+    let dir;
 
     if (isUnset(direction) || direction === DIRECTION_SOUTH) {
       dir = 's';
@@ -462,7 +462,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
         getRoot().appendChild(node);
       }
 
-      setNode(null);
+      setNode();
     }
   };
 
@@ -849,7 +849,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       const xd = document.implementation.createDocument(
         'http://www.w3.org/1999/xhtml',
         'html',
-        null
+        undefined
       );
       const xb = xd.createElement('body');
       xd.documentElement.appendChild(xb);
@@ -1073,8 +1073,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
       wrap,
       overflow,
       clip,
-      isSet(state.fontBackgroundColor) ? state.fontBackgroundColor : null,
-      isSet(state.fontBorderColor) ? state.fontBorderColor : null,
+      isSet(state.fontBackgroundColor) ? state.fontBackgroundColor : undefined,
+      isSet(state.fontBorderColor) ? state.fontBorderColor : undefined,
       'display: flex; align-items: unsafe ' +
         (valign === ALIGN_TOP
           ? 'flex-start'
@@ -1511,7 +1511,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     const s = getState();
 
     if (isSet(s.fontBackgroundColor) || isSet(s.fontBorderColor)) {
-      let bbox = null;
+      let bbox;
 
       if (overflow === 'fill' || overflow === 'width') {
         if (align === ALIGN_CENTER) {
@@ -1658,7 +1658,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     fillAndStroke
   };
 
-  let svg = null;
+  let svg;
 
   // Adds optional defs section for export
   if (getRoot().ownerDocument !== document) {

@@ -29,7 +29,7 @@ import { addProp } from '../Helpers';
  *
  * Constructs a new event source.
  */
-const EventSource = (eventSource = null) => {
+const EventSource = (eventSource) => {
   /**
    * Variable: eventSource
    *

@@ -239,7 +239,7 @@ const CellState = (view, cell, style = {}) => {
         setAbsolutePoints([]);
 
         const points = getAbsolutePoints();
-        points.push(null);
+        points.push(undefined);
         points.push(point);
       } else if (getAbsolutePoints().length === 1) {
         getAbsolutePoints().push(point);
@@ -273,7 +273,7 @@ const CellState = (view, cell, style = {}) => {
   const getVisibleTerminal = (source) => {
     const tmp = getVisibleTerminalState(source);
 
-    return isSet(tmp) ? tmp.getCell() : null;
+    return isSet(tmp) ? tmp.getCell() : undefined;
   };
 
   /**

@@ -203,7 +203,7 @@ const GraphView = (graph) => {
    * cells - Array of <mxCells> whose bounds should be returned.
    */
   const getBounds = (cells) => {
-    let result = null;
+    let result;
 
     if (isSet(cells) && cells.length > 0) {
       const model = getGraph().getModel();
@@ -614,7 +614,7 @@ const GraphView = (graph) => {
       redrawBackgroundImage(backgroundImage, bg);
     } else if (isSet(getBackgroundImage())) {
       getBackgroundImage().destroy();
-      setBackgroundImage(null);
+      setBackgroundImage();
     }
   };
 
@@ -672,7 +672,7 @@ const GraphView = (graph) => {
       }
     } else if (isSet(getBackgroundPageShape())) {
       getBackgroundPageShape().destroy();
-      setBackgroundPageShape(null);
+      setBackgroundPageShape();
     }
   };
 
@@ -783,7 +783,7 @@ const GraphView = (graph) => {
    * validated. Default is true.
    */
   const validateCellState = (cell, recurse = true) => {
-    let state = null;
+    let state;
 
     if (isSet(cell)) {
       state = getState(cell);
@@ -1037,7 +1037,7 @@ const GraphView = (graph) => {
     const h = getValue(state.getStyle(), STYLE_LABEL_POSITION, ALIGN_CENTER);
 
     if (h === ALIGN_LEFT) {
-      let lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, null);
+      let lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, undefined);
 
       if (isSet(lw)) {
         lw *= getScale();
@@ -1049,7 +1049,7 @@ const GraphView = (graph) => {
     } else if (h === ALIGN_RIGHT) {
       absoluteOffset.setX(absoluteOffset.getX() + state.getWidth());
     } else if (h === ALIGN_CENTER) {
-      const lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, null);
+      const lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, undefined);
 
       if (isSet(lw)) {
         // Aligns text block with given width inside the vertex width
@@ -1186,7 +1186,7 @@ const GraphView = (graph) => {
    * constraint - <mxConnectionConstraint> that specifies the connection.
    */
   const getFixedTerminalPoint = (edge, terminal, source, constraint) => {
-    let pt = null;
+    let pt;
 
     if (isSet(constraint)) {
       pt = getGraph().getConnectionPoint(terminal, constraint, false); // FIXME Rounding introduced bugs when calculating label positions -> , getGraph().isOrthogonal(edge));
@@ -1222,7 +1222,7 @@ const GraphView = (graph) => {
    * edge - <mxCellState> whose bounds should be updated.
    */
   const updateBoundsFromStencil = (state) => {
-    let previous = null;
+    let previous;
 
     if (
       isSet(state) &&
@@ -1332,7 +1332,7 @@ const GraphView = (graph) => {
       );
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -1369,7 +1369,7 @@ const GraphView = (graph) => {
       ? getValue(edge.getStyle(), STYLE_LOOP, getGraph().getDefaultLoopStyle())
       : !getValue(edge.getStyle(), STYLE_NOEDGESTYLE, false)
       ? edge.getStyle()[STYLE_EDGE]
-      : null;
+      : undefined;
 
     // Converts string values to objects
     if (typeof edgeStyle === 'string') {
@@ -1380,7 +1380,7 @@ const GraphView = (graph) => {
       return edgeStyle;
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -1517,7 +1517,7 @@ const GraphView = (graph) => {
    * border - Optional border between the perimeter and the shape.
    */
   const getPerimeterPoint = (terminal, next, orthogonal, border) => {
-    let point = null;
+    let point;
 
     if (isSet(terminal)) {
       const perimeter = getPerimeterFunction(terminal);
@@ -1659,7 +1659,7 @@ const GraphView = (graph) => {
       return perimeter;
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -1677,7 +1677,7 @@ const GraphView = (graph) => {
    */
   const getNextPoint = (edge, opposite, source) => {
     const pts = edge.getAbsolutePoints();
-    let point = null;
+    let point;
 
     if (isSet(pts) && pts.length >= 2) {
       const count = pts.length;
@@ -1724,7 +1724,7 @@ const GraphView = (graph) => {
         model.getParent(best) === model.getRoot() ||
         best === getCurrentRoot())
     ) {
-      best = null;
+      best = undefined;
     }
 
     return best;
@@ -2114,7 +2114,7 @@ const GraphView = (graph) => {
    * cell - <mxCell> for which the <mxCellState> should be removed.
    */
   const removeState = (cell) => {
-    let state = null;
+    let state;
 
     if (isSet(cell)) {
       state = getStates().remove(cell);
@@ -2243,7 +2243,7 @@ const GraphView = (graph) => {
       }
 
       // Fires event only for one pointer per gesture
-      let pointerId = null;
+      let pointerId;
 
       // Adds basic listeners for graph event dispatching
       Event.addGestureListeners(
@@ -2272,7 +2272,7 @@ const GraphView = (graph) => {
             graph.fireMouseEvent(Event.MOUSE_UP, MouseEvent(evt));
           }
 
-          pointerId = null;
+          pointerId = undefined;
         }
       );
 
@@ -2289,7 +2289,7 @@ const GraphView = (graph) => {
       // on top of the container, in which case the cells under the
       // mouse for the move and up events are not detected.
       const getState = (evt) => {
-        let state = null;
+        let state;
 
         // Workaround for touch events which started on some DOM node
         // on top of the container, in which case the cells under the
@@ -2361,7 +2361,7 @@ const GraphView = (graph) => {
 
       Event.addGestureListeners(
         document,
-        null,
+        undefined,
         getMoveHandler(),
         getEndHandler()
       );
@@ -2439,7 +2439,7 @@ const GraphView = (graph) => {
    * Destroys the view and all its resources.
    */
   const destroy = () => {
-    let root = isSet(getCanvas()) ? getCanvas().ownerSVGElement : null;
+    let root = isSet(getCanvas()) ? getCanvas().ownerSVGElement : undefined;
 
     if (isUnset(root)) {
       root = getCanvas();
@@ -2449,7 +2449,7 @@ const GraphView = (graph) => {
       clear(getCurrentRoot(), true);
       Event.removeGestureListeners(
         document,
-        null,
+        undefined,
         getMoveHandler(),
         getEndHandler()
       );

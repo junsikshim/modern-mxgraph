@@ -1798,7 +1798,7 @@ const Graph = (container, model, _, stylesheet) => {
         change.constructor !== RootChange &&
         (isUnset(ignoreFn) || !ignoreFn(change))
       ) {
-        let cell = null;
+        let cell;
 
         if (change.constructor === ChildChange) {
           cell = change.getChild();
@@ -2072,7 +2072,7 @@ const Graph = (container, model, _, stylesheet) => {
           EventObject(Event.REMOVE_OVERLAY, 'cell', cell, 'overlay', overlay)
         );
       } else {
-        overlay = null;
+        overlay = undefined;
       }
     }
 
@@ -2191,7 +2191,7 @@ const Graph = (container, model, _, stylesheet) => {
       removeCellOverlays(cell);
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -2208,7 +2208,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * evt - Optional mouse event that triggered the editing.
    */
-  const startEditing = (evt) => startEditingAtCell(null, evt);
+  const startEditing = (evt) => startEditingAtCell(undefined, evt);
 
   /**
    * Function: startEditingAtCell
@@ -2228,7 +2228,7 @@ const Graph = (container, model, _, stylesheet) => {
         cell = getSelectionCell();
 
         if (isSet(cell) && !isCellEditable(cell)) {
-          cell = null;
+          cell = undefined;
         }
       }
 
@@ -2415,9 +2415,9 @@ const Graph = (container, model, _, stylesheet) => {
           const tmp = getCellAt(
             mE.getGraphX(),
             mE.getGraphY(),
-            null,
-            null,
-            null,
+            undefined,
+            undefined,
+            undefined,
             (state) => {
               const selected = isCellSelected(state.getCell());
               active = active || selected;
@@ -3130,7 +3130,7 @@ const Graph = (container, model, _, stylesheet) => {
    * ignoreState - Optional boolean that specifies if the cell state should be ignored.
    */
   const getCurrentCellStyle = (cell, ignoreState) => {
-    const state = ignoreState ? null : getView().getState(cell);
+    const state = ignoreState ? undefined : getView().getState(cell);
 
     return isSet(state) ? state.getStyle() : getCellStyle(cell);
   };
@@ -3152,7 +3152,7 @@ const Graph = (container, model, _, stylesheet) => {
   const getCellStyle = (cell) => {
     const stylename = getModel().getStyle(cell);
     const stylesheet = getStylesheet();
-    let style = null;
+    let style;
 
     // Gets the default style for the cell
     if (getModel().isEdge(cell)) {
@@ -3285,7 +3285,7 @@ const Graph = (container, model, _, stylesheet) => {
     defaultValue = false,
     cells = getSelectionCells()
   ) => {
-    let value = null;
+    let value;
 
     if (isSet(cells) && cells.length > 0) {
       const style = getCurrentCellStyle(cells[0]);
@@ -3329,7 +3329,7 @@ const Graph = (container, model, _, stylesheet) => {
    * the selection cells.
    */
   const toggleCellStyleFlags = (key, flag, cells) =>
-    setCellStyleFlags(key, flag, null, cells);
+    setCellStyleFlags(key, flag, undefined, cells);
 
   /**
    * Function: setCellStyleFlags
@@ -3511,7 +3511,7 @@ const Graph = (container, model, _, stylesheet) => {
         if (isUnset(style) || style.length == 0) {
           model.setStyle(edge, getAlternateEdgeStyle());
         } else {
-          model.setStyle(edge, null);
+          model.setStyle(edge, undefined);
         }
 
         // Removes all existing control points
@@ -3569,7 +3569,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -3679,7 +3679,7 @@ const Graph = (container, model, _, stylesheet) => {
 
     const bounds = getBoundsForGroup(group, cells, border);
 
-    if (cells.length > 1 && bounds != null) {
+    if (cells.length > 1 && isSet(bounds)) {
       // Uses parent of group or previous parent of first child
       let parent = model.getParent(group);
 
@@ -3698,11 +3698,29 @@ const Graph = (container, model, _, stylesheet) => {
 
         // Adds the group into the parent
         let index = model.getChildCount(parent);
-        cellsAdded([group], parent, index, null, null, false, false, false);
+        cellsAdded(
+          [group],
+          parent,
+          index,
+          undefined,
+          undefined,
+          false,
+          false,
+          false
+        );
 
         // Adds the children into the group and moves
         index = model.getChildCount(group);
-        cellsAdded(cells, group, index, null, null, false, false, false);
+        cellsAdded(
+          cells,
+          group,
+          index,
+          undefined,
+          undefined,
+          false,
+          false,
+          false
+        );
         cellsMoved(cells, -bounds.getX(), -bounds.getY(), false, false, false);
 
         // Resizes the group
@@ -3835,7 +3853,7 @@ const Graph = (container, model, _, stylesheet) => {
             const parent = model.getParent(cells[i]);
             const index = model.getChildCount(parent);
 
-            cellsAdded(children, parent, index, null, null, true);
+            cellsAdded(children, parent, index, undefined, undefined, true);
             result = result.concat(children);
 
             // Fix relative child cells
@@ -3918,7 +3936,7 @@ const Graph = (container, model, _, stylesheet) => {
       const parent = getDefaultParent();
       const index = model.getChildCount(parent);
 
-      cellsAdded(cells, parent, index, null, null, true);
+      cellsAdded(cells, parent, index, undefined, undefined, true);
       fireEvent(EventObject(Event.REMOVE_CELLS_FROM_PARENT, 'cells', cells));
     } finally {
       model.endUpdate();
@@ -4051,7 +4069,7 @@ const Graph = (container, model, _, stylesheet) => {
    * cells - Array of <mxCells> whose bounding box should be returned.
    */
   const getBoundingBox = (cells) => {
-    let result = null;
+    let result;
 
     if (isSet(cells) && cells.length > 0) {
       for (let i = 0; i < cells.length; i++) {
@@ -4121,7 +4139,7 @@ const Graph = (container, model, _, stylesheet) => {
   ) => {
     const view = getView();
     const model = getModel();
-    let clones = null;
+    let clones;
 
     if (isSet(cells)) {
       // Creates a dictionary for fast lookups
@@ -4148,7 +4166,7 @@ const Graph = (container, model, _, stylesheet) => {
               isSet(model.getTerminal(clones[i], false))
             )
           ) {
-            clones[i] = null;
+            clones[i] = undefined;
           } else {
             const g = model.getGeometry(clones[i]);
 
@@ -4478,8 +4496,8 @@ const Graph = (container, model, _, stylesheet) => {
       model.beginUpdate();
 
       try {
-        const parentState = absolute ? getView().getState(parent) : null;
-        const o1 = isSet(parentState) ? parentState.origin : null;
+        const parentState = absolute ? getView().getState(parent) : undefined;
+        const o1 = isSet(parentState) ? parentState.origin : undefined;
         const zero = Point(0, 0);
 
         for (let i = 0; i < cells.length; i++) {
@@ -4756,7 +4774,7 @@ const Graph = (container, model, _, stylesheet) => {
                 }
 
                 model.setGeometry(edge, geo);
-                model.setTerminal(edge, null, source);
+                model.setTerminal(edge, undefined, source);
               }
             }
           };
@@ -4837,7 +4855,14 @@ const Graph = (container, model, _, stylesheet) => {
       }
 
       cellsMoved(cells, dx, dy, false, false);
-      cellsAdded(cells, parent, model.getChildCount(parent), null, null, true);
+      cellsAdded(
+        cells,
+        parent,
+        model.getChildCount(parent),
+        undefined,
+        undefined,
+        true
+      );
       cellsAdded(
         [newEdge],
         parent,
@@ -5375,7 +5400,7 @@ const Graph = (container, model, _, stylesheet) => {
    * textWidth - Optional maximum text width for word wrapping.
    */
   const getPreferredSizeForCell = (cell, textWidth) => {
-    let result = null;
+    let result;
 
     if (isSet(cell)) {
       const state = getView().createState(cell);
@@ -5420,7 +5445,7 @@ const Graph = (container, model, _, stylesheet) => {
         // Adds space for label
         let value = getCellRenderer().getLabelValue(state);
 
-        if (value != null && value.length > 0) {
+        if (isSet(value) && value.length > 0) {
           if (!isHtmlLabel(state.getCell())) {
             value = htmlEntities(value, false);
           }
@@ -5929,7 +5954,7 @@ const Graph = (container, model, _, stylesheet) => {
 
         if (isSet(target)) {
           const index = model.getChildCount(target);
-          cellsAdded(cells, target, index, null, null, true);
+          cellsAdded(cells, target, index, undefined, undefined, true);
 
           // Restores parent edge on cloned edge labels
           if (clone) {
@@ -6138,7 +6163,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -6451,7 +6476,7 @@ const Graph = (container, model, _, stylesheet) => {
       return ConnectionConstraint(Point(x, y), false);
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -6475,7 +6500,7 @@ const Graph = (container, model, _, stylesheet) => {
       return terminal.getShape().getStencil().getConstraints();
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -6492,7 +6517,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const getConnectionConstraint = (edge, terminal, source) => {
     const style = edge.getStyle();
-    let point = null;
+    let point;
     const x = style[source ? STYLE_EXIT_X : STYLE_ENTRY_X];
 
     if (isSet(x)) {
@@ -6522,7 +6547,7 @@ const Graph = (container, model, _, stylesheet) => {
       dy = isFinite(dy) ? dy : 0;
     }
 
-    return ConnectionConstraint(point, perimeter, null, dx, dy);
+    return ConnectionConstraint(point, perimeter, undefined, dx, dy);
   };
 
   /**
@@ -6548,13 +6573,21 @@ const Graph = (container, model, _, stylesheet) => {
         const point = constraint.getPoint();
 
         if (isUnset(constraint) || isUnset(point)) {
-          setCellStyles(source ? STYLE_EXIT_X : STYLE_ENTRY_X, null, [edge]);
-          setCellStyles(source ? STYLE_EXIT_Y : STYLE_ENTRY_Y, null, [edge]);
-          setCellStyles(source ? STYLE_EXIT_DX : STYLE_ENTRY_DX, null, [edge]);
-          setCellStyles(source ? STYLE_EXIT_DY : STYLE_ENTRY_DY, null, [edge]);
+          setCellStyles(source ? STYLE_EXIT_X : STYLE_ENTRY_X, undefined, [
+            edge
+          ]);
+          setCellStyles(source ? STYLE_EXIT_Y : STYLE_ENTRY_Y, undefined, [
+            edge
+          ]);
+          setCellStyles(source ? STYLE_EXIT_DX : STYLE_ENTRY_DX, undefined, [
+            edge
+          ]);
+          setCellStyles(source ? STYLE_EXIT_DY : STYLE_ENTRY_DY, undefined, [
+            edge
+          ]);
           setCellStyles(
             source ? STYLE_EXIT_PERIMETER : STYLE_ENTRY_PERIMETER,
-            null,
+            undefined,
             [edge]
           );
         } else if (isSet(point)) {
@@ -6585,7 +6618,7 @@ const Graph = (container, model, _, stylesheet) => {
           } else {
             setCellStyles(
               source ? STYLE_EXIT_PERIMETER : STYLE_ENTRY_PERIMETER,
-              null,
+              undefined,
               [edge]
             );
           }
@@ -6609,7 +6642,7 @@ const Graph = (container, model, _, stylesheet) => {
    * constraint as returned by <getConnectionConstraint>.
    */
   const getConnectionPoint = (vertex, constraint, round = true) => {
-    let point = null;
+    let point;
     const cp = constraint.getPoint();
 
     if (isSet(vertex) && isSet(cp)) {
@@ -6781,7 +6814,7 @@ const Graph = (container, model, _, stylesheet) => {
         // Checks if the new terminal is a port, uses the ID of the port in the
         // style and the parent of the port as the actual terminal of the edge.
         if (isPortsEnabled()) {
-          let id = null;
+          let id;
 
           if (isPort(terminal)) {
             id = terminal.getId();
@@ -6876,7 +6909,7 @@ const Graph = (container, model, _, stylesheet) => {
                       ),
                       true
                     );
-                    model.setTerminal(cells[i], null, true);
+                    model.setTerminal(cells[i], undefined, true);
                   }
                 }
 
@@ -6896,7 +6929,7 @@ const Graph = (container, model, _, stylesheet) => {
                       ),
                       false
                     );
-                    model.setTerminal(cells[i], null, false);
+                    model.setTerminal(cells[i], undefined, false);
                   }
                 }
 
@@ -6957,7 +6990,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * cell - <mxCell> that represents the root.
    */
-  const getTranslateForRoot = (cell) => null;
+  const getTranslateForRoot = (cell) => undefined;
 
   /**
    * Function: isPort
@@ -7013,7 +7046,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * cell - <mxCell> whose offset should be returned.
    */
-  const getChildOffsetForCell = (cell) => null;
+  const getChildOffsetForCell = (cell) => undefined;
 
   /**
    * Function: enterGroup
@@ -7061,7 +7094,7 @@ const Graph = (container, model, _, stylesheet) => {
       // Clears the current root if the new root is
       // the model's root or one of the layers.
       if (next === root || model.getParent(next) === root) {
-        view.setCurrentRoot(null);
+        view.setCurrentRoot();
       } else {
         view.setCurrentRoot(next);
       }
@@ -7085,7 +7118,7 @@ const Graph = (container, model, _, stylesheet) => {
     const current = getCurrentRoot();
 
     if (isSet(current)) {
-      getView().setCurrentRoot(null);
+      getView().setCurrentRoot();
       const state = getView().getState(current);
 
       if (isSet(state)) {
@@ -7199,7 +7232,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const getBoundingBoxFromGeometry = (cells, includeEdges = false) => {
     const model = getModel();
-    let result = null;
+    let result;
 
     if (isSet(cells)) {
       for (let i = 0; i < cells.length; i++) {
@@ -7208,8 +7241,8 @@ const Graph = (container, model, _, stylesheet) => {
           const geo = getCellGeometry(cells[i]);
 
           if (isSet(geo)) {
-            let bbox = null;
-            let tmp = null;
+            let bbox;
+            let tmp;
 
             if (model.isEdge(cells[i])) {
               const addPoint = (pt) => {
@@ -8209,7 +8242,7 @@ const Graph = (container, model, _, stylesheet) => {
       isUnset(model.getTerminal(edge, true)) &&
       isUnset(model.getTerminal(edge, false))
     ) {
-      return null;
+      return;
     }
 
     // Checks if we're dealing with a loop
@@ -8267,10 +8300,10 @@ const Graph = (container, model, _, stylesheet) => {
         error += err;
       }
 
-      return error.length > 0 ? error : null;
+      return error.length > 0 ? error : undefined;
     }
 
-    return isAllowDanglingEdges() ? null : '';
+    return isAllowDanglingEdges() ? undefined : '';
   };
 
   /**
@@ -8285,7 +8318,7 @@ const Graph = (container, model, _, stylesheet) => {
    * source - <mxCell> that represents the source terminal.
    * target - <mxCell> that represents the target terminal.
    */
-  const validateEdge = (edge, source, target) => null;
+  const validateEdge = (edge, source, target) => undefined;
 
   /**
    * Function: validateGraph
@@ -8321,7 +8354,7 @@ const Graph = (container, model, _, stylesheet) => {
       if (isSet(warn)) {
         setCellWarning(tmp, warn.replace(/\n/g, '<br>'));
       } else {
-        setCellWarning(tmp, null);
+        setCellWarning(tmp, undefined);
       }
 
       isValid = isValid && isUnset(warn);
@@ -8361,7 +8394,7 @@ const Graph = (container, model, _, stylesheet) => {
       getView().validate();
     }
 
-    return warning.length > 0 || !isValid ? warning : null;
+    return warning.length > 0 || !isValid ? warning : undefined;
   };
 
   /**
@@ -8403,7 +8436,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return error.length > 0 ? error : null;
+    return error.length > 0 ? error : undefined;
   };
 
   /**
@@ -8418,7 +8451,7 @@ const Graph = (container, model, _, stylesheet) => {
    * cell - <mxCell> that represents the cell to validate.
    * context - Object that represents the global validation state.
    */
-  const validateCell = (cell, context) => null;
+  const validateCell = (cell, context) => undefined;
 
   /**
    * Function: getFoldingImage
@@ -8439,7 +8472,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -8642,7 +8675,7 @@ const Graph = (container, model, _, stylesheet) => {
    * y - Y-coordinate of the mouse.
    */
   const getTooltip = (state, node, x, y) => {
-    let tip = null;
+    let tip;
 
     if (isSet(state)) {
       // Checks if the mouse is over the folding icon
@@ -8706,7 +8739,7 @@ const Graph = (container, model, _, stylesheet) => {
    * cell - <mxCell> whose tooltip should be returned.
    */
   const getTooltipForCell = (cell) => {
-    let tip = null;
+    let tip;
 
     if (isSet(cell) && isSet(cell.getTooltip)) {
       tip = cell.getTooltip();
@@ -8727,7 +8760,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * cell - <mxCell> whose tooltip should be returned.
    */
-  const getLinkForCell = (cell) => null;
+  const getLinkForCell = (cell) => undefined;
 
   /**
    * Function: getCursorForMouseEvent
@@ -8751,7 +8784,7 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * cell - <mxCell> whose cursor should be returned.
    */
-  const getCursorForCell = (cell) => null;
+  const getCursorForCell = (cell) => undefined;
 
   /**
    * Function: getStartSize
@@ -9575,7 +9608,7 @@ const Graph = (container, model, _, stylesheet) => {
     if (!isSwimlaneNesting()) {
       for (let i = 0; i < cells.length; i++) {
         if (isSwimlane(cells[i])) {
-          return null;
+          return;
         }
       }
     }
@@ -9622,7 +9655,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return !model.isLayer(cell) && isUnset(parent) ? cell : null;
+    return !model.isLayer(cell) && isUnset(parent) ? cell : undefined;
   };
 
   /**
@@ -9714,7 +9747,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -9776,7 +9809,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -10378,14 +10411,14 @@ const Graph = (container, model, _, stylesheet) => {
     if (isSet(parent)) {
       const model = getModel();
       const childCount = model.getChildCount(parent);
-      let best = null;
+      let best;
       let maxDiff = 0;
 
       for (let i = 0; i < childCount; i++) {
         const cell = model.getChildAt(parent, i);
 
         if (model.isVertex(cell) && isCellVisible(cell)) {
-          const conns = getConnections(cell, isolate ? parent : null);
+          const conns = getConnections(cell, isolate ? parent : undefined);
           let fanOut = 0;
           let fanIn = 0;
 
@@ -10674,7 +10707,7 @@ const Graph = (container, model, _, stylesheet) => {
   const selectCell = (isNext, isParent, isChild) => {
     const model = getModel();
     const sel = getSelectionModel();
-    const cell = sel.getCells().length > 0 ? sel.getCells()[0] : null;
+    const cell = sel.getCells().length > 0 ? sel.getCells()[0] : undefined;
 
     if (sel.getCells().length > 1) {
       sel.clear();
@@ -10861,7 +10894,7 @@ const Graph = (container, model, _, stylesheet) => {
    * state - <mxCellState> whose handler should be created.
    */
   const createHandler = (state) => {
-    let result = null;
+    let result;
 
     if (isSet(state)) {
       if (getModel().isEdge(state.getCell())) {
@@ -10871,7 +10904,7 @@ const Graph = (container, model, _, stylesheet) => {
 
         const edgeStyle = getView().getEdgeStyle(
           state,
-          isSet(geo) ? geo.getPoints() : null,
+          isSet(geo) ? geo.getPoints() : undefined,
           source,
           target
         );
@@ -10905,7 +10938,7 @@ const Graph = (container, model, _, stylesheet) => {
    * state - <mxCellState> to create the handler for.
    */
   const createEdgeHandler = (state, edgeStyle) => {
-    let result = null;
+    let result;
 
     if (
       edgeStyle === EdgeStyle.Loop ||
@@ -11020,9 +11053,9 @@ const Graph = (container, model, _, stylesheet) => {
             getCellAt(
               pt.getX(),
               pt.getY(),
-              null,
-              null,
-              null,
+              undefined,
+              undefined,
+              undefined,
               (state) =>
                 isUnset(state.getShape()) ||
                 state.getShape().getPaintBackground() !==
@@ -11077,7 +11110,7 @@ const Graph = (container, model, _, stylesheet) => {
     if (isSet(getEventSource()) && evtName !== Event.MOUSE_MOVE) {
       Event.removeGestureListeners(
         getEventSource(),
-        null,
+        undefined,
         getMouseMoveRedirect(),
         getMouseUpRedirect()
       );
@@ -11114,7 +11147,7 @@ const Graph = (container, model, _, stylesheet) => {
 
       Event.addGestureListeners(
         getEventSource(),
-        null,
+        undefined,
         getMouseMoveRedirect(),
         getMouseUpRedirect()
       );

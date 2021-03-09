@@ -34,6 +34,7 @@ import {
   NODETYPE_DOCUMENT_FRAGMENT,
   NODETYPE_ELEMENT,
   NODETYPE_TEXT,
+  NONE,
   NS_SVG,
   STYLE_DIRECTION,
   STYLE_FLIPH,
@@ -105,7 +106,7 @@ export const removeCursors = (element) => {
  * element - DOM node whose current style should be returned.
  */
 export const getCurrentStyle = (element) =>
-  isSet(element) ? window.getComputedStyle(element, '') : null;
+  isSet(element) ? window.getComputedStyle(element, '') : undefined;
 
 /**
  * Function: parseCssNumber
@@ -142,7 +143,7 @@ export const parseCssNumber = (value) => {
  * (end)
  */
 export const setPrefixedStyle = (() => {
-  let prefix = null;
+  let prefix;
 
   if (IS_OT) {
     prefix = 'O';
@@ -213,7 +214,7 @@ export const findNode = (node, attr, value) => {
     node = node.nextSibling;
   }
 
-  return null;
+  return;
 };
 
 /**
@@ -225,7 +226,7 @@ export const findNode = (node, attr, value) => {
  *
  * f - JavaScript object that represents a function.
  */
-export const getFunctionName = (f) => (f ? f.name : null);
+export const getFunctionName = (f) => (f ? f.name : undefined);
 
 /**
  * Function: remove
@@ -245,7 +246,7 @@ export const getFunctionName = (f) => (f ? f.name : null);
  * array - Array to check for the given obj.
  */
 export const remove = (obj, array) => {
-  let result = null;
+  let result;
 
   if (typeof array === 'object') {
     let index = array.indexOf(obj);
@@ -333,7 +334,7 @@ export const isAncestorNode = (ancestor, child) => {
  *
  * node - Parent DOM node to return the children from.
  * nodeType - Optional node type to return. Default is
- * <mxConstants.NODETYPE_ELEMENT>.
+ * <NODETYPE_ELEMENT>.
  */
 export const getChildNodes = (node, nodeType) => {
   nodeType = nodeType || NODETYPE_ELEMENT;
@@ -424,10 +425,10 @@ export const importNodeImplementation = (doc, node, allChildren) => {
  * Returns a new, empty XML document.
  */
 export const createXmlDocument = () => {
-  let doc = null;
+  let doc;
 
   if (document.implementation && document.implementation.createDocument) {
-    doc = document.implementation.createDocument('', '', null);
+    doc = document.implementation.createDocument('', '', undefined);
   } else if ('ActiveXObject' in window) {
     doc = createMsXmlDocument();
   }
@@ -674,7 +675,7 @@ export const getPrettyXml = (
       if (isSet(tmp)) {
         result.push('>' + newline);
 
-        while (tmp != null) {
+        while (isSet(tmp)) {
           result.push(getPrettyXml(tmp, tab, indent + tab, newline, ns));
           tmp = tmp.nextSibling;
         }
@@ -898,9 +899,8 @@ export const writeln = (parent, text) => {
  *
  * parent - DOM node to append the linebreak to.
  */
-export const br = (parent, count) => {
-  count = count || 1;
-  let br = null;
+export const br = (parent, count = 1) => {
+  let br;
 
   for (let i = 0; i < count; i++) {
     if (isSet(parent)) {
@@ -1112,9 +1112,9 @@ export const fit = (node) => {
  * key is null.
  */
 export const getValue = (array, key, defaultValue) => {
-  let value = isSet(array) ? array[key] : null;
+  let value = isSet(array) ? array[key] : undefined;
 
-  if (value === null) value = defaultValue;
+  if (isUnset(value)) value = defaultValue;
 
   return value;
 };
@@ -1144,7 +1144,7 @@ export const getNumber = (array, key, defaultValue = 0) => {
  *
  * Returns the color value for the given key in the given associative
  * array or the given default value if the value is null. If the value
- * is <mxConstants.NONE> then null is returned.
+ * is <NONE> then null is returned.
  *
  * Parameters:
  *
@@ -1153,8 +1153,8 @@ export const getNumber = (array, key, defaultValue = 0) => {
  * defaultValue - Value to be returned if the value for the given
  * key is null. Default is null.
  */
-export const getColor = (array, key, defaultValue = null) =>
-  isSet(array) ? array[key] : value === mxConstants.NONE ? null : defaultValue;
+export const getColor = (array, key, defaultValue) =>
+  isSet(array) ? array[key] : value === NONE ? undefined : defaultValue;
 
 /**
  * Function: clone
@@ -1174,8 +1174,8 @@ export const getColor = (array, key, defaultValue = null) =>
  * cloned. Default is false.
  */
 export const clone = (obj, transients, shallow) => {
-  if (!obj) return null;
-  if (typeof obj.constructor !== 'function') return null;
+  if (!obj) return;
+  if (typeof obj.constructor !== 'function') return;
 
   const clone = obj.constructor();
 
@@ -1427,7 +1427,7 @@ export const arcToCurves = (
  * rotation center is given then the center of rect is used.
  */
 export const getBoundingBox = (rect, rotation, cx) => {
-  let result = null;
+  let result;
 
   if (isSet(rect) && isSet(rotation) && rotation !== 0) {
     const rad = toRadians(rotation);
@@ -1496,7 +1496,7 @@ export const getPortConstraints = (terminal, edge, source, defaultValue) => {
     getValue(
       edge.getStyle(),
       source ? STYLE_SOURCE_PORT_CONSTRAINT : STYLE_TARGET_PORT_CONSTRAINT,
-      null
+      undefined
     )
   );
 
@@ -1630,7 +1630,7 @@ export const findNearestSegment = (state, x, y) => {
   if (state.getAbsolutePoints().length > 0) {
     const points = state.getAbsolutePoints();
     let last = points[0];
-    let min = null;
+    let min;
 
     for (let i = 1; i < points.length; i++) {
       const current = points[i];
@@ -1725,7 +1725,7 @@ export const getDirectedBounds = (rect, m, style, flipH, flipV) => {
  * points and the line between center and point.
  */
 export const getPerimeterPoint = (pts, center, point) => {
-  let min = null;
+  let min;
 
   for (let i = 0; i < pts.length - 1; i++) {
     const pt = intersection(
@@ -1750,7 +1750,7 @@ export const getPerimeterPoint = (pts, center, point) => {
     }
   }
 
-  return isSet(min) ? min.p : null;
+  return isSet(min) ? min.p : undefined;
 };
 
 /**
@@ -2058,7 +2058,7 @@ export const getScrollOrigin = (
       fixed = fixed || style.position == 'fixed';
     }
 
-    node = includeAncestors ? node.parentNode : null;
+    node = includeAncestors ? node.parentNode : undefined;
   }
 
   if (!fixed && includeDocument) {
@@ -2169,7 +2169,7 @@ export const intersection = (x0, y0, x1, y1, x2, y2, x3, y3) => {
   }
 
   // No intersection
-  return null;
+  return;
 };
 
 /**
@@ -2399,7 +2399,7 @@ export const getStylenames = (style) => {
  * given style, otherwise it returns the index of the first character.
  */
 export const indexOfStylename = (style, stylename) => {
-  if (style != null && stylename != null) {
+  if (isSet(style) && isSet(stylename)) {
     const tokens = style.split(';');
     let pos = 0;
 
@@ -2584,8 +2584,8 @@ export const setStyle = (style, key, value) => {
  * var cells = graph.getSelectionCells();
  * mxUtils.setCellStyleFlags(graph.model,
  * 			cells,
- * 			mxConstants.STYLE_FONTSTYLE,
- * 			mxConstants.FONT_BOLD);
+ * 			STYLE_FONTSTYLE,
+ * 			FONT_BOLD);
  * (end)
  *
  * Toggles the bold font style.
@@ -2634,7 +2634,7 @@ export const setCellStyleFlags = (model, cells, key, flag, value) => {
  */
 export const setStyleFlag = (style, key, flag, value) => {
   if (isUnset(style) || style.length == 0) {
-    if (value || value === null) {
+    if (value || isUnset(value)) {
       style = key + '=' + flag;
     } else {
       style = key + '=0';
@@ -2645,7 +2645,7 @@ export const setStyleFlag = (style, key, flag, value) => {
     if (index < 0) {
       var sep = style.charAt(style.length - 1) === ';' ? '' : ';';
 
-      if (value || value === null) {
+      if (value || isUnset(value)) {
         style = style + sep + key + '=' + flag;
       } else {
         style = style + sep + key + '=0';
@@ -2660,7 +2660,7 @@ export const setStyleFlag = (style, key, flag, value) => {
         tmp = style.substring(index + key.length + 1, cont);
       }
 
-      if (value === null) {
+      if (isUnset(value)) {
         tmp = parseInt(tmp) ^ flag;
       } else if (value) {
         tmp = parseInt(tmp) | flag;
@@ -2728,9 +2728,9 @@ export const getAlignmentAsPoint = (align, valign) => {
  *
  * text - String whose size should be returned.
  * fontSize - Integer that specifies the font size in pixels. Default is
- * <mxConstants.DEFAULT_FONTSIZE>.
+ * <DEFAULT_FONTSIZE>.
  * fontFamily - String that specifies the name of the font family. Default
- * is <mxConstants.DEFAULT_FONTFAMILY>.
+ * is <DEFAULT_FONTFAMILY>.
  * textWidth - Optional width for text wrapping.
  * fontStyle - Optional font style.
  */
@@ -2807,7 +2807,7 @@ export const getViewXml = (graph, scale = 1, cells, x0 = 0, y0 = 0) => {
   }
 
   const view = graph.getView();
-  let result = null;
+  let result;
 
   // Disables events on the view
   const eventsEnabled = view.isEventsEnabled();
@@ -2871,7 +2871,7 @@ export const getViewXml = (graph, scale = 1, cells, x0 = 0, y0 = 0) => {
  * pageCount - Specifies the number of pages in the print output.
  * graph - <mxGraph> that should be printed.
  * pageFormat - Optional <mxRectangle> that specifies the page format.
- * Default is <mxConstants.PAGE_FORMAT_A4_PORTRAIT>.
+ * Default is <PAGE_FORMAT_A4_PORTRAIT>.
  * border - The border along each side of every page.
  */
 export const getScaleForPageCount = (
@@ -3070,7 +3070,7 @@ export const show = (graph, doc, x0 = 0, y0 = 0, w, h) => {
   div.style.top = dy + 'px';
 
   const node = graph.getContainer().firstChild;
-  let svg = null;
+  let svg;
 
   while (isSet(node)) {
     const clone = node.cloneNode(true);
@@ -3238,7 +3238,7 @@ export const error = (message, width, close, icon) => {
     (w - width) / 2,
     h / 4,
     width,
-    null,
+    undefined,
     false,
     true
   );

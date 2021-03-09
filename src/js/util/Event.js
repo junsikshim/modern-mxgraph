@@ -5,6 +5,7 @@
  */
 
 import {} from '../Client';
+import { isSet } from '../Helpers';
 
 /**
  * Class: Event
@@ -87,7 +88,8 @@ const Event = {
           }
         }
 
-        if (element.mxListenerList.length === 0) element.mxListenerList = null;
+        if (element.mxListenerList.length === 0)
+          element.mxListenerList = undefined;
       }
     };
 
@@ -254,7 +256,7 @@ const Event = {
       if (dblClick) dblClick(evt);
       else if (!Event.isConsumed(evt)) {
         const tmp = getState(evt);
-        graph.dblClick(evt, tmp ? tmp.cell : null);
+        graph.dblClick(evt, tmp ? tmp.cell : undefined);
       }
     });
   },
@@ -459,7 +461,7 @@ const Event = {
   isPenEvent: (evt) =>
     evt.pointerType
       ? evt.pointerType === 'pen' || evt.pointerType === evt.MSPOINTER_TYPE_PEN
-      : evt.mozInputSource != null
+      : isSet(evt.mozInputSource)
       ? evt.mozInputSource === 2
       : evt.type.indexOf('pen') === 0,
 

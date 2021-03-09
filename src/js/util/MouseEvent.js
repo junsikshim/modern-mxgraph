@@ -122,7 +122,7 @@ const MouseEvent = (evt, state) => {
    *
    * Returns the <Cell> in <state> is not null.
    */
-  const getCell = () => (getState() ? getState().getCell() : null);
+  const getCell = () => (getState() ? getState().getCell() : undefined);
 
   /**
    * Function: isPopupTrigger

@@ -373,7 +373,7 @@ const Shape = (stencil) => {
       updateBoundingBox();
     } else {
       getNode().style.visibility = 'hidden';
-      setBoundingBox(null);
+      setBoundingBox();
     }
   };
 
@@ -480,7 +480,7 @@ const Shape = (stencil) => {
    * computing the label bounds as an <mxRectangle>, where the bottom and right
    * margin are defined in the width and height of the rectangle, respectively.
    */
-  const getLabelMargins = (rect) => null;
+  const getLabelMargins = (rect) => undefined;
 
   /**
    * Function: checkBounds
@@ -536,7 +536,7 @@ const Shape = (stencil) => {
    * Creates a new canvas for drawing this shape. May return null.
    */
   const createCanvas = () => {
-    let canvas = null;
+    let canvas;
 
     // LATER: Check if reusing existing DOM nodes improves performance
     if (isSet(getNode().ownerSVGElement)) {
@@ -668,7 +668,7 @@ const Shape = (stencil) => {
       node.style.borderWidth = '0px';
     }
 
-    color = isOutline() ? null : getFill();
+    color = isOutline() ? undefined : getFill();
 
     if (isSet(color) && color !== NONE) {
       node.style.backgroundColor = color;
@@ -783,7 +783,7 @@ const Shape = (stencil) => {
     configureCanvas(c, x, y, w, h);
 
     // Adds background rectangle to capture events
-    let bg = null;
+    let bg;
 
     if (
       (isUnset(getStencil()) &&
@@ -843,7 +843,7 @@ const Shape = (stencil) => {
    * Sets the state of the canvas for drawing the shape.
    */
   const configureCanvas = (c, x, y, w, h) => {
-    let dash = null;
+    let dash;
     const style = getStyle();
 
     if (isSet(style)) {

@@ -148,12 +148,12 @@ const AbstractCanvas2D = () => {
     alpha: 1,
     fillAlpha: 1,
     strokeAlpha: 1,
-    fillColor: null,
+    fillColor: undefined,
     gradientFillAlpha: 1,
-    gradientColor: null,
+    gradientColor: undefined,
     gradientAlpha: 1,
-    gradientDirection: null,
-    strokeColor: null,
+    gradientDirection: undefined,
+    strokeColor: undefined,
     strokeWidth: 1,
     dashed: false,
     dashPattern: '3 3',
@@ -162,8 +162,8 @@ const AbstractCanvas2D = () => {
     lineJoin: 'miter',
     miterLimit: 10,
     fontColor: '#000000',
-    fontBackgroundColor: null,
-    fontBorderColor: null,
+    fontBackgroundColor: undefined,
+    fontBorderColor: undefined,
     fontSize: DEFAULT_FONTSIZE,
     fontFamily: DEFAULT_FONTFAMILY,
     fontStyle: 0,
@@ -316,8 +316,8 @@ const AbstractCanvas2D = () => {
    */
   const setFillColor = (value) => {
     const state = getState();
-    state.fillColor = value === NONE ? null : value;
-    state.gradientColor = null;
+    state.fillColor = value === NONE ? undefined : value;
+    state.gradientColor = undefined;
   };
 
   /**
@@ -338,9 +338,9 @@ const AbstractCanvas2D = () => {
   ) => {
     const state = getState();
     state.fillColor = color1;
-    state.gradientFillAlpha = alpha1 != null ? alpha1 : 1;
+    state.gradientFillAlpha = isSet(alpha1) ? alpha1 : 1;
     state.gradientColor = color2;
-    state.gradientAlpha = alpha2 != null ? alpha2 : 1;
+    state.gradientAlpha = isSet(alpha2) ? alpha2 : 1;
     state.gradientDirection = direction;
   };
 
@@ -350,7 +350,7 @@ const AbstractCanvas2D = () => {
    * Sets the current stroke color.
    */
   const setStrokeColor = (value) =>
-    (getState().strokeColor = value === NONE ? null : value);
+    (getState().strokeColor = value === NONE ? undefined : value);
 
   /**
    * Function: setStrokeWidth
@@ -404,7 +404,7 @@ const AbstractCanvas2D = () => {
    * Sets the current font color.
    */
   const setFontColor = (value) =>
-    (getState().fontColor = value === NONE ? null : value);
+    (getState().fontColor = value === NONE ? undefined : value);
 
   /**
    * Function: setFontBackgroundColor
@@ -412,7 +412,7 @@ const AbstractCanvas2D = () => {
    * Sets the current font background color.
    */
   const setFontBackgroundColor = (value) =>
-    (getState().fontBackgroundColor = value === NONE ? null : value);
+    (getState().fontBackgroundColor = value === NONE ? undefined : value);
 
   /**
    * Function: setFontBorderColor
@@ -420,7 +420,7 @@ const AbstractCanvas2D = () => {
    * Sets the current font border color.
    */
   const setFontBorderColor = (value) =>
-    (getState().fontBorderColor = value === NONE ? null : value);
+    (getState().fontBorderColor = value === NONE ? undefined : value);
 
   /**
    * Function: setFontSize
@@ -442,7 +442,7 @@ const AbstractCanvas2D = () => {
    * Sets the current font style.
    */
   const setFontStyle = (value) =>
-    (getState().fontStyle = value === null ? 0 : value);
+    (getState().fontStyle = isUnset(value) ? 0 : value);
 
   /**
    * Function: setShadow
@@ -457,7 +457,7 @@ const AbstractCanvas2D = () => {
    * Enables or disables and configures the current shadow.
    */
   const setShadowColor = (value) =>
-    (getState().shadowColor = value === NONE ? null : value);
+    (getState().shadowColor = value === NONE ? undefined : value);
 
   /**
    * Function: setShadowAlpha

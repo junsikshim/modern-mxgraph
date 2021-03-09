@@ -218,14 +218,14 @@ const GraphModel = (root) => {
    * layers of the diagram as child cells. That is, the actual elements of the
    * diagram are supposed to live in the third generation of cells and below.
    */
-  const [getModelRoot, setModelRoot] = addProp(null);
+  const [getModelRoot, setModelRoot] = addProp();
 
   /**
    * Variable: cells
    *
    * Maps from Ids to cells.
    */
-  const [getCells, setCells] = addProp(null);
+  const [getCells, setCells] = addProp();
 
   /**
    * Variable: maintainEdgeParent
@@ -281,7 +281,7 @@ const GraphModel = (root) => {
    * closed then a new object is created for this variable using
    * <createUndoableEdit>.
    */
-  const [getCurrentEdit, setCurrentEdit] = addProp(null);
+  const [getCurrentEdit, setCurrentEdit] = addProp();
 
   /**
    * Variable: updateLevel
@@ -329,7 +329,7 @@ const GraphModel = (root) => {
    *
    * id - A string representing the Id of the cell.
    */
-  const getCell = (id) => (getCells() ? getCells()[id] : null);
+  const getCell = (id) => (getCells() ? getCells()[id] : undefined);
 
   /**
    * Function: filterCells
@@ -337,7 +337,8 @@ const GraphModel = (root) => {
    * Returns the cells from the given array where the given filter function
    * returns true.
    */
-  const filterCells = (cells, filter) => (cells ? cells.filter(filter) : null);
+  const filterCells = (cells, filter) =>
+    cells ? cells.filter(filter) : undefined;
 
   /**
    * Function: getDescendants
@@ -348,7 +349,7 @@ const GraphModel = (root) => {
    *
    * parent - <mxCell> whose descendants should be returned.
    */
-  const getDescendants = (parent) => filterDescendants(null, parent);
+  const getDescendants = (parent) => filterDescendants(undefined, parent);
 
   /**
    * Function: filterDescendants
@@ -464,7 +465,7 @@ const GraphModel = (root) => {
 
     // Resets counters and datastructures
     setNextId(0);
-    setCells(null);
+    setCells();
     me.cellAdded(root);
 
     return oldRoot;
@@ -534,7 +535,7 @@ const GraphModel = (root) => {
    *
    * cell - <mxCell> whose parent should be returned.
    */
-  const getParent = (cell) => (cell ? cell.getParent() : null);
+  const getParent = (cell) => (cell ? cell.getParent() : undefined);
 
   /**
    * Function: add
@@ -550,10 +551,10 @@ const GraphModel = (root) => {
    * child - <mxCell> that specifies the child to be inserted.
    * index - Optional integer that specifies the index of the child.
    */
-  const add = (parent, child, index = null) => {
+  const add = (parent, child, index) => {
     if (child !== parent && parent && child) {
       // Appends the child if no index was specified
-      const i = index !== null ? index : getChildCount(parent);
+      const i = isSet(index) ? index : getChildCount(parent);
       const parentChanged = parent !== getParent(child);
 
       execute(ChildChange(me, parent, child, i));
@@ -698,7 +699,7 @@ const GraphModel = (root) => {
   const updateEdgeParent = (edge, root) => {
     let source = getTerminal(edge, true);
     let target = getTerminal(edge, false);
-    let cell = null;
+    let cell;
 
     // Uses the first non-relative descendants of the source terminal
     while (
@@ -783,7 +784,7 @@ const GraphModel = (root) => {
    * cell2 - <mxCell> that specifies the second cell in the tree.
    */
   const getNearestCommonAncestor = (cell1, cell2) => {
-    if (!cell1 || !cell2) return null;
+    if (!cell1 || !cell2) return;
 
     // Creates the cell path for the second cell
     let path = CellPath.create(cell2);
@@ -815,7 +816,7 @@ const GraphModel = (root) => {
       }
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -830,8 +831,8 @@ const GraphModel = (root) => {
    * cell - <mxCell> that should be removed.
    */
   const remove = (cell) => {
-    if (cell === getModelRoot()) setRoot(null);
-    else if (getParent(cell)) execute(ChildChange(me, null, cell));
+    if (cell === getModelRoot()) setRoot();
+    else if (getParent(cell)) execute(ChildChange(me, undefined, cell));
 
     return cell;
   };
@@ -999,7 +1000,7 @@ const GraphModel = (root) => {
    * isSource - Boolean indicating which end of the edge should be returned.
    */
   const getTerminal = (edge, isSource) =>
-    edge ? edge.getTerminal(isSource) : null;
+    edge ? edge.getTerminal(isSource) : undefined;
 
   /**
    * Function: setTerminal
@@ -1094,7 +1095,7 @@ const GraphModel = (root) => {
    * index - Integer that specifies the index of the edge
    * to return.
    */
-  const getEdgeAt = (cell, index) => (cell ? cell.getEdgeAt(index) : null);
+  const getEdgeAt = (cell, index) => (cell ? cell.getEdgeAt(index) : undefined);
 
   /**
    * Function: getDirectedEdgeCount
@@ -1386,7 +1387,7 @@ const GraphModel = (root) => {
    *
    * cell - <mxCell> whose user object should be returned.
    */
-  const getValue = (cell) => (cell ? cell.getValue() : null);
+  const getValue = (cell) => (cell ? cell.getValue() : undefined);
 
   /**
    * Function: setValue
@@ -1436,7 +1437,7 @@ const GraphModel = (root) => {
    *
    * cell - <mxCell> whose geometry should be returned.
    */
-  const getGeometry = (cell) => (cell ? cell.getGeometry() : null);
+  const getGeometry = (cell) => (cell ? cell.getGeometry() : undefined);
 
   /**
    * Function: setGeometry
@@ -1480,7 +1481,7 @@ const GraphModel = (root) => {
    *
    * cell - <mxCell> whose style should be returned.
    */
-  const getStyle = (cell) => (cell ? cell.getStyle() : null);
+  const getStyle = (cell) => (cell ? cell.getStyle() : undefined);
 
   /**
    * Function: setStyle
@@ -1827,7 +1828,7 @@ const GraphModel = (root) => {
         if (typeof cell.getId === 'function') {
           const id = cell.getId();
           let target =
-            id && (!isEdge(cell) || !cloneAllEdges) ? getCell(id) : null;
+            id && (!isEdge(cell) || !cloneAllEdges) ? getCell(id) : undefined;
 
           // Clones and adds the child if no cell exists for the id
           if (!target) {
@@ -1904,7 +1905,7 @@ const GraphModel = (root) => {
    * with all descendants. Default is true.
    */
   const cloneCell = (cell, includeChildren) =>
-    cell ? cloneCells([cell], includeChildren)[0] : null;
+    cell ? cloneCells([cell], includeChildren)[0] : undefined;
 
   /**
    * Function: cloneCells
@@ -1926,7 +1927,7 @@ const GraphModel = (root) => {
 
     for (const cell of cells) {
       if (cell) clones.push(cloneCellImpl(cell, mapping, includeChildren));
-      else clones.push(null);
+      else clones.push(undefined);
     }
 
     for (let i = 0; i < clones.length; i++) {
@@ -2197,12 +2198,12 @@ export const ChildChange = (model, parent, child, index) => {
 
     if (source) {
       if (isConnect) getModel().terminalForCellChanged(cell, source, true);
-      else getModel().terminalForCellChanged(cell, null, true);
+      else getModel().terminalForCellChanged(cell, undefined, true);
     }
 
     if (target) {
       if (isConnect) getModel().terminalForCellChanged(cell, target, false);
-      else getModel().terminalForCellChanged(cell, null, false);
+      else getModel().terminalForCellChanged(cell, undefined, false);
     }
 
     cell.setTerminal(source, true);

@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp } from '../Helpers';
+import { addProp, isSet } from '../Helpers';
 
 /**
  * Class: EventObject
@@ -54,7 +54,7 @@ const EventObject = (name, ...args) => {
   const props = getProperties();
 
   for (let i = 0; i < args.length; i += 2) {
-    if (args[i + 1] !== undefined) {
+    if (isSet(args[i + 1])) {
       props[args[i]] = args[i + 1];
     }
   }
