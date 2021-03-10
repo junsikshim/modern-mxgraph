@@ -332,6 +332,7 @@ const GraphHandler = (graph) => {
   const [isSuspended, setSuspended] = addProp(false);
   const [isCloning, setCloning] = addProp(false);
   const [getAllCells, setAllCells] = addProp();
+  const [getBounds, setBounds] = addProp();
   const [getPBounds, setPBounds] = addProp();
   const [getGuides, setGuides] = addProp();
   const [getTarget, setTarget] = addProp();
@@ -904,7 +905,7 @@ const GraphHandler = (graph) => {
         return;
       }
 
-      const delta = getDelta(mE);
+      let delta = getDelta(mE);
       const tol = graph.getTolerance();
 
       if (

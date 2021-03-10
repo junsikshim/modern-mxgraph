@@ -69,11 +69,11 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
    *
    * Generic background painting implementation.
    */
-  const paintBackground = (c, x, y, w, h) => {
+  _shape.paintBackground = (c, x, y, w, h) => {
     let events = true;
 
     if (isSet(_shape.getStyle())) {
-      events = getValue(_shape.getStyle(), STYLE_POINTER_EVENTS, true);
+      events = getValue(_shape.getStyle(), STYLE_POINTER_EVENTS, '1') === '1';
     }
 
     if (
@@ -82,13 +82,13 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
       (isSet(getStroke()) && getStroke() !== NONE)
     ) {
       if (!events && (isUnset(getFill()) || getFill() === NONE)) {
-        c.pointerEvents = false;
+        c.setPointerEvents(false);
       }
 
-      if (this.isRounded) {
-        var r = 0;
+      if (_shape.isRounded()) {
+        let r = 0;
 
-        if (getValue(_shape.getStyle(), STYLE_ABSOLUTE_ARCSIZE, false)) {
+        if (getValue(_shape.getStyle(), STYLE_ABSOLUTE_ARCSIZE, 0) === '1') {
           r = Math.min(
             w / 2,
             Math.min(
@@ -97,7 +97,7 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
             )
           );
         } else {
-          var f =
+          const f =
             getValue(
               _shape.getStyle(),
               STYLE_ARCSIZE,
@@ -127,8 +127,13 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
    *
    * Generic background painting implementation.
    */
-  const paintForeground = (c, x, y, w, h) => {
-    if (isGlass() && !isOutline() && isSet(getFill()) && getFill() !== NONE) {
+  _shape.paintForeground = (c, x, y, w, h) => {
+    if (
+      _shape.isGlass() &&
+      !_shape.isOutline() &&
+      isSet(getFill()) &&
+      getFill() !== NONE
+    ) {
       paintGlassEffect(
         c,
         x,
@@ -143,9 +148,7 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
   const me = {
     ..._shape,
     isHtmlAllowed,
-    paintBackground,
-    isRoundable,
-    paintForeground
+    isRoundable
   };
 
   return me;

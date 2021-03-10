@@ -26,8 +26,8 @@ import {
   WORD_WRAP
 } from './Constants';
 import { write } from './Utils';
-import { addProp, isSet, withConstructor } from '../Helpers';
-import { IS_CHROMEAPP, IS_EDGE, IS_IE, IS_IE11 } from '../Client';
+import { addProp, isSet, isUnset, withConstructor } from '../Helpers';
+import { IS_CHROMEAPP, IS_EDGE, IS_FF, IS_IE, IS_IE11, IS_OT } from '../Client';
 
 /**
  * Class: SvgCanvas2D
@@ -90,6 +90,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
    * Reference to the container for the SVG content.
    */
   const [getRoot, setRoot] = addProp(root);
+  const [getOriginalRoot, setOriginalRoot] = addProp();
 
   /**
    * Variable: gradients
@@ -1657,6 +1658,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     stroke,
     fill,
     fillAndStroke,
+    rect,
+    roundrect,
     getStrokeTolerance,
     setStrokeTolerance,
     getPointerEventsValue,

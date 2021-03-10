@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp } from '../Helpers';
+import { addProp, isSet } from '../Helpers';
 import {
   DEFAULT_VALID_COLOR,
   HIGHLIGHT_OPACITY,

@@ -6,7 +6,12 @@
 
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
-import { equalPoints, getRotatedPoint, toRadians } from '../util/Utils';
+import {
+  equalPoints,
+  getRotatedPoint,
+  toRadians,
+  clone as cloneGeometry
+} from '../util/Utils';
 import { addProp } from '../Helpers';
 
 /**
@@ -412,6 +417,8 @@ const Geometry = (x, y, width, height) => {
     ((!getOffset() && !obj.getOffset()) ||
       (getOffset() && getOffset().equals(obj.getOffset())));
 
+  const clone = () => cloneGeometry(me);
+
   const me = {
     getX,
     getY,
@@ -430,7 +437,8 @@ const Geometry = (x, y, width, height) => {
     rotate,
     translate,
     scale,
-    equals
+    equals,
+    clone
   };
 
   return me;

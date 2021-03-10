@@ -12,6 +12,7 @@ import {
   SHAPE_CONNECTOR,
   SHAPE_RECTANGLE,
   STYLE_ALIGN,
+  STYLE_ENDARROW,
   STYLE_FILLCOLOR,
   STYLE_FONTCOLOR,
   STYLE_PERIMETER,
@@ -256,6 +257,9 @@ const Stylesheet = () => {
     putCellStyle,
     getCellStyle
   };
+
+  putDefaultVertexStyle(createDefaultVertexStyle());
+  putDefaultEdgeStyle(createDefaultEdgeStyle());
 
   return me;
 };

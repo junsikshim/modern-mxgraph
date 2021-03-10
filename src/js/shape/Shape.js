@@ -948,7 +948,7 @@ const Shape = (stencil) => {
    * Paints the vertex shape.
    */
   const paintVertexShape = (c, x, y, w, h) => {
-    paintBackground(c, x, y, w, h);
+    me.paintBackground(c, x, y, w, h);
 
     if (
       !isOutline() ||
@@ -956,7 +956,7 @@ const Shape = (stencil) => {
       getValue(getStyle(), STYLE_BACKGROUND_OUTLINE, 0) === 0
     ) {
       c.setShadow(false);
-      paintForeground(c, x, y, w, h);
+      me.paintForeground(c, x, y, w, h);
     }
   };
 
@@ -1257,7 +1257,7 @@ const Shape = (stencil) => {
   const setCursor = (cursor = '') => {
     _setCursor(cursor);
 
-    if (isSet(getNode())) getNode().getStyle().cursor = cursor;
+    if (isSet(getNode())) getNode().style.cursor = cursor;
   };
 
   /**
@@ -1416,7 +1416,7 @@ const Shape = (stencil) => {
     rect.setAttribute('fill', 'none');
     rect.setAttribute('stroke', 'none');
     rect.setAttribute('pointer-events', 'all');
-
+    console.log('here');
     return rect;
   };
 
@@ -1575,6 +1575,16 @@ const Shape = (stencil) => {
     setFlipV,
     isVisible,
     setVisible,
+    isRounded,
+    setRounded,
+    isGlass,
+    setGlass,
+    getStencil,
+    setStencil,
+    isDashed,
+    setDashed,
+    isPointerEvents,
+    setPointerEvents,
     destroy
   };
 

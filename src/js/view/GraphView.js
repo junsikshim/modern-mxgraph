@@ -113,7 +113,7 @@ import CellState from './CellState';
  */
 const GraphView = (graph) => {
   // Extends EventSource.
-  const { fireEvent, addListener } = EventSource();
+  const { fireEvent, addListener, removeListener } = EventSource();
 
   /**
    * Variable: captureDocumentGesture
@@ -2495,6 +2495,7 @@ const GraphView = (graph) => {
 
   const me = {
     addListener,
+    removeListener,
 
     /**
      * Function: getGraphBounds

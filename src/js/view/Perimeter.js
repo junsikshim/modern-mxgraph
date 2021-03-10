@@ -10,6 +10,7 @@ import {
   DIRECTION_SOUTH,
   STYLE_DIRECTION
 } from '../util/Constants';
+import Point from '../util/Point';
 
 /**
  * Class: Perimeter

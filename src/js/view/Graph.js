@@ -43,7 +43,10 @@ import {
   PAGE_FORMAT_A4_PORTRAIT,
   SHAPE_LABEL,
   SHAPE_SWIMLANE,
+  STYLE_AUTOSIZE,
+  STYLE_BENDABLE,
   STYLE_DIRECTION,
+  STYLE_EDITABLE,
   STYLE_ENTRY_DX,
   STYLE_ENTRY_DY,
   STYLE_ENTRY_PERIMETER,
@@ -57,15 +60,18 @@ import {
   STYLE_FILLCOLOR,
   STYLE_FLIPH,
   STYLE_FLIPV,
+  STYLE_FOLDABLE,
   STYLE_HORIZONTAL,
   STYLE_IMAGE,
   STYLE_IMAGE_HEIGHT,
   STYLE_IMAGE_WIDTH,
   STYLE_INDICATOR_GRADIENTCOLOR,
+  STYLE_MOVABLE,
   STYLE_NOLABEL,
   STYLE_ORTHOGONAL,
   STYLE_OVERFLOW,
   STYLE_POINTER_EVENTS,
+  STYLE_RESIZABLE,
   STYLE_SHAPE,
   STYLE_SOURCE_PORT,
   STYLE_STARTSIZE,
@@ -2263,7 +2269,7 @@ const Graph = (container, model, _, stylesheet) => {
 
       if (isSet(cell)) {
         fireEvent(EventObject(Event.START_EDITING, 'cell', cell, 'event', evt));
-        cellEditor.startEditing(cell, evt);
+        getCellEditor().startEditing(cell, evt);
         fireEvent(
           EventObject(Event.EDITING_STARTED, 'cell', cell, 'event', evt)
         );
@@ -12713,6 +12719,10 @@ const Graph = (container, model, _, stylesheet) => {
     setKeepEdgesInForeground,
     isKeepEdgesInBackground,
     setKeepEdgesInBackground,
+    getPanDx,
+    setPanDx,
+    getPanDy,
+    setPanDy,
     destroy
   };
 

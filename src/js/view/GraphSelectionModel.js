@@ -288,6 +288,8 @@ const GraphSelectionModel = (graph) => {
   };
 
   const me = {
+    fireEvent,
+
     /**
      * Function: isSingleSelection
      *

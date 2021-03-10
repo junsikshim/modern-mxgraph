@@ -65,6 +65,7 @@ import ImageShape from '../shape/ImageShape';
 import Rectangle from '../util/Rectangle';
 import { IS_IOS, IS_SVG, IS_TOUCH, NO_FO } from '../Client';
 import { getValue, isNode } from '../util/Utils';
+import MouseEvent from '../util/MouseEvent';
 
 /**
  * Variable: defaultShapes
@@ -813,12 +814,15 @@ const CellRenderer = () => {
       },
       (evt) => {
         if (isShapeEvent(state, evt)) {
-          fireMouseEvent(Event.MOUSE_MOVE, MouseEvent(evt, getState(evt)));
+          graph.fireMouseEvent(
+            Event.MOUSE_MOVE,
+            MouseEvent(evt, getState(evt))
+          );
         }
       },
       (evt) => {
         if (isShapeEvent(state, evt)) {
-          fireMouseEvent(Event.MOUSE_UP, MouseEvent(evt, getState(evt)));
+          graph.fireMouseEvent(Event.MOUSE_UP, MouseEvent(evt, getState(evt)));
         }
       }
     );

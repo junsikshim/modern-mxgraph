@@ -608,7 +608,8 @@ const AbstractCanvas2D = () => {
     close,
     end,
     isPointerEvents,
-    setPointerEvents
+    setPointerEvents,
+    getState
   };
 
   reset();
