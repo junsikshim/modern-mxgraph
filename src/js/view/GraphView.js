@@ -13,7 +13,7 @@ import {
   IS_SF,
   IS_TOUCH
 } from '../Client';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, noop } from '../Helpers';
 import ImageShape from '../shape/ImageShape';
 import {
   ALIGN_BOTTOM,
@@ -834,6 +834,7 @@ const GraphView = (graph) => {
             validateCellState(getVisibleTerminal(cell, true), false),
             true
           );
+
           state.setVisibleTerminalState(
             validateCellState(getVisibleTerminal(cell, false), false),
             false
@@ -1020,7 +1021,7 @@ const GraphView = (graph) => {
       (isSet(getGraph().getModel().getTerminal(state.getCell(), true)) &&
         isUnset(source)) ||
       (isUnset(source) && isUnset(geo.getTerminalPoint(true))) ||
-      (isSet(getGraph().getModel().getTerminal(state.cell, false)) &&
+      (isSet(getGraph().getModel().getTerminal(state.getCell(), false)) &&
         isUnset(target)) ||
       (isUnset(target) && isUnset(geo.getTerminalPoint(false)))
     ) {
@@ -1064,7 +1065,7 @@ const GraphView = (graph) => {
     const h = getValue(state.getStyle(), STYLE_LABEL_POSITION, ALIGN_CENTER);
 
     if (h === ALIGN_LEFT) {
-      let lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, undefined);
+      let lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH);
 
       if (isSet(lw)) {
         lw *= getScale();
@@ -1076,7 +1077,7 @@ const GraphView = (graph) => {
     } else if (h === ALIGN_RIGHT) {
       absoluteOffset.setX(absoluteOffset.getX() + state.getWidth());
     } else if (h === ALIGN_CENTER) {
-      const lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH, undefined);
+      const lw = getValue(state.getStyle(), STYLE_LABEL_WIDTH);
 
       if (isSet(lw)) {
         // Aligns text block with given width inside the vertex width
@@ -1337,7 +1338,6 @@ const GraphView = (graph) => {
 
       const tmp = edge.getAbsolutePoints();
       pts.push(tmp[tmp.length - 1]);
-
       edge.setAbsolutePoints(pts);
     }
   };
@@ -2031,8 +2031,8 @@ const GraphView = (graph) => {
   const updateEdgeLabelOffset = (state) => {
     const points = state.getAbsolutePoints();
 
-    points.setX(state.getCenterX());
-    points.setY(state.getCenterY());
+    state.getAbsoluteOffset().setX(state.getCenterX());
+    state.getAbsoluteOffset().setY(state.getCenterY());
 
     if (isSet(points) && points.length > 0 && isSet(state.getSegments())) {
       const geometry = getGraph().getCellGeometry(state.getCell());
@@ -2341,11 +2341,9 @@ const GraphView = (graph) => {
       // Implemented via graph event dispatch loop to avoid duplicate events
       // in Firefox and Chrome
       graph.addMouseListener({
-        mouseDown: function (sender, me) {
-          graph.getPopupMenuHandler().hideMenu();
-        },
-        mouseMove: function () {},
-        mouseUp: function () {}
+        mouseDown: (sender, me) => graph.getPopupMenuHandler().hideMenu(),
+        mouseMove: noop,
+        mouseUp: noop
       });
 
       setMoveHandler((evt) => {

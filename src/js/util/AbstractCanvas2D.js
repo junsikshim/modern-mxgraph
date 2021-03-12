@@ -15,7 +15,7 @@ import {
 } from './Constants';
 import UrlConverter from './UrlConverter';
 import { arcToCurves, clone, getRotatedPoint } from './Utils';
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 
 /**
  * Class: AbstractCanvas2D
@@ -609,7 +609,9 @@ const AbstractCanvas2D = () => {
     end,
     isPointerEvents,
     setPointerEvents,
-    getState
+    getState,
+    getPath,
+    setPath
   };
 
   reset();

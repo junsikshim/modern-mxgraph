@@ -1136,7 +1136,7 @@ export const getValue = (array, key, defaultValue) => {
 export const getNumber = (array, key, defaultValue = 0) => {
   const value = isSet(array) ? array[key] : defaultValue;
 
-  return Number(value);
+  return isSet(value) ? Number(value) : defaultValue;
 };
 
 /**

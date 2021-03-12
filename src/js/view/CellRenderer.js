@@ -64,7 +64,7 @@ import Text from '../shape/Text';
 import ImageShape from '../shape/ImageShape';
 import Rectangle from '../util/Rectangle';
 import { IS_IOS, IS_SVG, IS_TOUCH, NO_FO } from '../Client';
-import { getValue, isNode } from '../util/Utils';
+import { equalEntries, equalPoints, getValue, isNode } from '../util/Utils';
 import MouseEvent from '../util/MouseEvent';
 
 /**
@@ -475,7 +475,7 @@ const CellRenderer = () => {
           }
         },
         (evt) => {
-          if (this.isLabelEvent(state, evt)) {
+          if (isLabelEvent(state, evt)) {
             graph.fireMouseEvent(
               Event.MOUSE_MOVE,
               MouseEvent(evt, getState(evt))
@@ -483,7 +483,7 @@ const CellRenderer = () => {
           }
         },
         (evt) => {
-          if (this.isLabelEvent(state, evt)) {
+          if (isLabelEvent(state, evt)) {
             graph.fireMouseEvent(
               Event.MOUSE_UP,
               MouseEvent(evt, getState(evt))
@@ -1111,12 +1111,13 @@ const CellRenderer = () => {
     ) {
       const s = state.getView().getScale();
       const spacing = text.getSpacing();
+
       bounds.setX(bounds.getX() + spacing.getX() * s);
       bounds.setY(bounds.getY() + spacing.getY() * s);
 
       const hpos = getValue(style, STYLE_LABEL_POSITION, ALIGN_CENTER);
       const vpos = getValue(style, STYLE_VERTICAL_LABEL_POSITION, ALIGN_MIDDLE);
-      const lw = getValue(style, STYLE_LABEL_WIDTH, undefined);
+      const lw = getValue(style, STYLE_LABEL_WIDTH);
 
       bounds.setWidth(
         Math.max(
@@ -1345,7 +1346,7 @@ const CellRenderer = () => {
           n.parentNode !== state.getView().getOverlayPane();
         const temp = html ? htmlNode : node;
 
-        if (isSet(temp) && temp.nextSibling != n) {
+        if (isSet(temp) && temp.nextSibling !== n) {
           if (isUnset(temp.nextSibling)) {
             temp.parentNode.appendChild(n);
           } else {

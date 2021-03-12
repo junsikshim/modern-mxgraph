@@ -26,23 +26,7 @@ import Shape from './Shape';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const Ellipse = (bounds, fill, stroke, strokewidth = 1) => {
-  const {
-    getBounds,
-    setBounds,
-    getFill,
-    setFill,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth
-  } = Shape();
-
-  setBounds(bounds);
-  setFill(fill);
-  setStroke(stroke);
-  setStrokeWidth(strokewidth);
-
+const Ellipse = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
   /**
    * Function: paintVertexShape
    *
@@ -53,7 +37,18 @@ const Ellipse = (bounds, fill, stroke, strokewidth = 1) => {
     c.fillAndStroke();
   };
 
+  const _shape = Shape(undefined, {
+    paintVertexShape,
+    ...overrides
+  });
+
+  _shape.setBounds(bounds);
+  _shape.setFill(fill);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokewidth);
+
   const me = {
+    ..._shape,
     paintVertexShape
   };
 

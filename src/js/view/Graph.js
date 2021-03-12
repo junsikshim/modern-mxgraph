@@ -736,8 +736,6 @@ import Stylesheet from './Stylesheet';
  * stylesheet - Optional <mxStylesheet> to be used in the graph.
  */
 const Graph = (container, model, _, stylesheet) => {
-  const { fireEvent, addListener } = EventSource();
-
   /**
    * Variable: mouseListeners
    *
@@ -4532,7 +4530,7 @@ const Graph = (container, model, _, stylesheet) => {
 
       try {
         const parentState = absolute ? getView().getState(parent) : undefined;
-        const o1 = isSet(parentState) ? parentState.origin : undefined;
+        const o1 = isSet(parentState) ? parentState.getOrigin() : undefined;
         const zero = Point(0, 0);
 
         for (let i = 0; i < cells.length; i++) {
@@ -6929,7 +6927,7 @@ const Graph = (container, model, _, stylesheet) => {
                 const dy = -pstate.getOrigin().getY();
                 const pts = state.getAbsolutePoints();
 
-                const src = model.getTerminal(cells[i], true);
+                let src = model.getTerminal(cells[i], true);
 
                 if (isSet(src) && isCellDisconnectable(cells[i], src, true)) {
                   while (isSet(src) && !dict.get(src)) {
@@ -11634,6 +11632,8 @@ const Graph = (container, model, _, stylesheet) => {
       setContainer();
     }
   };
+
+  const { fireEvent, addListener } = EventSource();
 
   const me = {
     addListener,

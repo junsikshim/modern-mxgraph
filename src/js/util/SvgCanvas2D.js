@@ -8,7 +8,9 @@ import AbstractCanvas2D from './AbstractCanvas2D';
 import {
   ABSOLUTE_LINE_HEIGHT,
   ALIGN_BOTTOM,
+  ALIGN_CENTER,
   ALIGN_LEFT,
+  ALIGN_MIDDLE,
   ALIGN_RIGHT,
   ALIGN_TOP,
   DEFAULT_FONTFAMILY,
@@ -20,6 +22,7 @@ import {
   FONT_BOLD,
   FONT_ITALIC,
   FONT_STRIKETHROUGH,
+  FONT_UNDERLINE,
   LINE_HEIGHT,
   NS_SVG,
   NS_XLINK,
@@ -82,8 +85,6 @@ import { IS_CHROMEAPP, IS_EDGE, IS_FF, IS_IE, IS_IE11, IS_OT } from '../Client';
  * stroke-miterlimit globally. Default is false.
  */
 const SvgCanvas2D = (root, styleEnabled = false) => {
-  const _canvas = AbstractCanvas2D();
-
   /**
    * Variable: root
    *
@@ -396,8 +397,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     if (isSet(node)) {
       if (node.nodeName === 'path') {
         // Checks if the path is not empty
-        if (isSet(getPath()) && getPath().length > 0) {
-          node.setAttribute('d', getPath().join(' '));
+        if (isSet(_canvas.getPath()) && _canvas.getPath().length > 0) {
+          node.setAttribute('d', _canvas.getPath().join(' '));
         } else {
           return;
         }
@@ -1438,7 +1439,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
     for (let i = 0; i < lines.length; i++) {
       // Workaround for bounding box of empty lines and spaces
-      if (lines[i].length > 0 && trim(lines[i]).length > 0) {
+      if (lines[i].length > 0 && lines[i].trim().length > 0) {
         const text = createElement('text');
         // LATER: Match horizontal HTML alignment
         text.setAttribute('x', format(x * s.scale) + getTextOffset());
@@ -1627,6 +1628,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
   const fill = () => addNode(true, false);
 
   const fillAndStroke = () => addNode(true, true);
+
+  const _canvas = AbstractCanvas2D();
 
   const me = {
     ..._canvas,

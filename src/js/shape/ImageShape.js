@@ -28,30 +28,17 @@ import Shape from './Shape';
  * <image>.
  * fill - String that defines the fill color. This is stored in <fill>.
  * stroke - String that defines the stroke color. This is stored in <stroke>.
- * strokewidth - Optional integer that defines the stroke width. Default is
- * 0. This is stored in <strokewidth>.
+ * strokeWidth - Optional integer that defines the stroke width. Default is
+ * 0. This is stored in <strokeWidth>.
  */
-const ImageShape = (bounds, image, fill, stroke, strokewidth) => {
-  const {
-    getFill,
-    setFill,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth,
-    setGradient,
-    shapeApply,
-    getStyle,
-    isFlipH,
-    setFlipH,
-    isFlipV,
-    setFlipV,
-    getNode,
-    setTransparentBackgroundImage
-  } = Shape();
-
-  const { paintBackground } = RectangleShape();
-
+const ImageShape = (
+  bounds,
+  image,
+  fill,
+  stroke,
+  strokeWidth,
+  overrides = {}
+) => {
   const [getBounds, setBounds] = addProp(bounds);
   const [getImage, setImage] = addProp(image);
   const [isShadow, setShadow] = addProp(false);
@@ -62,10 +49,6 @@ const ImageShape = (bounds, image, fill, stroke, strokewidth) => {
    * Switch to preserve image aspect. Default is true.
    */
   const [isPreserveImageAspect, setPreserveImageAspect] = addProp(true);
-
-  setFill(fill);
-  setStroke(stroke);
-  setStrokeWidth(strokewidth);
 
   /**
    * Function: getSvgScreenOffset
@@ -216,7 +199,25 @@ const ImageShape = (bounds, image, fill, stroke, strokewidth) => {
     }
   };
 
+  const _shape = Shape(undefined, {
+    getSvgScreenOffset,
+    apply,
+    isHtmlAllowed,
+    createHtml,
+    isRoundable,
+    paintVertexShape,
+    redrawHtmlShape,
+    ...overrides
+  });
+
+  _shape.setFill(fill);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokeWidth);
+
+  const { paintBackground } = RectangleShape();
+
   const me = {
+    ...Shape,
     getSvgScreenOffset,
     apply,
     isHtmlAllowed,

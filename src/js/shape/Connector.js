@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import { isSet } from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
   STYLE_CURVED,
@@ -14,6 +15,7 @@ import {
   STYLE_STARTFILL,
   STYLE_STARTSIZE
 } from '../util/Constants';
+import { getNumber, getValue } from '../util/Utils';
 import Marker from './Marker';
 import Polyline from './Polyline';
 
@@ -36,20 +38,10 @@ import Polyline from './Polyline';
  * <mxShape.points>.
  * stroke - String that defines the stroke color. This is stored in <stroke>.
  * Default is 'black'.
- * strokewidth - Optional integer that defines the stroke width. Default is
- * 1. This is stored in <strokewidth>.
+ * strokeWidth - Optional integer that defines the stroke width. Default is
+ * 1. This is stored in <strokeWidth>.
  */
-const Connector = (points, stroke, strokewidth) => {
-  const {
-    getStroke,
-    setUseSvgBoundingBox,
-    getStyle,
-    updateBoundingBox: _updateBoundingBox,
-    paintEdgeShape: _paintEdgeShape,
-    augmentBoundingBox: _augmentBoundingBox,
-    getScale
-  } = Polyline(points, stroke, strokewidth);
-
+const Connector = (points, stroke, strokeWidth, overrides = {}) => {
   /**
    * Function: updateBoundingBox
    *
@@ -57,7 +49,9 @@ const Connector = (points, stroke, strokewidth) => {
    * <augmentBoundingBox> and stores the result in <boundingBox>.
    */
   const updateBoundingBox = () => {
-    setUseSvgBoundingBox(isSet(getStyle()) && getStyle()[STYLE_CURVED] === 1);
+    _polyline.setUseSvgBoundingBox(
+      isSet(getStyle()) && getStyle()[STYLE_CURVED] === 1
+    );
     _updateBoundingBox();
   };
 
@@ -73,10 +67,10 @@ const Connector = (points, stroke, strokewidth) => {
     const sourceMarker = createMarker(c, pts, true);
     const targetMarker = createMarker(c, pts, false);
 
-    _paintEdgeShape(c, pts);
+    _polyline.paintEdgeShape(c, pts);
 
     // Disables shadows, dashed styles and fixes fill color for markers
-    c.setFillColor(getStroke());
+    c.setFillColor(_polyline.getStroke());
     c.setShadow(false);
     c.setDashed(false);
 
@@ -99,7 +93,7 @@ const Connector = (points, stroke, strokewidth) => {
     let result;
     const n = pts.length;
     const type = getValue(
-      getStyle(),
+      _polyline.getStyle(),
       source ? STYLE_STARTARROW : STYLE_ENDARROW
     );
     let p0 = source ? pts[1] : pts[n - 2];
@@ -128,14 +122,15 @@ const Connector = (points, stroke, strokewidth) => {
       const unitY = dy / dist;
 
       const size = getNumber(
-        getStyle(),
+        _polyline.getStyle(),
         source ? STYLE_STARTSIZE : STYLE_ENDSIZE,
         DEFAULT_MARKERSIZE
       );
 
       // Allow for stroke width in the end point used and the
       // orthogonal vectors describing the direction of the marker
-      const filled = getStyle()[source ? STYLE_STARTFILL : STYLE_ENDFILL] !== 0;
+      const filled =
+        _polyline.getStyle()[source ? STYLE_STARTFILL : STYLE_ENDFILL] !== 0;
 
       result = Marker.createMarker(
         c,
@@ -146,7 +141,7 @@ const Connector = (points, stroke, strokewidth) => {
         unitY,
         size,
         source,
-        getStrokewidth(),
+        _polyline.getStrokeWidth(),
         filled
       );
     }
@@ -157,10 +152,10 @@ const Connector = (points, stroke, strokewidth) => {
   /**
    * Function: augmentBoundingBox
    *
-   * Augments the bounding box with the strokewidth and shadow offsets.
+   * Augments the bounding box with the strokeWidth and shadow offsets.
    */
   const augmentBoundingBox = (bbox) => {
-    _augmentBoundingBox(bbox);
+    _polyline.augmentBoundingBox(bbox);
 
     // Adds marker sizes
     let size = 0;
@@ -175,12 +170,17 @@ const Connector = (points, stroke, strokewidth) => {
         Math.max(size, getNumber(style, STYLE_ENDSIZE, DEFAULT_MARKERSIZE)) + 1;
     }
 
-    bbox.grow(size * getScale());
+    bbox.grow(size * _polyline.getScale());
   };
 
-  const me = {
-    updateBoundingBox,
+  const _polyline = Polyline(points, stroke, strokeWidth, {
     paintEdgeShape,
+    ...overrides
+  });
+
+  const me = {
+    ..._polyline,
+    updateBoundingBox,
     createMarker,
     augmentBoundingBox
   };

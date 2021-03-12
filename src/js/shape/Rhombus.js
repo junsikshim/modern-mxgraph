@@ -28,25 +28,7 @@ import { getValue } from '../util/Utils';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const Rhombus = (bounds, fill, stroke, strokewidth = 1) => {
-  const {
-    getBounds,
-    setBounds,
-    getFill,
-    setFill,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth,
-    addPoints,
-    getStyle
-  } = Shape();
-
-  setBounds(bounds);
-  setFill(fill);
-  setStroke(stroke);
-  setStrokeWidth(strokewidth);
-
+const Rhombus = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
   /**
    * Function: isRoundable
    *
@@ -80,7 +62,19 @@ const Rhombus = (bounds, fill, stroke, strokewidth = 1) => {
     c.fillAndStroke();
   };
 
+  const _shape = Shape(undefined, {
+    isRoundable,
+    paintVertexShape,
+    ...overrides
+  });
+
+  _shape.setBounds(bounds);
+  _shape.setFill(fill);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokewidth);
+
   const me = {
+    ..._shape,
     isRoundable,
     paintVertexShape
   };

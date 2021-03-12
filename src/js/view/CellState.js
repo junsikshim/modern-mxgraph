@@ -248,7 +248,7 @@ const CellState = (view, cell, style = {}) => {
       } else if (getAbsolutePoints().length === 1) {
         getAbsolutePoints().push(point);
       } else {
-        getAbsolutePoints()[getAbsolutePoints.length - 1] = point;
+        getAbsolutePoints()[getAbsolutePoints().length - 1] = point;
       }
     }
   };
@@ -473,6 +473,10 @@ const CellState = (view, cell, style = {}) => {
     setControl,
     getCenterX,
     getCenterY,
+    getTerminalDistance,
+    setTerminalDistance,
+    getSegments,
+    setSegments,
     destroy
   };
 

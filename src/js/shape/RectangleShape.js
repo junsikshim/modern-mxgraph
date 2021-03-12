@@ -36,9 +36,13 @@ import Shape from './Shape';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
-  const _shape = Shape();
-
+const RectangleShape = (
+  bounds,
+  fill,
+  stroke,
+  strokewidth = 1,
+  overrides = {}
+) => {
   const [getBounds, setBounds] = addProp(bounds);
   const [getFill, setFill] = addProp(fill);
   const [getStroke, setStroke] = addProp(stroke);
@@ -69,7 +73,7 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
    *
    * Generic background painting implementation.
    */
-  _shape.paintBackground = (c, x, y, w, h) => {
+  const paintBackground = (c, x, y, w, h) => {
     let events = true;
 
     if (isSet(_shape.getStyle())) {
@@ -127,7 +131,7 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
    *
    * Generic background painting implementation.
    */
-  _shape.paintForeground = (c, x, y, w, h) => {
+  const paintForeground = (c, x, y, w, h) => {
     if (
       _shape.isGlass() &&
       !_shape.isOutline() &&
@@ -144,6 +148,13 @@ const RectangleShape = (bounds, fill, stroke, strokewidth = 1) => {
       );
     }
   };
+
+  const _shape = Shape(undefined, {
+    isHtmlAllowed,
+    paintForeground,
+    paintBackground,
+    ...overrides
+  });
 
   const me = {
     ..._shape,

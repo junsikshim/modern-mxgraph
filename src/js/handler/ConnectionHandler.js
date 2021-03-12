@@ -1413,6 +1413,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       null,
       isSet(getCurrentState()) ? null : current
     ]);
+
     getGraph()
       .getView()
       .updateFixedTerminalPoint(edgeState, getPrevious(), true, sc);

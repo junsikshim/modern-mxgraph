@@ -127,10 +127,9 @@ const Text = (
   clipped = false,
   overflow = 'visible',
   labelPadding = 0,
-  textDirection
+  textDirection,
+  overrides = {}
 ) => {
-  const _shape = Shape();
-
   const [getData, setData] = addProp(data);
   const [getColor, setColor] = addProp(color);
   const [getAlign, setAlign] = addProp(align);
@@ -249,9 +248,6 @@ const Text = (
   const [getMargin, setMargin] = addProp();
   const [getUnrotatedBoundingBox, setUnrotatedBoundingBox] = addProp();
 
-  _shape.setBounds(bounds);
-  _shape.setRotation(0);
-
   /**
    * Function: isHtmlAllowed
    *
@@ -302,7 +298,7 @@ const Text = (
     const w = bounds.getWidth() / s;
     const h = bounds.getHeight() / s;
 
-    updateTransform(c, x, y, w, h);
+    _shape.updateTransform(c, x, y, w, h);
     configureCanvas(c, x, y, w, h);
 
     if (update) {
@@ -363,8 +359,7 @@ const Text = (
       _shape.isVisible() &&
       checkBounds() &&
       isCacheEnabled() &&
-      getLastData() === getData() &&
-      isNode(getData())
+      getLastData() === getData()
     ) {
       if (_shape.getNode().nodeName === 'DIV' && isHtmlAllowed()) {
         redrawHtmlShapeWithCss3();
@@ -430,7 +425,7 @@ const Text = (
    */
   const apply = (state) => {
     const style = _shape.getStyle();
-    const old = getSpacing();
+    const old = _getSpacing();
 
     _shape.apply(state);
 
@@ -441,24 +436,24 @@ const Text = (
       setColor(getValue(style, STYLE_FONTCOLOR, getColor()));
       setAlign(getValue(style, STYLE_ALIGN, getAlign()));
       setValign(getValue(style, STYLE_VERTICAL_ALIGN, getValign()));
-      setSpacing(parseInt(getValue(style, STYLE_SPACING, getSpacing())));
+      setSpacing(parseInt(getValue(style, STYLE_SPACING, _getSpacing())));
       setSpacingTop(
         parseInt(getValue(style, STYLE_SPACING_TOP, getSpacingTop() - old)) +
-          getSpacing()
+          _getSpacing()
       );
       setSpacingRight(
         parseInt(
           getValue(style, STYLE_SPACING_RIGHT, getSpacingRight() - old)
-        ) + getSpacing()
+        ) + _getSpacing()
       );
       setSpacingBottom(
         parseInt(
           getValue(style, STYLE_SPACING_BOTTOM, getSpacingBottom() - old)
-        ) + getSpacing()
+        ) + _getSpacing()
       );
       setSpacingLeft(
         parseInt(getValue(style, STYLE_SPACING_LEFT, getSpacingLeft() - old)) +
-          getSpacing()
+          _getSpacing()
       );
       setHorizontal(getValue(style, STYLE_HORIZONTAL, isHorizontal()));
       setBackground(
@@ -705,7 +700,7 @@ const Text = (
    * Sets the state of the canvas for drawing the shape.
    */
   const configureCanvas = (c, x, y, w, h) => {
-    _configureCanvas(c, x, y, w, h);
+    _shape.configureCanvas(c, x, y, w, h);
 
     c.setFontColor(getColor());
     c.setFontBackgroundColor(getBackground());
@@ -751,7 +746,7 @@ const Text = (
       '; line-height: ' +
       lh +
       '; pointer-events: ' +
-      (isPointerEvents() ? 'all' : 'none') +
+      (_shape.isPointerEvents() ? 'all' : 'none') +
       '; ';
 
     if ((getFontStyle() & FONT_BOLD) === FONT_BOLD) {
@@ -903,6 +898,19 @@ const Text = (
 
     return Point(dx, dy);
   };
+
+  const _shape = Shape(undefined, {
+    apply,
+    redraw,
+    isHtmlAllowed,
+    redrawHtmlShape,
+    checkBounds,
+    paint,
+    ...overrides
+  });
+
+  _shape.setBounds(bounds);
+  _shape.setRotation(0);
 
   const me = {
     ..._shape,

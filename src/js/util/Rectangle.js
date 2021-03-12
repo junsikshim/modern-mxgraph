@@ -156,6 +156,9 @@ const Rectangle = (x, y, width = 0, height = 0) => {
 
   const clone = () => cloneRect(me);
 
+  const toString = () =>
+    `[${getX()}, ${getY()}, ${getWidth()}, ${getHeight()}]`;
+
   const me = {
     getX,
     setX,
@@ -174,7 +177,8 @@ const Rectangle = (x, y, width = 0, height = 0) => {
     getPoint,
     rotate90,
     equals,
-    clone
+    clone,
+    toString
   };
 
   return me;

@@ -46,13 +46,16 @@ const Point = (x = 0, y = 0) => {
    */
   const clone = () => clonePoint(me);
 
+  const toString = () => `[${getX()}, ${getY()}]`;
+
   const me = {
     getX,
     setX,
     getY,
     setY,
     equals,
-    clone
+    clone,
+    toString
   };
 
   return me;

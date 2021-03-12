@@ -48,13 +48,9 @@ import {
 } from '../util/Constants';
 import Rectangle from '../util/Rectangle';
 import SvgCanvas2D from '../util/SvgCanvas2D';
-import {
-  addTransparentBackgroundFilter,
-  getDirectedBounds,
-  getValue,
-  mod
-} from '../util/Utils';
+import { getDirectedBounds, getValue, mod } from '../util/Utils';
 import { addProp, isSet } from '../Helpers';
+import Point from '../util/Point';
 
 /**
  * Class: Shape
@@ -114,7 +110,7 @@ import { addProp, isSet } from '../Helpers';
  *
  * Constructs a new shape.
  */
-const Shape = (stencil) => {
+const Shape = (stencil, overrides = {}) => {
   /**
    * Variable: scale
    *
@@ -382,7 +378,8 @@ const Shape = (stencil) => {
    * Reconfigures this shape. This will update the colors etc in
    * addition to the bounds or points.
    */
-  const reconfigure = () => redraw();
+  const reconfigure = () =>
+    isSet(overrides.redraw) ? overrides.redraw() : redraw();
 
   /**
    * Function: redraw
@@ -392,15 +389,29 @@ const Shape = (stencil) => {
   const redraw = () => {
     updateBoundsFromPoints();
 
-    if (isVisible() && checkBounds()) {
+    const isCheck = isSet(overrides.checkBounds)
+      ? overrides.checkBounds()
+      : checkBounds();
+
+    const isHtml = isSet(overrides.isHtmlAllowed)
+      ? overrides.isHtmlAllowed()
+      : isHtmlAllowed();
+
+    if (isVisible() && isCheck) {
       getNode().style.visibility = 'visible';
       clear();
 
-      if (getNode().nodeName === 'DIV' && (isHtmlAllowed() || !Client.IS_VML))
-        redrawHtmlShape();
-      else redrawShape();
+      if (getNode().nodeName === 'DIV' && isHtml) {
+        isSet(overrides.redrawHtmlShape)
+          ? overrides.redrawHtmlShape()
+          : redrawHtmlShape();
+      } else {
+        redrawShape();
+      }
 
-      updateBoundingBox();
+      isSet(overrides.updateBoundingBox)
+        ? overrides.updateBoundingBox()
+        : updateBoundingBox();
     } else {
       getNode().style.visibility = 'hidden';
       setBoundingBox();
@@ -548,7 +559,10 @@ const Shape = (stencil) => {
       canvas.setPointerEvents(isPointerEvents());
 
       beforePaint(canvas);
-      paint(canvas);
+
+      if (isSet(overrides.paint)) overrides.paint(canvas);
+      else paint(canvas);
+
       afterPaint(canvas);
 
       if (getNode() !== canvas.getRoot()) {
@@ -849,10 +863,13 @@ const Shape = (stencil) => {
           }
         }
 
-        paintEdgeShape(c, pts);
+        if (isSet(overrides.paintEdgeShape)) overrides.paintEdgeShape(c, pts);
+        else paintEdgeShape(c, pts);
       } else {
         // Paints vertex shape
-        paintVertexShape(c, x, y, w, h);
+        if (isSet(overrides.paintVertexShape))
+          overrides.paintVertexShape(c, x, y, w, h);
+        else paintVertexShape(c, x, y, w, h);
       }
     }
 
@@ -948,7 +965,9 @@ const Shape = (stencil) => {
    * Paints the vertex shape.
    */
   const paintVertexShape = (c, x, y, w, h) => {
-    me.paintBackground(c, x, y, w, h);
+    if (isSet(overrides.paintBackground))
+      overrides.paintBackground(c, x, y, w, h);
+    else paintBackground(c, x, y, w, h);
 
     if (
       !isOutline() ||
@@ -956,7 +975,8 @@ const Shape = (stencil) => {
       getValue(getStyle(), STYLE_BACKGROUND_OUTLINE, 0) === 0
     ) {
       c.setShadow(false);
-      me.paintForeground(c, x, y, w, h);
+      if (isSet(overrides.paintForeground)) paintForeground(c, x, y, w, h);
+      else paintForeground(c, x, y, w, h);
     }
   };
 
@@ -1056,7 +1076,7 @@ const Shape = (stencil) => {
       if (close && rounded) {
         pts = pts.slice();
         const p0 = pts[0];
-        const wp = new mxPoint(
+        const wp = Point(
           pe.getX() + (p0.getX() - pe.getX()) / 2,
           pe.getY() + (p0.getY() - pe.getY()) / 2
         );
@@ -1074,7 +1094,7 @@ const Shape = (stencil) => {
       }
 
       while (i < (close ? pts.length : pts.length - 1)) {
-        let tmp = pts[mxUtils.mod(i, pts.length)];
+        let tmp = pts[mod(i, pts.length)];
         let dx = pt.getX() - tmp.getX();
         let dy = pt.getY() - tmp.getY();
 
@@ -1416,7 +1436,7 @@ const Shape = (stencil) => {
     rect.setAttribute('fill', 'none');
     rect.setAttribute('stroke', 'none');
     rect.setAttribute('pointer-events', 'all');
-    console.log('here');
+
     return rect;
   };
 
@@ -1585,6 +1605,10 @@ const Shape = (stencil) => {
     setDashed,
     isPointerEvents,
     setPointerEvents,
+    getStroke,
+    setStroke,
+    getStrokeWidth,
+    setStrokeWidth,
     destroy
   };
 

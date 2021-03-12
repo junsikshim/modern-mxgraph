@@ -4,6 +4,13 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import { isSet } from '../Helpers';
+import {
+  ARROW_CLASSIC,
+  ARROW_CLASSIC_THIN,
+  ARROW_DIAMOND
+} from '../util/Constants';
+
 /**
  * Variable: markers
  *

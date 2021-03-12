@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import { isUnset } from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE, STYLE_CURVED } from '../util/Constants';
 import { getValue } from '../util/Utils';
 import Shape from './Shape';
@@ -28,25 +29,7 @@ import Shape from './Shape';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const Polyline = (points, stroke, strokewidth = 1) => {
-  const {
-    getPoints,
-    setPoints,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth,
-    getStyle,
-    isRounded,
-    addPoints,
-    updateBoundingBox,
-    augmentBoundingBox
-  } = Shape();
-
-  setPoints(points);
-  setStroke(stroke);
-  setStrokeWidth(strokewidth);
-
+const Polyline = (points, stroke, strokewidth = 1, overrides = {}) => {
   /**
    * Function: getRotation
    *
@@ -77,8 +60,8 @@ const Polyline = (points, stroke, strokewidth = 1) => {
     const prev = c.getPointerEventsValue();
     c.setPointerEventsValue('stroke');
 
-    if (isUnset(getStyle()) || getStyle()[STYLE_CURVED] !== 1) {
-      paintLine(c, pts, isRounded());
+    if (isUnset(_shape.getStyle()) || _shape.getStyle()[STYLE_CURVED] !== 1) {
+      paintLine(c, pts, _shape.isRounded());
     } else {
       paintCurvedLine(c, pts);
     }
@@ -92,9 +75,10 @@ const Polyline = (points, stroke, strokewidth = 1) => {
    * Paints the line shape.
    */
   const paintLine = (c, pts, rounded) => {
-    const arcSize = getValue(getStyle(), STYLE_ARCSIZE, LINE_ARCSIZE) / 2;
+    const arcSize =
+      getValue(_shape.getStyle(), STYLE_ARCSIZE, LINE_ARCSIZE) / 2;
     c.begin();
-    addPoints(c, pts, rounded, arcSize, false);
+    _shape.addPoints(c, pts, rounded, arcSize, false);
     c.stroke();
   };
 
@@ -127,23 +111,23 @@ const Polyline = (points, stroke, strokewidth = 1) => {
     c.stroke();
   };
 
+  const _shape = Shape(undefined, {
+    paintEdgeShape,
+    ...overrides
+  });
+
+  _shape.setPoints(points);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokewidth);
+
   const me = {
+    ..._shape,
     getRotation,
     getShapeRotation,
     isPaintBoundsInverted,
-    paintEdgeShape,
     paintLine,
     paintCurvedLine,
-    getStyle,
-    useSvgBoundingBox,
-    updateBoundingBox,
-    getPoints,
-    setPoints,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth,
-    augmentBoundingBox
+    paintEdgeShape
   };
 
   return me;
