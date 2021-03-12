@@ -1,3 +1,7 @@
+# modern-mxgraph
+
+A modernized version of mxGraph.
+
 ## Objectives
 
 - Reformat into ES6 modules to enable tree-shaking
