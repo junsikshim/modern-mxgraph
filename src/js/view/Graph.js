@@ -1662,7 +1662,7 @@ const Graph = (container, model, _, stylesheet) => {
   const [getHorizontalPageBreaks, setHorizontalPageBreaks] = addProp();
   const [getVerticalPageBreaks, setVerticalPageBreaks] = addProp();
   const [getLastEvent, setLastEvent] = addProp();
-  const [isIgnoreMouseEvents, setIgnoreMouseEvents] = addProp(true);
+  const [isIgnoreMouseEvents, setIgnoreMouseEvents] = addProp(false);
   const [isMouseTrigger, setMouseTrigger] = addProp(false);
 
   /**
@@ -11333,11 +11333,7 @@ const Graph = (container, model, _, stylesheet) => {
     ) {
       const currentTime = new Date().getTime();
 
-      // NOTE: Second mouseDown for double click missing in quirks mode
-      if (
-        (!IS_QUIRKS && evtName === Event.MOUSE_DOWN) ||
-        (IS_QUIRKS && evtName === Event.MOUSE_UP && !isFireDoubleClick())
-      ) {
+      if (evtName === Event.MOUSE_DOWN) {
         if (
           isSet(getLastTouchEvent()) &&
           getLastTouchEvent() !== mE.getEvent() &&
@@ -11347,7 +11343,6 @@ const Graph = (container, model, _, stylesheet) => {
           getDoubleClickCounter() < 2
         ) {
           setDoubleClickCounter(getDoubleClickCounter() + 1);
-          let doubleClickFired = false;
 
           if (evtName === Event.MOUSE_UP) {
             if (
@@ -11366,11 +11361,8 @@ const Graph = (container, model, _, stylesheet) => {
             setLastTouchTime(0);
           }
 
-          // Do not ignore mouse up in quirks in this case
-          if (!IS_QUIRKS || doubleClickFired) {
-            Event.consume(mE.getEvent());
-            return;
-          }
+          Event.consume(mE.getEvent());
+          return;
         } else if (
           isUnset(getLastTouchEvent()) ||
           getLastTouchEvent() !== mE.getEvent()
@@ -11464,11 +11456,11 @@ const Graph = (container, model, _, stylesheet) => {
             const l = getMouseListeners()[i];
 
             if (evtName === Event.MOUSE_DOWN) {
-              l.mouseDown.apply(l, args);
+              l.mouseDown(...args);
             } else if (evtName === Event.MOUSE_MOVE) {
-              l.mouseMove.apply(l, args);
+              l.mouseMove(...args);
             } else if (evtName === Event.MOUSE_UP) {
-              l.mouseUp.apply(l, args);
+              l.mouseUp(...args);
             }
           }
         }
@@ -11535,10 +11527,10 @@ const Graph = (container, model, _, stylesheet) => {
    *
    * Consumes the given <mxMouseEvent> if it's a touchStart event.
    */
-  const consumeMouseEvent = (evtName, me, sender) => {
+  const consumeMouseEvent = (evtName, mE, sender) => {
     // Workaround for duplicate click in Windows 8 with Chrome/FF/Opera with touch
-    if (evtName === Event.MOUSE_DOWN && Event.isTouchEvent(me.getEvent())) {
-      me.consume(false);
+    if (evtName === Event.MOUSE_DOWN && Event.isTouchEvent(mE.getEvent())) {
+      mE.consume(false);
     }
   };
 
