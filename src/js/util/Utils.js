@@ -48,6 +48,7 @@ import {
   STYLE_TARGET_PORT_CONSTRAINT,
   TOOLTIP_VERTICAL_OFFSET
 } from './Constants';
+import Dictionary from './Dictionary';
 import Event from './Event';
 import ObjectIdentity from './ObjectIdentity';
 import Point from './Point';

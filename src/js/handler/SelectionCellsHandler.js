@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
@@ -34,8 +34,6 @@ import { sortCells } from '../util/Utils';
  * graph - Reference to the enclosing <mxGraph>.
  */
 const SelectionCellsHandler = (graph) => {
-  const { fireEvent } = EventSource();
-
   /**
    * Variable: graph
    *
@@ -55,7 +53,9 @@ const SelectionCellsHandler = (graph) => {
    *
    * Keeps a reference to an event listener for later removal.
    */
-  const [getRefreshHandler, setRefreshHandler] = addProp();
+  const [getRefreshHandler, setRefreshHandler] = addProp((sender, evt) => {
+    if (isEnabled()) refresh();
+  });
 
   /**
    * Variable: maxHandlers
@@ -244,6 +244,8 @@ const SelectionCellsHandler = (graph) => {
     }
   };
 
+  const { fireEvent } = EventSource();
+
   const me = {
     /**
      * Function: isEnabled
@@ -282,6 +284,15 @@ const SelectionCellsHandler = (graph) => {
     mouseUp,
     destroy
   };
+
+  graph.addMouseListener(me);
+  graph.getSelectionModel().addListener(Event.CHANGE, getRefreshHandler());
+  graph.getModel().addListener(Event.CHANGE, getRefreshHandler());
+  graph.getView().addListener(Event.SCALE, getRefreshHandler());
+  graph.getView().addListener(Event.TRANSLATE, getRefreshHandler());
+  graph.getView().addListener(Event.SCALE_AND_TRANSLATE, getRefreshHandler());
+  graph.getView().addListener(Event.DOWN, getRefreshHandler());
+  graph.getView().addListener(Event.UP, getRefreshHandler());
 
   return me;
 };

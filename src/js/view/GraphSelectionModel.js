@@ -50,8 +50,6 @@ import UndoableEdit from '../util/UndoableEdit';
  * graph - Reference to the enclosing <mxGraph>.
  */
 const GraphSelectionModel = (graph) => {
-  const { fireEvent } = EventSource();
-
   /**
    * Variable: graph
    *
@@ -287,8 +285,11 @@ const GraphSelectionModel = (graph) => {
     }
   };
 
+  const { fireEvent, addListener } = EventSource();
+
   const me = {
     fireEvent,
+    addListener,
 
     /**
      * Function: isSingleSelection

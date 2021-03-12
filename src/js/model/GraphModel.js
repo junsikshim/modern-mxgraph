@@ -208,9 +208,6 @@ import Cell from './Cell';
  * root - <Cell> that represents the root cell.
  */
 const GraphModel = (root) => {
-  // Extends mxEventSource.
-  const { addListener, removeListener, fireEvent } = EventSource();
-
   /**
    * Variable: root
    *
@@ -1999,6 +1996,9 @@ const GraphModel = (root) => {
       restoreClone(getChildAt(clone, i), getChildAt(cell, i), mapping);
     }
   };
+
+  // Extends mxEventSource.
+  const { addListener, removeListener, fireEvent } = EventSource();
 
   const me = {
     fireEvent,

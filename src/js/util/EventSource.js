@@ -5,7 +5,7 @@
  */
 
 import EventObject from './EventObject';
-import { addProp } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 
 /**
  * Class: EventSource
@@ -75,9 +75,12 @@ const EventSource = (eventSource) => {
    */
   const removeListener = (f) => {
     const listeners = getEventListeners();
-    const i = listeners.indexOf(f);
+    let i = 0;
 
-    if (i > 0) listeners.splice(i - 1, 2);
+    while (i < listeners.length) {
+      if (listeners[i + 1] === f) listeners.splice(i, 2);
+      else i += 2;
+    }
   };
 
   /**
@@ -99,20 +102,20 @@ const EventSource = (eventSource) => {
    * sender - Optional sender to be passed to the listener. Default value is
    * the return value of <getEventSource>.
    */
-  const fireEvent = (evt, sender) => {
+  const fireEvent = (evt = EventObject(), sender = getEventSource()) => {
     if (!isEventsEnabled()) return;
 
-    const args = [
-      sender ? sender : getEventSource() ? getEventSource() : me,
-      evt ? evt : EventObject()
-    ];
-
+    const args = [sender ?? me, evt];
     const listeners = getEventListeners();
-    const name = args[1].getName();
+    const name = evt.getName();
 
-    listeners.forEach((listener, i) => {
-      if (!listener || listener === name) listeners[i + 1].apply(me, args);
-    });
+    for (let i = 0; i < listeners.length; i += 2) {
+      const listen = listeners[i];
+
+      if (isUnset(listen) || listen === name) {
+        listeners[i + 1](...args);
+      }
+    }
   };
 
   const me = {

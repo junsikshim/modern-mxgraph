@@ -1652,7 +1652,15 @@ const Graph = (container, model, _, stylesheet) => {
   const [getMouseMoveRedirect, setMouseMoveRedirect] = addProp();
   const [getMouseUpRedirect, setMouseUpRedirect] = addProp();
   const [getEventSource, setEventSource] = addProp();
-  const [getGraphModelChangeListener, setGraphModelChangeListener] = addProp();
+
+  // Adds a graph model listener to update the view
+  const [
+    getGraphModelChangeListener,
+    setGraphModelChangeListener
+  ] = addProp((sender, evt) =>
+    graphModelChanged(evt.getProperty('edit').getChanges())
+  );
+
   const [getTooltipHandler, setTooltipHandler] = addProp();
   const [getSelectionCellsHandler, setSelectionCellsHandler] = addProp();
   const [getConnectionHandler, setConnectionHandler] = addProp();
@@ -8025,8 +8033,8 @@ const Graph = (container, model, _, stylesheet) => {
           view.refresh();
 
           // Repaints selection marker (ticket 18)
-          if (isSet(selectionCellsHandler)) {
-            selectionCellsHandler.refresh();
+          if (isSet(getSelectionCellsHandler())) {
+            getSelectionCellsHandler().refresh();
           }
         }
       }
@@ -8734,7 +8742,7 @@ const Graph = (container, model, _, stylesheet) => {
       }
 
       if (isUnset(tip)) {
-        const handler = selectionCellsHandler.getHandler(state.getCell());
+        const handler = getSelectionCellsHandler().getHandler(state.getCell());
 
         if (isSet(handler) && typeof handler.getTooltipForNode === 'function') {
           tip = handler.getTooltipForNode(node);
@@ -12726,11 +12734,6 @@ const Graph = (container, model, _, stylesheet) => {
   setSelectionModel(createSelectionModel());
   setStylesheet(isSet(stylesheet) ? stylesheet : createStylesheet());
   setView(createGraphView());
-
-  // Adds a graph model listener to update the view
-  setGraphModelChangeListener((sender, evt) =>
-    graphModelChanged(evt.getProperty('edit').getChanges())
-  );
 
   getModel().addListener(Event.CHANGE, getGraphModelChangeListener());
 
