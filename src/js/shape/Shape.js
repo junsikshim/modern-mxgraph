@@ -615,7 +615,9 @@ const Shape = (stencil, overrides = {}) => {
     const canvas = SvgCanvas2D(getNode(), false);
     canvas.setStrokeTolerance(isPointerEvents() ? getSvgStrokeTolerance() : 0);
     canvas.setPointerEventsValue(getSvgPointerEvents());
-    const off = getSvgScreenOffset();
+    const off = isSet(overrides.getSvgScreenOffset)
+      ? overrides.getSvgScreenOffset()
+      : getSvgScreenOffset();
 
     if (off !== 0) {
       getNode().setAttribute('transform', 'translate(' + off + ',' + off + ')');

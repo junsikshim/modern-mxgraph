@@ -906,6 +906,7 @@ const Text = (
     redrawHtmlShape,
     checkBounds,
     paint,
+    getSvgScreenOffset,
     ...overrides
   });
 
