@@ -18,16 +18,6 @@ import { getScrollOrigin } from '../util/Utils';
  * Constructs an event handler that creates a <mxPopupMenu>.
  */
 const PopupMenuHandler = (graph, factoryMethod) => {
-  // Extends PopupMenu.
-  const {
-    init: _init,
-    destroy: _destroy,
-    getDiv,
-    isEnabled,
-    hideMenu,
-    popup
-  } = PopupMenu(factoryMethod);
-
   /**
    * Variable: graph
    *
@@ -212,6 +202,16 @@ const PopupMenuHandler = (graph, factoryMethod) => {
     // Supercall
     _destroy();
   };
+
+  // Extends PopupMenu.
+  const {
+    init: _init,
+    destroy: _destroy,
+    getDiv,
+    isEnabled,
+    hideMenu,
+    popup
+  } = PopupMenu(factoryMethod);
 
   const me = {
     init,

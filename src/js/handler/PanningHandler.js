@@ -38,8 +38,6 @@ import { hasScrollbars } from '../util/Utils';
  * <code>event</code> property contains the corresponding <mxMouseEvent>.
  */
 const PanningHandler = (graph) => {
-  const { fireEvent } = EventSource();
-
   /**
    * Variable: graph
    *
@@ -424,6 +422,8 @@ const PanningHandler = (graph) => {
     getGraph().removeListener(getGestureHandler());
     Event.removeListener(document, 'mouseup', getMouseUpListener());
   };
+
+  const { fireEvent } = EventSource();
 
   const me = {
     isActive,

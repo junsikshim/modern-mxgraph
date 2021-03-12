@@ -183,8 +183,6 @@ import { getOffset, getRotatedPoint, getValue, toRadians } from '../util/Utils';
  * the <mxCell> that represents the new edge.
  */
 const ConnectionHandler = (graph, factoryMethod) => {
-  const { fireEvent } = EventSource();
-
   /**
    * Variable: graph
    *
@@ -2154,6 +2152,8 @@ const ConnectionHandler = (graph, factoryMethod) => {
       setEscapeHandler();
     }
   };
+
+  const { fireEvent } = EventSource();
 
   const me = {
     /**

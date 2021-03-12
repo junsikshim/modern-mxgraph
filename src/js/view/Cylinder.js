@@ -29,17 +29,6 @@ import { addProp } from '../Helpers';
  * 1. This is stored in <strokewidth>.
  */
 const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
-  const {
-    getBounds,
-    setBounds,
-    getFill,
-    setFill,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth
-  } = Shape();
-
   /**
    * Variable: maxHeight
    *
@@ -121,6 +110,17 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
       c.close();
     }
   };
+
+  const {
+    getBounds,
+    setBounds,
+    getFill,
+    setFill,
+    getStroke,
+    setStroke,
+    getStrokeWidth,
+    setStrokeWidth
+  } = Shape();
 
   const me = {
     paintVertexShape,

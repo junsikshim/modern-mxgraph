@@ -38,8 +38,6 @@ import { fit, getDocumentScrollOrigin, write } from './Utils';
  * Fires after the menu has been shown in <popup>.
  */
 const PopupMenu = (factoryMethod) => {
-  const { fireEvent } = EventSource();
-
   /**
    * Variable: submenuImage
    *
@@ -578,6 +576,8 @@ const PopupMenu = (factoryMethod) => {
       setDiv();
     }
   };
+
+  const { fireEvent } = EventSource();
 
   const me = {
     init,

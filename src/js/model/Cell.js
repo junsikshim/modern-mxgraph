@@ -4,7 +4,6 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { clone as cloneCell } from '../util/Utils';
 import { addProp, isUnset, withConstructor } from '../Helpers';
 
 /**
@@ -486,10 +485,23 @@ const Cell = (value, geometry, style) => {
    * Returns a clone of the cell. Uses <cloneValue> to clone
    * the user object. All fields in <transient> are ignored
    * during the cloning.
+   *
+   * 'id',
+   * 'value',
+   * 'parent',
+   * 'source',
+   * 'target',
+   * 'children',
+   * 'edges'
    */
   const clone = () => {
-    const c = cloneCell(me, Cell.transient);
-    c.setValue(cloneValue());
+    const c = Cell(cloneValue(), getGeometry(), getStyle());
+    c.setVertex(isVertex());
+    c.setEdge(isEdge());
+    c.setConnectable(isConnectable());
+    c.setVisible(isVisible());
+    c.setCollapsed(isCollapsed());
+    c.setOverlays(getOverlays());
 
     return c;
   };
@@ -711,24 +723,5 @@ const Cell = (value, geometry, style) => {
 
   return withConstructor(me, Cell);
 };
-
-/**
- * Variable: transient
- *
- * List of members that should not be cloned inside <clone>. This field is
- * passed to <Utils.clone> and is not made persistent in <CellCodec>.
- * This is not a convention for all classes, it is only used in this class
- * to mark transient fields since transient modifiers are not supported by
- * the language.
- */
-Cell.transient = [
-  'id',
-  'value',
-  'parent',
-  'source',
-  'target',
-  'children',
-  'edges'
-];
 
 export default Cell;

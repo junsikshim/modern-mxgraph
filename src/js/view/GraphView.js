@@ -112,9 +112,6 @@ import CellState from './CellState';
  * graph - Reference to the enclosing <mxGraph>.
  */
 const GraphView = (graph) => {
-  // Extends EventSource.
-  const { fireEvent, addListener, removeListener } = EventSource();
-
   /**
    * Variable: captureDocumentGesture
    *
@@ -2490,6 +2487,9 @@ const GraphView = (graph) => {
       setDecoratorPane();
     }
   };
+
+  // Extends EventSource.
+  const { fireEvent, addListener, removeListener } = EventSource();
 
   const me = {
     addListener,

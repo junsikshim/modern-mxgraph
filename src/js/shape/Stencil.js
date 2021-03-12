@@ -221,8 +221,6 @@ import StencilRegistry from './StencilRegistry';
  * desc - XML node that contains the stencil description.
  */
 const Stencil = (desc) => {
-  const {} = Shape();
-
   /**
    * Variable: desc
    *
@@ -787,6 +785,8 @@ const Stencil = (desc) => {
       }
     }
   };
+
+  const {} = Shape();
 
   const me = {
     parseDescription,

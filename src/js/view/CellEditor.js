@@ -143,13 +143,6 @@ import {
  * graph - Reference to the enclosing <mxGraph>.
  */
 const CellEditor = (graph) => {
-  const {
-    getBaseSpacingTop,
-    getBaseSpcingRight,
-    getBaseSpacingBottom,
-    getBaseSpacingLeft
-  } = Text();
-
   /**
    * Variable: graph
    *
@@ -1185,6 +1178,13 @@ const CellEditor = (graph) => {
       setZoomHandler();
     }
   };
+
+  const {
+    getBaseSpacingTop,
+    getBaseSpcingRight,
+    getBaseSpacingBottom,
+    getBaseSpacingLeft
+  } = Text();
 
   const me = {
     init,

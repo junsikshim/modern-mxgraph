@@ -34,19 +34,6 @@ import Point from '../util/Point';
  * style - Array of key, value pairs that constitute the style.
  */
 const CellState = (view, cell, style = {}) => {
-  const {
-    getX,
-    setX,
-    getY,
-    setY,
-    getWidth,
-    setWidth,
-    getHeight,
-    setHeight,
-    getCenterX,
-    getCenterY
-  } = Rectangle();
-
   /**
    * Variable: view
    *
@@ -406,6 +393,19 @@ const CellState = (view, cell, style = {}) => {
    * Destroys the state and all associated resources.
    */
   const destroy = () => getView().getGraph().getCellRenderer().destroy(me);
+
+  const {
+    getX,
+    setX,
+    getY,
+    setY,
+    getWidth,
+    setWidth,
+    getHeight,
+    setHeight,
+    getCenterX,
+    getCenterY
+  } = Rectangle();
 
   const me = {
     getPerimeterBounds,

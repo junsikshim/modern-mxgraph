@@ -6,12 +6,7 @@
 
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
-import {
-  equalPoints,
-  getRotatedPoint,
-  toRadians,
-  clone as cloneGeometry
-} from '../util/Utils';
+import { equalPoints, getRotatedPoint, toRadians } from '../util/Utils';
 import { addProp } from '../Helpers';
 
 /**
@@ -83,21 +78,6 @@ import { addProp } from '../Helpers';
  * the control points of an edge.
  */
 const Geometry = (x, y, width, height) => {
-  // Extends Rectangle.
-  const {
-    getX,
-    setX,
-    getY,
-    setY,
-    getWidth,
-    setWidth,
-    getHeight,
-    setHeight,
-    getCenterX,
-    getCenterY,
-    equals: rectEquals
-  } = Rectangle(x, y, width, height);
-
   /**
    * Variable: alternateBounds
    *
@@ -417,7 +397,41 @@ const Geometry = (x, y, width, height) => {
     ((!getOffset() && !obj.getOffset()) ||
       (getOffset() && getOffset().equals(obj.getOffset())));
 
-  const clone = () => cloneGeometry(me);
+  const clone = () => {
+    const c = Geometry(getX(), getY(), getWidth(), getHeight());
+    c.setAlternateBounds(getAlternateBounds().clone());
+    c.setSourcePoint(getSourcePoint().clone());
+    c.setTargetPoint(getTargetPoint().clone());
+
+    const points = [];
+
+    for (const p of getPoints()) {
+      points.push(p.clone());
+    }
+
+    c.setPoints(points);
+
+    c.setOffset(getOffset().clone());
+    c.setRelative(isRelative());
+    c.setTerminalPoint(getTerminalPoint().clone());
+
+    return c;
+  };
+
+  // Extends Rectangle.
+  const {
+    getX,
+    setX,
+    getY,
+    setY,
+    getWidth,
+    setWidth,
+    getHeight,
+    setHeight,
+    getCenterX,
+    getCenterY,
+    equals: rectEquals
+  } = Rectangle(x, y, width, height);
 
   const me = {
     getX,
@@ -425,10 +439,15 @@ const Geometry = (x, y, width, height) => {
     getWidth,
     getHeight,
     getAlternateBounds,
+    setAlternateBounds,
     getSourcePoint,
+    setSourcePoint,
     getTargetPoint,
+    setTargetPoint,
     getPoints,
+    setPoints,
     getOffset,
+    setOffset,
     isRelative,
     setRelative,
     swap,

@@ -61,8 +61,6 @@ const CellMarker = (
   invalidColor,
   hotspot = DEFAULT_HOTSPOT
 ) => {
-  const { fireEvent } = EventSource();
-
   /**
    * Variable: graph
    *
@@ -315,6 +313,8 @@ const CellMarker = (
     getGraph().getModel().removeListener(getResetHandler());
     getHighlight().destroy();
   };
+
+  const { fireEvent } = EventSource();
 
   const me = {
     /**
