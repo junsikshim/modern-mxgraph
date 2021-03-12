@@ -62,64 +62,58 @@ const Marker = {
  * Adds the classic and block marker factory method.
  */
 (() => {
-  const createArrow = (widthFactor = 2) => {
-    return (
-      canvas,
-      shape,
-      type,
-      pe,
-      unitX,
-      unitY,
-      size,
-      source,
-      sw,
-      filled
-    ) => {
-      // The angle of the forward facing arrow sides against the x axis is
-      // 26.565 degrees, 1/sin(26.565) = 2.236 / 2 = 1.118 ( / 2 allows for
-      // only half the strokewidth is processed ).
-      const endOffsetX = unitX * sw * 1.118;
-      const endOffsetY = unitY * sw * 1.118;
+  const createArrow = (widthFactor = 2) => (
+    canvas,
+    shape,
+    type,
+    pe,
+    unitX,
+    unitY,
+    size,
+    source,
+    sw,
+    filled
+  ) => {
+    // The angle of the forward facing arrow sides against the x axis is
+    // 26.565 degrees, 1/sin(26.565) = 2.236 / 2 = 1.118 ( / 2 allows for
+    // only half the strokewidth is processed ).
+    const endOffsetX = unitX * sw * 1.118;
+    const endOffsetY = unitY * sw * 1.118;
 
-      unitX = unitX * (size + sw);
-      unitY = unitY * (size + sw);
+    unitX = unitX * (size + sw);
+    unitY = unitY * (size + sw);
 
-      const pt = pe.clone();
-      pt.setX(pt.getX() - endOffsetX);
-      pt.setY(pt.getY() - endOffsetY);
+    const pt = pe.clone();
+    pt.setX(pt.getX() - endOffsetX);
+    pt.setY(pt.getY() - endOffsetY);
 
-      const f =
-        type !== ARROW_CLASSIC && type !== ARROW_CLASSIC_THIN ? 1 : 3 / 4;
-      pe.setX(pe.getX() + (-unitX * f - endOffsetX));
-      pe.setY(pe.getY() + (-unitY * f - endOffsetY));
+    const f = type !== ARROW_CLASSIC && type !== ARROW_CLASSIC_THIN ? 1 : 3 / 4;
+    pe.setX(pe.getX() + (-unitX * f - endOffsetX));
+    pe.setY(pe.getY() + (-unitY * f - endOffsetY));
 
-      return () => {
-        canvas.begin();
-        canvas.moveTo(pt.getX(), pt.getY());
-        canvas.lineTo(
-          pt.getX() - unitX - unitY / widthFactor,
-          pt.getY() - unitY + unitX / widthFactor
-        );
+    return () => {
+      canvas.begin();
+      canvas.moveTo(pt.getX(), pt.getY());
+      canvas.lineTo(
+        pt.getX() - unitX - unitY / widthFactor,
+        pt.getY() - unitY + unitX / widthFactor
+      );
 
-        if (type === ARROW_CLASSIC || type === ARROW_CLASSIC_THIN) {
-          canvas.lineTo(
-            pt.getX() - (unitX * 3) / 4,
-            pt.getY() - (unitY * 3) / 4
-          );
-        }
+      if (type === ARROW_CLASSIC || type === ARROW_CLASSIC_THIN) {
+        canvas.lineTo(pt.getX() - (unitX * 3) / 4, pt.getY() - (unitY * 3) / 4);
+      }
 
-        canvas.lineTo(
-          pt.getX() + unitY / widthFactor - unitX,
-          pt.getY() - unitY - unitX / widthFactor
-        );
-        canvas.close();
+      canvas.lineTo(
+        pt.getX() + unitY / widthFactor - unitX,
+        pt.getY() - unitY - unitX / widthFactor
+      );
+      canvas.close();
 
-        if (filled) {
-          canvas.fillAndStroke();
-        } else {
-          canvas.stroke();
-        }
-      };
+      if (filled) {
+        canvas.fillAndStroke();
+      } else {
+        canvas.stroke();
+      }
     };
   };
 

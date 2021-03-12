@@ -5,7 +5,6 @@
  */
 
 import { addProp } from '../Helpers';
-import { clone as clonePoint } from './Utils';
 
 /**
  * Class: Point
@@ -44,7 +43,7 @@ const Point = (x = 0, y = 0) => {
    *
    * Returns a clone of this <Point>.
    */
-  const clone = () => clonePoint(me);
+  const clone = () => Point(getX(), getY());
 
   const toString = () => `[${getX()}, ${getY()}]`;
 
