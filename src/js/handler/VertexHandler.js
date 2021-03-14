@@ -2224,7 +2224,7 @@ const VertexHandler = (state) => {
    * Destroys the handler and all its resources and DOM nodes.
    */
   const destroy = () => {
-    if (isSet(getEscapeHandler)) {
+    if (isSet(getEscapeHandler())) {
       getState().getView().getGraph().removeListener(getEscapeHandler());
       setEscapeHandler();
     }

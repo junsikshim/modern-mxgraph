@@ -75,7 +75,7 @@ const Event = {
    *
    * Removes the specified listener from the given element.
    */
-  removeListener: () => {
+  removeListener: (() => {
     const updateListener = (element, eventName, f) => {
       if (element.mxListenerList) {
         const listenerCount = element.mxListenerList.length;
@@ -98,7 +98,7 @@ const Event = {
       element.removeEventListener(eventName, f, false);
       updateListener(element, eventName, f);
     };
-  },
+  })(),
 
   /**
    * Function: removeAllListeners
