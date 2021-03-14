@@ -1,6 +1,9 @@
 # modern-mxgraph
 
-A modernized version of mxGraph.
+This is a modernized version of mxGraph.
+
+The official mxGraph is at https://github.com/jgraph/mxgraph. However, it is discontinued as of now.
+
 
 ## Objectives
 
@@ -40,7 +43,7 @@ A modernized version of mxGraph.
 | /handler/mxRubberband            | 430   |           |            |
 | /handler/mxSelectionCellsHandler | 345   | Converted |            |
 | /handler/mxTooltipHandler        | 354   | Converted |            |
-| /handler/mxVertexHandler         | 2252  |           |            |
+| /handler/mxVertexHandler         | 2252  | Converted |            |
 | Total                            | 13593 |           |            |
 
 ### /io
@@ -195,7 +198,7 @@ A modernized version of mxGraph.
 
 | File                         | LoC   | Progress  | Unit tests |
 | ---------------------------- | ----- | --------- | ---------- |
-| /view/mxCellEditor           | 1221  |           |            |
+| /view/mxCellEditor           | 1221  | Converted |            |
 | /view/mxCellOverlay          | 234   |           |            |
 | /view/mxCellRenderer         | 1640  | Converted |            |
 | /view/mxCellState            | 448   | Converted |            |
