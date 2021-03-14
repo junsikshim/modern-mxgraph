@@ -139,7 +139,7 @@ const SelectionCellsHandler = (graph) => {
       const state = getGraph().getView().getState(tmp[i]);
 
       if (isSet(state)) {
-        const handler = getHandlers().get(tmp[i]);
+        let handler = getHandlers().get(tmp[i]);
 
         if (isUnset(handler)) {
           handler = getGraph().createHandler(state);
@@ -195,7 +195,7 @@ const SelectionCellsHandler = (graph) => {
     if (getGraph().isEnabled() && isEnabled()) {
       const args = [sender, mE];
 
-      getHandlers().visit((key, handler) => handler.mouseDown(args));
+      getHandlers().visit((key, handler) => handler.mouseDown(...args));
     }
   };
 
@@ -208,7 +208,7 @@ const SelectionCellsHandler = (graph) => {
     if (getGraph().isEnabled() && isEnabled()) {
       const args = [sender, mE];
 
-      getHandlers().visit((key, handler) => handler.mouseMove(args));
+      getHandlers().visit((key, handler) => handler.mouseMove(...args));
     }
   };
 
@@ -221,7 +221,7 @@ const SelectionCellsHandler = (graph) => {
     if (getGraph().isEnabled() && isEnabled()) {
       const args = [sender, mE];
 
-      getHandlers().visit((key, handler) => handler.mouseUp(args));
+      getHandlers().visit((key, handler) => handler.mouseUp(...args));
     }
   };
 

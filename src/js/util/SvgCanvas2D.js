@@ -694,7 +694,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
         theta *= -1;
       }
 
-      if (theta != 0) {
+      if (theta !== 0) {
         s.transform +=
           'rotate(' + format(theta) + ',' + format(cx) + ',' + format(cy) + ')';
       }

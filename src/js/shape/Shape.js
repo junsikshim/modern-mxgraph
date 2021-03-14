@@ -1611,6 +1611,10 @@ const Shape = (stencil, overrides = {}) => {
     setStroke,
     getStrokeWidth,
     setStrokeWidth,
+    getSvgStrokeTolerance,
+    setSvgStrokeTolerance,
+    getFill,
+    setFill,
     destroy
   };
 

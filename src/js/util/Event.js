@@ -6,6 +6,7 @@
 
 import {} from '../Client';
 import { isSet } from '../Helpers';
+import MouseEvent from './MouseEvent';
 
 /**
  * Class: Event

@@ -435,7 +435,7 @@ const GraphHandler = (graph) => {
    * Implements the delayed selection for the given mouse event.
    */
   const selectDelayed = (mE) => {
-    if (!getGraph().getPopupMenuHandler().isPopupTrigger(mmE)) {
+    if (!getGraph().getPopupMenuHandler().isPopupTrigger(mE)) {
       let cell = mE.getCell();
 
       if (isUnset(cell)) {
@@ -1859,6 +1859,7 @@ const GraphHandler = (graph) => {
     shouldRemoveCellsFromParent,
     moveCells,
     shouldRemoveParent,
+    getMaxCells,
     destroyShapes,
     destroy
   };

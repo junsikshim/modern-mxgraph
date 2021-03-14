@@ -2489,7 +2489,12 @@ const GraphView = (graph) => {
   };
 
   // Extends EventSource.
-  const { fireEvent, addListener, removeListener } = EventSource();
+  const {
+    fireEvent,
+    addListener,
+    removeListener,
+    isEventsEnabled
+  } = EventSource();
 
   const me = {
     addListener,

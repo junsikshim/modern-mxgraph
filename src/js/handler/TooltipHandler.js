@@ -188,6 +188,7 @@ const TooltipHandler = (graph, delay = 500) => {
     hideTooltip,
     show,
     getDiv,
+    getState,
     destroy
   };
 

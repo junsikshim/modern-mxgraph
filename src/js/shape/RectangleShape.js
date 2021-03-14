@@ -40,14 +40,9 @@ const RectangleShape = (
   bounds,
   fill,
   stroke,
-  strokewidth = 1,
+  strokeWidth = 1,
   overrides = {}
 ) => {
-  const [getBounds, setBounds] = addProp(bounds);
-  const [getFill, setFill] = addProp(fill);
-  const [getStroke, setStroke] = addProp(stroke);
-  const [getStrokeWidth, setStrokeWidth] = addProp(strokewidth);
-
   /**
    * Function: isHtmlAllowed
    *
@@ -64,7 +59,7 @@ const RectangleShape = (
       !_shape.isRounded() &&
       !_shape.isGlass() &&
       _shape.getRotation() === 0 &&
-      (events || (isSet(getFill()) && getFill() !== NONE))
+      (events || (isSet(_shape.getFill()) && _shape.getFill() !== NONE))
     );
   };
 
@@ -82,10 +77,10 @@ const RectangleShape = (
 
     if (
       events ||
-      (isSet(getFill()) && getFill() !== NONE) ||
-      (isSet(getStroke()) && getStroke() !== NONE)
+      (isSet(_shape.getFill()) && _shape.getFill() !== NONE) ||
+      (isSet(_shape.getStroke()) && _shape.getStroke() !== NONE)
     ) {
-      if (!events && (isUnset(getFill()) || getFill() === NONE)) {
+      if (!events && (isUnset(_shape.getFill()) || _shape.getFill() === NONE)) {
         c.setPointerEvents(false);
       }
 
@@ -155,6 +150,11 @@ const RectangleShape = (
     paintBackground,
     ...overrides
   });
+
+  _shape.setBounds(bounds);
+  _shape.setFill(fill);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokeWidth);
 
   const me = {
     ..._shape,

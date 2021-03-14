@@ -228,6 +228,7 @@ const PopupMenuHandler = (graph, factoryMethod) => {
     mouseUp,
     getCellForPopupEvent,
     hideMenu,
+    isPopupTrigger,
     destroy
   };
 

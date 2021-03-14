@@ -903,13 +903,13 @@ const CellRenderer = () => {
 
       if (
         forced ||
-        text.getValue() !== value ||
-        text.isWrapping() !== wrapping ||
+        text.getData() !== value ||
+        text.isWrap() !== wrapping ||
         text.getOverflow() !== overflow ||
-        text.isClipping() !== clipping ||
+        text.isClipped() !== clipping ||
         text.getScale() !== nextScale ||
         isUnset(text.getBounds()) ||
-        !text.getBounds.equals(bounds)
+        !text.getBounds().equals(bounds)
       ) {
         text.setData(value);
         text.setBounds(bounds);

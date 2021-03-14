@@ -21,6 +21,7 @@ import PanningHandler from '../handler/PanningHandler';
 import PopupMenuHandler from '../handler/PopupMenuHandler';
 import SelectionCellsHandler from '../handler/SelectionCellsHandler';
 import TooltipHandler from '../handler/TooltipHandler';
+import VertexHandler from '../handler/VertexHandler';
 import { addProp, isSet, isUnset } from '../Helpers';
 import Cell from '../model/Cell';
 import Geometry from '../model/Geometry';
@@ -5675,7 +5676,7 @@ const Graph = (container, model, _, stylesheet) => {
    * recurse - Optional boolean that specifies if the children should be resized.
    */
   const cellResized = (cell, bounds, ignoreRelative, recurse) => {
-    const mode = getModel();
+    const model = getModel();
     const prev = model.getGeometry(cell);
 
     if (isSet(prev) && prev.equals(bounds)) {
@@ -7931,7 +7932,7 @@ const Graph = (container, model, _, stylesheet) => {
         const tr2 = Point(translate.getX(), translate.getY());
         translate.setX(tr.getX());
         translate.setY(tr.getY());
-        setTranslate(tr2.getX(), tr2.getY());
+        view.setTranslate(tr2.getX(), tr2.getY());
       }
     }
   };
@@ -11633,10 +11634,11 @@ const Graph = (container, model, _, stylesheet) => {
     }
   };
 
-  const { fireEvent, addListener } = EventSource();
+  const { fireEvent, addListener, removeListener } = EventSource();
 
   const me = {
     addListener,
+    removeListener,
     createTooltipHandler,
     createSelectionCellsHandler,
     createConnectionHandler,
@@ -12711,6 +12713,8 @@ const Graph = (container, model, _, stylesheet) => {
     getTooltipHandler,
     getPopupMenuHandler,
     getSelectionCellsHandler,
+    getGraphHandler,
+    getCellEditor,
     isNativeDblClickEnabled,
     setNativeDblClickEnabled,
     isFoldingEnabled,

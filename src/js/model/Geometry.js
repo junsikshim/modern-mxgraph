@@ -7,7 +7,7 @@
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import { equalPoints, getRotatedPoint, toRadians } from '../util/Utils';
-import { addProp } from '../Helpers';
+import { addProp, isSet } from '../Helpers';
 
 /**
  * Class: Geometry
@@ -399,21 +399,30 @@ const Geometry = (x, y, width, height) => {
 
   const clone = () => {
     const c = Geometry(getX(), getY(), getWidth(), getHeight());
-    c.setAlternateBounds(getAlternateBounds().clone());
-    c.setSourcePoint(getSourcePoint().clone());
-    c.setTargetPoint(getTargetPoint().clone());
 
-    const points = [];
+    if (isSet(getAlternateBounds()))
+      c.setAlternateBounds(getAlternateBounds().clone());
 
-    for (const p of getPoints()) {
-      points.push(p.clone());
+    if (isSet(getSourcePoint())) c.setSourcePoint(getSourcePoint().clone());
+
+    if (isSet(getTargetPoint())) c.setTargetPoint(getTargetPoint().clone());
+
+    if (isSet(getPoints())) {
+      const points = [];
+
+      for (const p of getPoints()) {
+        points.push(p.clone());
+      }
+
+      c.setPoints(points);
     }
 
-    c.setPoints(points);
+    if (isSet(getOffset())) c.setOffset(getOffset().clone());
 
-    c.setOffset(getOffset().clone());
     c.setRelative(isRelative());
-    c.setTerminalPoint(getTerminalPoint().clone());
+
+    if (isSet(getTerminalPoint()))
+      c.setTerminalPoint(getTerminalPoint().clone());
 
     return c;
   };
