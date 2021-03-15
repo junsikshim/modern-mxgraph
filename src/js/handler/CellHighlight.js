@@ -141,7 +141,7 @@ const CellHighlight = (
     shape.init(graph.getView().getOverlayPane());
     Event.redirectMouseEvents(shape.getNode(), graph, getState());
 
-    shape.svgPointerEvents = 'stroke';
+    shape.setSvgPointerEvents('stroke');
 
     return shape;
   };
@@ -269,6 +269,8 @@ const CellHighlight = (
     hide,
     highlight,
     isHighlightAt,
+    getShape,
+    setShape,
     destroy
   };
 

@@ -16,6 +16,7 @@ import {
   IS_TOUCH
 } from '../Client';
 import ConnectionHandler from '../handler/ConnectionHandler';
+import EdgeHandler from '../handler/EdgeHandler';
 import GraphHandler from '../handler/GraphHandler';
 import PanningHandler from '../handler/PanningHandler';
 import PopupMenuHandler from '../handler/PopupMenuHandler';
@@ -73,6 +74,7 @@ import {
   STYLE_OVERFLOW,
   STYLE_POINTER_EVENTS,
   STYLE_RESIZABLE,
+  STYLE_ROTATION,
   STYLE_SHAPE,
   STYLE_SOURCE_PORT,
   STYLE_STARTSIZE,
@@ -95,7 +97,10 @@ import {
   setCellStyles as _setCellStyles,
   convertPoint,
   getValue,
-  isNode
+  isNode,
+  ptSegDistSq,
+  toRadians,
+  contains
 } from '../util/Utils';
 import CellEditor from './CellEditor';
 import CellRenderer from './CellRenderer';
@@ -12727,6 +12732,12 @@ const Graph = (container, model, _, stylesheet) => {
     setPanDx,
     getPanDy,
     setPanDy,
+    isResetEdgesOnConnect,
+    setResetEdgesOnConnect,
+    isResetEdgesOnMove,
+    setResetEdgesOnMove,
+    isResetEdgesOnResize,
+    setResetEdgesOnResize,
     destroy
   };
 

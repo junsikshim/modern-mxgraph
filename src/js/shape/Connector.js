@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { isSet } from '../Helpers';
+import { isSet, withConstructor } from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
   STYLE_CURVED,
@@ -185,7 +185,7 @@ const Connector = (points, stroke, strokeWidth, overrides = {}) => {
     augmentBoundingBox
   };
 
-  return me;
+  return withConstructor(me, Connector);
 };
 
 export default Connector;

@@ -417,7 +417,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
     shape.setPointerEvents(false);
     shape.setDashed(true);
     shape.init(graph.getView().getOverlayPane());
-    Event.redirectMouseEvents(shape.getNode(), graph, null);
+    Event.redirectMouseEvents(shape.getNode(), graph);
 
     return shape;
   };
@@ -521,7 +521,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
           )) ||
         !isConnectableCell(cell)
       ) {
-        cell = null;
+        cell = undefined;
       }
 
       if (isSet(cell)) {
@@ -530,7 +530,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
             setError(validateConnection(getPrevious().getCell(), cell));
 
             if (isSet(getError()) && getError().length === 0) {
-              cell = null;
+              cell = undefined;
 
               // Enables create target inside groups
               if (isCreateTarget(mE.getEvent())) {
@@ -539,7 +539,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
             }
           }
         } else if (!isValidSource(cell, mE)) {
-          cell = null;
+          cell = undefined;
         }
       } else if (
         isConnecting() &&
@@ -650,7 +650,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       return '';
     }
 
-    return getGraph().getEdgeValidationError(null, source, target);
+    return getGraph().getEdgeValidationError(undefined, source, target);
   };
 
   /**
@@ -696,7 +696,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       // connect-icon appears behind the selection border and the selection
       // border consumes the events before the icon gets a chance
       const bounds = Rectangle(0, 0, image.getWidth(), image.getHeight());
-      let icon = ImageShape(bounds, image.getSrc(), null, null, 0);
+      let icon = ImageShape(bounds, image.getSrc(), undefined, undefined, 0);
       icon.setPreserveImageAspect(false);
 
       if (isMoveIconToFrontForState(state)) {
@@ -745,7 +745,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       return icons;
     }
 
-    return null;
+    return;
   };
 
   /**
@@ -931,7 +931,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    * };
    * (end)
    */
-  const createEdgeState = (mE) => null;
+  const createEdgeState = (mE) => undefined;
 
   /**
    * Function: isOutlineConnectEvent
@@ -988,7 +988,9 @@ const ConnectionHandler = (graph, factoryMethod) => {
       mE,
       isUnset(getFirst()),
       false,
-      isUnset(getFirst()) || mE.isSource(highlight.getShape()) ? null : point
+      isUnset(getFirst()) || mE.isSource(highlight.getShape())
+        ? undefined
+        : point
     );
 
     if (
@@ -1200,7 +1202,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
 
       if (isSet(getFirst())) {
         const constraintHandler = getConstraintHandler();
-        let constraint = null;
+        let constraint;
         let current = point;
 
         // Uses the current point from the constraint handler if available
@@ -1408,8 +1410,8 @@ const ConnectionHandler = (graph, factoryMethod) => {
     }
 
     edgeState.setAbsolutePoints([
-      null,
-      isSet(getCurrentState()) ? null : current
+      undefined,
+      isSet(getCurrentState()) ? undefined : current
     ]);
 
     getGraph()
@@ -1425,7 +1427,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
         );
       }
 
-      edgeState.setAbsoluteTerminalPoint(null, false);
+      edgeState.setAbsoluteTerminalPoint(undefined, false);
       getGraph()
         .getView()
         .updateFixedTerminalPoint(
@@ -1437,7 +1439,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
     }
 
     // Scales and translates the waypoints to the model
-    let realPoints = null;
+    let realPoints;
 
     if (isSet(getWaypoints())) {
       realPoints = [];
@@ -1472,7 +1474,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    * me - <mxMouseEvent> that represents the mouse move.
    */
   const getTargetPerimeterPoint = (state, mE) => {
-    let result = null;
+    let result;
     const view = state.getView();
     const targetPerimeter = view.getPerimeterFunction(state);
 
@@ -1511,7 +1513,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    * me - <mxMouseEvent> that represents the mouse move.
    */
   const getSourcePerimeterPoint = (state, next, mE) => {
-    let result = null;
+    let result;
     const view = state.getView();
     const sourcePerimeter = view.getPerimeterFunction(state);
     const c = Point(state.getCenterX(), state.getCenterY());
@@ -1644,8 +1646,8 @@ const ConnectionHandler = (graph, factoryMethod) => {
       const c1 = getSourceConstraint();
       const c2 = constraintHandler.getCurrentConstraint();
 
-      const source = isSet(getPrevious()) ? getPrevious().getCell() : null;
-      let target = null;
+      const source = isSet(getPrevious()) ? getPrevious().getCell() : undefined;
+      let target;
 
       if (
         isSet(constraintHandler.getCurrentConstraint()) &&
@@ -1789,7 +1791,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       // the default parent to insert the edge
       const model = graph.getModel();
       let terminalInserted = false;
-      let edge = null;
+      let edge;
 
       model.beginUpdate();
 
@@ -1846,15 +1848,15 @@ const ConnectionHandler = (graph, factoryMethod) => {
 
         // Uses the value of the preview edge state for inserting
         // the new edge into the graph
-        let value = null;
-        let style = null;
+        let value;
+        let style;
 
         if (isSet(getEdgeState())) {
           value = getEdgeState().getCell().getValue();
           style = getEdgeState().getCell().getStyle();
         }
 
-        edge = insertEdge(parent, null, value, source, target, style);
+        edge = insertEdge(parent, undefined, value, source, target, style);
 
         if (isSet(edge)) {
           // Updates the connection constraints
@@ -1967,7 +1969,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       }
 
       if (isSelect()) {
-        selectCells(edge, terminalInserted ? target : null);
+        selectCells(edge, terminalInserted ? target : undefined);
       }
     }
   };
@@ -2088,7 +2090,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    * style - Optional style from the preview edge.
    */
   const createEdge = (value, source, target, style) => {
-    let edge = null;
+    let edge;
 
     // Creates a new edge using the factoryMethod
     if (isSet(getFactoryMethod())) {

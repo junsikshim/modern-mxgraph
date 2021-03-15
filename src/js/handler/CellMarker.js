@@ -309,8 +309,6 @@ const CellMarker = (
    * Destroys the handler and all its resources and DOM nodes.
    */
   const destroy = () => {
-    getGraph().getView().removeListener(getResetHandler());
-    getGraph().getModel().removeListener(getResetHandler());
     getHighlight().destroy();
   };
 
@@ -391,6 +389,12 @@ const CellMarker = (
     getCell,
     getStateToMark,
     intersects,
+    getHighlight,
+    setHighlight,
+    getValidColor,
+    setValidColor,
+    getInvalidColor,
+    setInvalidColor,
     destroy
   };
 

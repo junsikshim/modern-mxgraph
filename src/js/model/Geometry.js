@@ -444,9 +444,13 @@ const Geometry = (x, y, width, height) => {
 
   const me = {
     getX,
+    setX,
     getY,
+    setY,
     getWidth,
+    setWidth,
     getHeight,
+    setHeight,
     getAlternateBounds,
     setAlternateBounds,
     getSourcePoint,

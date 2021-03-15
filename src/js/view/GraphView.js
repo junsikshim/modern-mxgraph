@@ -57,6 +57,7 @@ import {
   getRotatedPoint,
   getValue,
   ptSegDistSq,
+  relativeCcw,
   toRadians
 } from '../util/Utils';
 import CellState from './CellState';
@@ -1913,8 +1914,8 @@ const GraphView = (graph) => {
         const segments = edgeState.getSegments();
 
         // Works out which line segment the point of the label is closest to
-        const p0 = edgeState.getAbsolutePoints()[0];
-        const pe = edgeState.getAbsolutePoints()[1];
+        let p0 = edgeState.getAbsolutePoints()[0];
+        let pe = edgeState.getAbsolutePoints()[1];
         let minDist = ptSegDistSq(
           p0.getX(),
           p0.getY(),

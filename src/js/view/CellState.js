@@ -163,6 +163,7 @@ const CellState = (view, cell, style = {}) => {
   const [getPaintBounds, setPaintBounds] = addProp();
   const [getOverlays, setOverlays] = addProp();
   const [getControl, setControl] = addProp();
+  const [getBoundingBox, setBoundingBox] = addProp();
 
   /**
    * Function: getPerimeterBounds
@@ -443,6 +444,8 @@ const CellState = (view, cell, style = {}) => {
     getAbsolutePoints,
     setAbsolutePoints,
     getOrigin,
+    setOrigin,
+    getLength,
     setLength,
     getCell,
     setCell,

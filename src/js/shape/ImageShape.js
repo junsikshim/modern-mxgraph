@@ -39,9 +39,7 @@ const ImageShape = (
   strokeWidth,
   overrides = {}
 ) => {
-  const [getBounds, setBounds] = addProp(bounds);
   const [getImage, setImage] = addProp(image);
-  const [isShadow, setShadow] = addProp(false);
 
   /**
    * Variable: preserveImageAspect
@@ -210,9 +208,11 @@ const ImageShape = (
     ...overrides
   });
 
+  _shape.setBounds(bounds);
   _shape.setFill(fill);
   _shape.setStroke(stroke);
   _shape.setStrokeWidth(strokeWidth);
+  _shape.setShadow(false);
 
   const { paintBackground } = RectangleShape();
 
