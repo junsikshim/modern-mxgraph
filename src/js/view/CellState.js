@@ -395,6 +395,16 @@ const CellState = (view, cell, style = {}) => {
    */
   const destroy = () => getView().getGraph().getCellRenderer().destroy(me);
 
+  const toString = () => {
+    const cell = getCell();
+
+    if (isSet(cell)) {
+      return `[CellState cell:${cell}]`;
+    }
+
+    return `[CellState]`;
+  };
+
   const {
     getX,
     setX,
@@ -480,7 +490,8 @@ const CellState = (view, cell, style = {}) => {
     setTerminalDistance,
     getSegments,
     setSegments,
-    destroy
+    destroy,
+    toString
   };
 
   return me;

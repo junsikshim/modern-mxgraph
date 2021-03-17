@@ -7,6 +7,8 @@
 import { addProp, isSet } from '../Helpers';
 import {
   DEFAULT_HOTSPOT,
+  DEFAULT_INVALID_COLOR,
+  DEFAULT_VALID_COLOR,
   MAX_HOTSPOT_SIZE,
   MIN_HOTSPOT_SIZE
 } from '../util/Constants';
@@ -57,8 +59,8 @@ import CellHighlight from './CellHighlight';
  */
 const CellMarker = (
   graph,
-  validColor,
-  invalidColor,
+  validColor = DEFAULT_VALID_COLOR,
+  invalidColor = DEFAULT_INVALID_COLOR,
   hotspot = DEFAULT_HOTSPOT
 ) => {
   /**
@@ -176,7 +178,8 @@ const CellMarker = (
    * Sets and marks the current valid state.
    */
   const setCurrentState = (state, mE, color) => {
-    const isValid = isSet(state) ? isValidState(state) : false;
+    const isValid = isSet(state) ? me.isValidState(state) : false;
+
     color = isSet(color)
       ? color
       : getMarkerColor(mE.getEvent(), state, isValid);
@@ -190,7 +193,7 @@ const CellMarker = (
     if (state !== getMarkedState() || color !== getCurrentColor()) {
       setCurrentColor(color);
 
-      if (isSet(state) && isSet(setCurrentColor())) {
+      if (isSet(state) && isSet(getCurrentColor())) {
         setMarkedState(state);
         mark();
       } else if (isSet(getMarkedState())) {
@@ -259,10 +262,10 @@ const CellMarker = (
    */
   const getState = (mE) => {
     const view = getGraph().getView();
-    const cell = getCell(mE);
+    const cell = me.getCell(mE);
     const state = getStateToMark(view.getState(cell));
 
-    return isSet(state) && intersects(state, me) ? state : undefined;
+    return isSet(state) && intersects(state, mE) ? state : undefined;
   };
 
   /**

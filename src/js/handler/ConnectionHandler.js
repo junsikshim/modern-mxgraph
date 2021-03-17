@@ -860,7 +860,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       getGraph().isEnabled() &&
       !mE.isConsumed() &&
       !isConnecting() &&
-      isStartEvent(me)
+      isStartEvent(mE)
     ) {
       const constraintHandler = getConstraintHandler();
 
@@ -1569,7 +1569,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    * icons - Array of currently displayed icons.
    * me - <mxMouseEvent> that contains the mouse event.
    */
-  const updateIcons = (state, icons, me) => {};
+  const updateIcons = (state, icons, mE) => {};
 
   /**
    * Function: isStopEvent
@@ -1962,6 +1962,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
           );
         }
       } catch (e) {
+        throw e;
         // mxLog.show();
         // mxLog.debug(e.message);
       } finally {

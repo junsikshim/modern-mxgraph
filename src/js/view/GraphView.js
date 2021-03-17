@@ -2339,7 +2339,7 @@ const GraphView = (graph) => {
       // Implemented via graph event dispatch loop to avoid duplicate events
       // in Firefox and Chrome
       graph.addMouseListener({
-        mouseDown: (sender, me) => graph.getPopupMenuHandler().hideMenu(),
+        mouseDown: (sender, mE) => graph.getPopupMenuHandler().hideMenu(),
         mouseMove: noop,
         mouseUp: noop
       });

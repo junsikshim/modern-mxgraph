@@ -890,6 +890,7 @@ const CellEditor = (graph) => {
           document.execCommand('selectAll', false, null);
         }
       } catch (e) {
+        throw e;
         // ignore
       }
     }

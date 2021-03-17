@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { isSet } from '../Helpers';
 import {
   LINE_ARCSIZE,
   NONE,

@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, isUnset } from '../Helpers';
 import {
   DEFAULT_VALID_COLOR,
   HIGHLIGHT_OPACITY,
@@ -12,6 +12,7 @@ import {
   STYLE_ROTATION
 } from '../util/Constants';
 import Event from '../util/Event';
+import Rectangle from '../util/Rectangle';
 
 /**
  * Class: CellHighlight
@@ -114,6 +115,7 @@ const CellHighlight = (
   const drawHighlight = () => {
     const shape = setShape(createShape());
     const node = shape.getNode();
+
     repaint();
 
     if (!isKeepOnTop() && node.parentNode.firstChild !== node) {

@@ -152,10 +152,6 @@ const MouseEvent = (evt, state) => {
 
     if (pd && evt.preventDefault) evt.preventDefault();
 
-    // Workaround for images being dragged in IE
-    // Does not change returnValue in Opera
-    if (IS_IE) evt.returnValue = true;
-
     // Sets local consumed state
     setConsumed(true);
   };

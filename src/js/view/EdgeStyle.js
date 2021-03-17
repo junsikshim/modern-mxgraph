@@ -1,11 +1,16 @@
 import { isSet, isUnset } from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
+  DIRECTION_EAST,
   DIRECTION_MASK_EAST,
   DIRECTION_MASK_NONE,
   DIRECTION_MASK_WEST,
+  DIRECTION_NORTH,
+  DIRECTION_SOUTH,
+  DIRECTION_WEST,
   ENTITY_SEGMENT,
   NONE,
+  STYLE_DIRECTION,
   STYLE_ENDARROW,
   STYLE_ENDSIZE,
   STYLE_JETTY_SIZE,
@@ -15,6 +20,7 @@ import {
   STYLE_STARTSIZE,
   STYLE_TARGET_JETTY_SIZE
 } from '../util/Constants';
+import Point from '../util/Point';
 import { contains, getValue } from '../util/Utils';
 import CellState from './CellState';
 

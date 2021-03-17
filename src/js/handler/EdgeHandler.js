@@ -534,10 +534,12 @@ const EdgeHandler = (state) => {
     const graph = getGraph();
     const marker = CellMarker(graph);
 
+    const _getCell = marker.getCell;
+
     // Only returns edges if they are connectable and never returns
     // the edge that is currently being modified
     marker.getCell = (mE) => {
-      let cell = marker.getCell(mE);
+      let cell = _getCell(mE);
 
       // Checks for cell at preview point (with grid)
       if (
@@ -1435,10 +1437,10 @@ const EdgeHandler = (state) => {
           point = Point(mE.getGraphX(), mE.getGraphY());
         }
 
-        constraint = this.graph.getOutlineConstraint(point, terminalState, mE);
-        this.constraintHandler.setFocus(mE, terminalState, this.isSource);
-        this.constraintHandler.currentConstraint = constraint;
-        this.constraintHandler.currentPoint = point;
+        constraint = graph.getOutlineConstraint(point, terminalState, mE);
+        constraintHandler.setFocus(mE, terminalState, isSource());
+        constraintHandler.setCurrentConstraint(constraint);
+        constraintHandler.setCurrentPoint(point);
       } else {
         constraint = ConnectionConstraint();
       }
@@ -1568,6 +1570,7 @@ const EdgeHandler = (state) => {
         getLabel().setY(currentPoint.getY());
       } else {
         setPoints(getPreviewPoints(currentPoint, mE));
+
         let terminalState =
           isSource() || isTarget() ? getPreviewTerminalState(mE) : undefined;
         let outline;
@@ -1651,7 +1654,7 @@ const EdgeHandler = (state) => {
         getShape().getNode().style.display = '';
       }
 
-      const edge = state.getCell();
+      let edge = state.getCell();
       const index = getIndex();
       setIndex();
 
@@ -1689,7 +1692,7 @@ const EdgeHandler = (state) => {
               model.endUpdate();
             }
           }
-        } else if (getLabel()) {
+        } else if (isLabel()) {
           moveLabel(state, getLabel().getX(), getLabel().getY());
         } else if (isSource() || isTarget()) {
           let terminal;
@@ -1998,19 +2001,19 @@ const EdgeHandler = (state) => {
     try {
       if (clone) {
         const parent = model.getParent(edge);
-        const terminal = model.getTerminal(edge, !isSource());
+        const terminal = model.getTerminal(edge, !isSource);
         edge = graph.cloneCell(edge);
         model.add(parent, edge, model.getChildCount(parent));
-        model.setTerminal(edge, terminal, !isSource());
+        model.setTerminal(edge, terminal, !isSource);
       }
 
       let geo = model.getGeometry(edge);
 
       if (isSet(geo)) {
         geo = geo.clone();
-        geo.setTerminalPoint(point, isSource());
+        geo.setTerminalPoint(point, isSource);
         model.setGeometry(edge, geo);
-        graph.connectCell(edge, null, isSource(), ConnectionConstraint());
+        graph.connectCell(edge, undefined, isSource, ConnectionConstraint());
       }
     } finally {
       model.endUpdate();
@@ -2385,9 +2388,9 @@ const EdgeHandler = (state) => {
       if (isSet(bends[i])) {
         const absPoints = getAbsPoints();
 
-        if (isSet(abspoints[i])) {
-          const x = abspoints[i].getX();
-          const y = abspoints[i].getY();
+        if (isSet(absPoints[i])) {
+          const x = absPoints[i].getX();
+          const y = absPoints[i].getY();
 
           const b = bends[i].getBounds();
           bends[i].getNode().style.visibility = 'visible';
@@ -2403,7 +2406,7 @@ const EdgeHandler = (state) => {
           if (isManageLabelHandle()) {
             checkLabelHandle(bends[i].getBounds());
           } else if (
-            isUnset(handleImage) &&
+            isUnset(getHandleImage()) &&
             getLabelShape().isVisible() &&
             intersects(bends[i].getBounds(), getLabelShape().getBounds())
           ) {
@@ -2482,6 +2485,7 @@ const EdgeHandler = (state) => {
 
       updateParentHighlight();
     } catch (e) {
+      throw e;
       // ignore
     }
   };

@@ -1545,6 +1545,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
             bbox.getHeight() + (ie ? 1 : 0)
           );
         } catch (e) {
+          throw e;
           // Ignores NS_ERROR_FAILURE in FF if container display is none.
         }
       }

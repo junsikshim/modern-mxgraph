@@ -4,8 +4,8 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {} from '../Client';
-import { isSet } from '../Helpers';
+import { IS_MAC, IS_POINTER, IS_SF, IS_TOUCH } from '../Client';
+import { isSet, isUnset } from '../Helpers';
 import MouseEvent from './MouseEvent';
 
 /**
@@ -31,12 +31,12 @@ const Event = {
    * to a given execution scope.
    */
   addListener: (() => {
-    const updateListenerList = (element, eventName, f) => {
-      if (!element.mxListenerList) element.mxListenerList = [];
+    const updateListenerList = (element, eventName, funct) => {
+      if (isUnset(element.mxListenerList)) element.mxListenerList = [];
 
       const entry = {
         name: eventName,
-        f
+        funct
       };
 
       element.mxListenerList.push(entry);
@@ -60,13 +60,13 @@ const Event = {
       // ignore
     }
 
-    return (element, eventName, f) => {
+    return (element, eventName, funct) => {
       element.addEventListener(
         eventName,
-        f,
+        funct,
         supportsPassive ? { passive: false } : false
       );
-      updateListenerList(element, eventName, f);
+      updateListenerList(element, eventName, funct);
     };
   })(),
 
@@ -76,14 +76,14 @@ const Event = {
    * Removes the specified listener from the given element.
    */
   removeListener: (() => {
-    const updateListener = (element, eventName, f) => {
-      if (element.mxListenerList) {
+    const updateListener = (element, eventName, funct) => {
+      if (isSet(element.mxListenerList)) {
         const listenerCount = element.mxListenerList.length;
 
         for (let i = 0; i < listenerCount; i++) {
           const entry = element.mxListenerList[i];
 
-          if (entry.f === f) {
+          if (entry.f === funct) {
             element.mxListenerList.splice(i, 1);
             break;
           }
@@ -94,9 +94,9 @@ const Event = {
       }
     };
 
-    return (element, eventName, f) => {
-      element.removeEventListener(eventName, f, false);
-      updateListener(element, eventName, f);
+    return (element, eventName, funct) => {
+      element.removeEventListener(eventName, funct, false);
+      updateListener(element, eventName, funct);
     };
   })(),
 
@@ -108,7 +108,7 @@ const Event = {
   removeAllListeners: (element) => {
     const list = element.mxListenerList;
 
-    if (list) {
+    if (isSet(list)) {
       while (list.length > 0) {
         const entry = list[0];
         Event.removeListener(element, entry.name, entry.f);
@@ -120,46 +120,46 @@ const Event = {
    * Function: addGestureListeners
    *
    * Adds the given listeners for touch, mouse and/or pointer events. If
-   * <Client.IS_POINTER> is true then pointer events will be registered,
-   * else the respective mouse events will be registered. If <Client.IS_POINTER>
-   * is false and <Client.IS_TOUCH> is true then the respective touch events
+   * <IS_POINTER> is true then pointer events will be registered,
+   * else the respective mouse events will be registered. If <IS_POINTER>
+   * is false and <IS_TOUCH> is true then the respective touch events
    * will be registered as well as the mouse events.
    */
   addGestureListeners: (node, startListener, moveListener, endListener) => {
-    if (startListener) {
+    if (isSet(startListener)) {
       Event.addListener(
         node,
-        Client.IS_POINTER ? 'pointerdown' : 'mousedown',
+        IS_POINTER ? 'pointerdown' : 'mousedown',
         startListener
       );
     }
 
-    if (moveListener) {
+    if (isSet(moveListener)) {
       Event.addListener(
         node,
-        Client.IS_POINTER ? 'pointermove' : 'mousemove',
+        IS_POINTER ? 'pointermove' : 'mousemove',
         moveListener
       );
     }
 
-    if (endListener) {
+    if (isSet(endListener)) {
       Event.addListener(
         node,
-        Client.IS_POINTER ? 'pointerup' : 'mouseup',
+        IS_POINTER ? 'pointerup' : 'mouseup',
         endListener
       );
     }
 
-    if (!Client.IS_POINTER && Client.IS_TOUCH) {
-      if (startListener) {
+    if (!IS_POINTER && IS_TOUCH) {
+      if (isSet(startListener)) {
         Event.addListener(node, 'touchstart', startListener);
       }
 
-      if (moveListener) {
+      if (isSet(moveListener)) {
         Event.addListener(node, 'touchmove', moveListener);
       }
 
-      if (endListener) {
+      if (isSet(endListener)) {
         Event.addListener(node, 'touchend', endListener);
       }
     }
@@ -169,43 +169,43 @@ const Event = {
    * Function: removeGestureListeners
    *
    * Removes the given listeners from mousedown, mousemove, mouseup and the
-   * respective touch events if <Client.IS_TOUCH> is true.
+   * respective touch events if <IS_TOUCH> is true.
    */
   removeGestureListeners: (node, startListener, moveListener, endListener) => {
-    if (startListener) {
+    if (isSet(startListener)) {
       Event.removeListener(
         node,
-        Client.IS_POINTER ? 'pointerdown' : 'mousedown',
+        IS_POINTER ? 'pointerdown' : 'mousedown',
         startListener
       );
     }
 
-    if (moveListener) {
+    if (isSet(moveListener)) {
       Event.removeListener(
         node,
-        Client.IS_POINTER ? 'pointermove' : 'mousemove',
+        IS_POINTER ? 'pointermove' : 'mousemove',
         moveListener
       );
     }
 
-    if (endListener) {
+    if (isSet(endListener)) {
       Event.removeListener(
         node,
-        Client.IS_POINTER ? 'pointerup' : 'mouseup',
+        IS_POINTER ? 'pointerup' : 'mouseup',
         endListener
       );
     }
 
-    if (!Client.IS_POINTER && Client.IS_TOUCH) {
-      if (startListener) {
+    if (!IS_POINTER && IS_TOUCH) {
+      if (isSet(startListener)) {
         Event.removeListener(node, 'touchstart', startListener);
       }
 
-      if (moveListener) {
+      if (isSet(moveListener)) {
         Event.removeListener(node, 'touchmove', moveListener);
       }
 
-      if (endListener) {
+      if (isSet(endListener)) {
         Event.removeListener(node, 'touchend', endListener);
       }
     }
@@ -228,7 +228,7 @@ const Event = {
     Event.addGestureListeners(
       node,
       (evt) => {
-        if (down) down(evt);
+        if (isSet(down)) down(evt);
         else if (!Event.isConsumed(evt)) {
           graph.fireMouseEvent(
             Event.MOUSE_DOWN,
@@ -237,7 +237,7 @@ const Event = {
         }
       },
       (evt) => {
-        if (move) move(evt);
+        if (isSet(move)) move(evt);
         else if (!Event.isConsumed(evt)) {
           graph.fireMouseEvent(
             Event.MOUSE_MOVE,
@@ -246,7 +246,7 @@ const Event = {
         }
       },
       (evt) => {
-        if (up) up(evt);
+        if (isSet(up)) up(evt);
         else if (!Event.isConsumed(evt)) {
           graph.fireMouseEvent(Event.MOUSE_UP, MouseEvent(evt, getState(evt)));
         }
@@ -254,10 +254,10 @@ const Event = {
     );
 
     Event.addListener(node, 'dblclick', (evt) => {
-      if (dblClick) dblClick(evt);
+      if (isSet(dblClick)) dblClick(evt);
       else if (!Event.isConsumed(evt)) {
         const tmp = getState(evt);
-        graph.dblClick(evt, tmp ? tmp.cell : undefined);
+        graph.dblClick(evt, isSet(tmp) ? tmp.getCell() : undefined);
       }
     });
   },
@@ -273,12 +273,12 @@ const Event = {
    */
   release: (element) => {
     try {
-      if (element) {
+      if (isSet(element)) {
         Event.removeAllListeners(element);
 
         const children = element.childNodes;
 
-        if (children) {
+        if (isSet(children)) {
           const childCount = children.length;
 
           for (let i = 0; i < childCount; i++) {
@@ -337,7 +337,7 @@ const Event = {
       }
     };
 
-    if (Client.IS_SF && !Client.IS_TOUCH) {
+    if (IS_SF && !IS_TOUCH) {
       let scale = 1;
 
       Event.addListener(target, 'gesturestart', (evt) => {
@@ -543,7 +543,7 @@ const Event = {
    */
   isPopupTrigger: (evt) =>
     Event.isRightMouseButton(evt) ||
-    (Client.IS_MAC &&
+    (IS_MAC &&
       Event.isControlDown(evt) &&
       !Event.isShiftDown(evt) &&
       !Event.isMetaDown(evt) &&

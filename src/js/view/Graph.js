@@ -34,6 +34,7 @@ import GraphModel, {
   TerminalChange,
   ValueChange
 } from '../model/GraphModel';
+import RectangleShape from '../shape/RectangleShape';
 import {
   ALIGN_MIDDLE,
   DEFAULT_STARTSIZE,
@@ -11103,13 +11104,17 @@ const Graph = (container, model, _, stylesheet) => {
               undefined,
               undefined,
               undefined,
-              (state) =>
-                isUnset(state.getShape()) ||
-                // state.getShape().paintBackground !==
-                //   rectangleShape.paintBackground ||
-                getValue(state.getStyle(), STYLE_POINTER_EVENTS, '1') === '1' ||
-                (isSet(state.getShape().getFill()) &&
-                  state.getShape().getFill() !== NONE)
+              (state) => {
+                const shape = state.getShape();
+
+                return (
+                  isUnset(shape) ||
+                  shape.paintBackground !== paintBackground ||
+                  getValue(state.getStyle(), STYLE_POINTER_EVENTS, '1') ===
+                    '1' ||
+                  (isSet(shape.getFill()) && shape.getFill() !== NONE)
+                );
+              }
             )
           )
         );
@@ -11640,6 +11645,7 @@ const Graph = (container, model, _, stylesheet) => {
   };
 
   const { fireEvent, addListener, removeListener } = EventSource();
+  const { paintBackground } = RectangleShape();
 
   const me = {
     addListener,
@@ -12738,6 +12744,8 @@ const Graph = (container, model, _, stylesheet) => {
     setResetEdgesOnMove,
     isResetEdgesOnResize,
     setResetEdgesOnResize,
+    getDefaultLoopStyle,
+    setDefaultLoopStyle,
     destroy
   };
 

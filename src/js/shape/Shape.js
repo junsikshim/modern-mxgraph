@@ -1617,6 +1617,8 @@ const Shape = (stencil, overrides = {}) => {
     setFill,
     isOutline,
     setOutline,
+    getSvgPointerEvents,
+    setSvgPointerEvents,
     destroy
   };
 

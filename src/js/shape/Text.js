@@ -575,6 +575,7 @@ const Text = (
 
             return;
           } catch (e) {
+            throw e;
             // Ignores NS_ERROR_FAILURE in FF if container display is none.
           }
         }
