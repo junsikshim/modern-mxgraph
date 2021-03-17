@@ -301,6 +301,8 @@ const EdgeHandler = (state) => {
     shape.setCursor(CURSOR_MOVABLE_EDGE);
     Event.redirectMouseEvents(shape.getNode(), graph, state);
 
+    const { getMaxCells } = graph.getGraphHandler();
+
     // Creates bends for the non-routed absolute points
     // or bends that don't correspond to points
     if (graph.getSelectionCount() < getMaxCells() || getMaxCells() <= 0) {
@@ -2611,8 +2613,6 @@ const EdgeHandler = (state) => {
 
     removeHint();
   };
-
-  const { getMaxCells } = graph.getGraphHandler();
 
   const me = {
     getGraph,

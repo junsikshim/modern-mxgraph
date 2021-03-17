@@ -19,7 +19,7 @@
 
     <!-- Example code -->
     <script>
-      const { Graph, Client, Utils, Event } = window.mxgraph;
+      const { Graph, Client, Utils, Event, Rubberband } = window.mxgraph;
 
       // import { isBrowserSupported } from 'Client';
       // Program starts here. Creates a sample graph in the
@@ -31,14 +31,16 @@
           // Displays an error message if the browser is not supported.
           Utils.error('Browser is not supported!', 200, false);
         } else {
+          Client.link('stylesheet', mxBasePath + '/css/common.css');
+
           // Disables the built-in context menu
           Event.disableContextMenu(container);
 
           // Creates the graph inside the given container
-          var graph = (window.graph = Graph(container));
+          var graph = Graph(container);
 
           // Enables rubberband selection
-          //new mxRubberband(graph);
+          Rubberband(graph);
 
           // Gets the default parent for inserting new cells. This
           // is normally the first child of the root (ie. layer 0).

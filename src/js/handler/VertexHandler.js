@@ -247,6 +247,8 @@ const VertexHandler = (state) => {
       border.setCursor(CURSOR_MOVABLE_VERTEX);
     }
 
+    const { getMaxCells } = getGraph().getGraphHandler();
+
     // Adds the sizer handles
     if (getMaxCells() <= 0 || graph.getSelectionCount() < getMaxCells()) {
       const cell = state.getCell();
@@ -340,6 +342,7 @@ const VertexHandler = (state) => {
    */
   const isRotationHandleVisible = () => {
     const graph = getGraph();
+    const { getMaxCells } = graph.getGraphHandler();
 
     return (
       graph.isEnabled() &&
@@ -2278,8 +2281,6 @@ const VertexHandler = (state) => {
       setCustomHandles();
     }
   };
-
-  const { getMaxCells } = graph.getGraphHandler();
 
   const me = {
     init,
