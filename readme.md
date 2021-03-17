@@ -4,7 +4,6 @@ This is a modernized version of mxGraph.
 
 The official mxGraph is at https://github.com/jgraph/mxgraph. However, it is discontinued as of now.
 
-
 ## Objectives
 
 - Reformat into ES6 modules to enable tree-shaking
@@ -31,8 +30,8 @@ The official mxGraph is at https://github.com/jgraph/mxgraph. However, it is dis
 | /handler/mxCellMarker            | 431   | Converted |            |
 | /handler/mxCellTracker           | 146   |           |            |
 | /handler/mxConnectionHandler     | 2250  | Converted |            |
-| /handler/mxConstraintHandler     | 518   |           |            |
-| /handler/mxEdgeHandler           | 2545  |           |            |
+| /handler/mxConstraintHandler     | 518   | Converted |            |
+| /handler/mxEdgeHandler           | 2545  | Converted |            |
 | /handler/mxEdgeSegmentHandler    | 414   |           |            |
 | /handler/mxElbowEdgeHandler      | 231   |           |            |
 | /handler/mxGraphHandler          | 1866  | Converted |            |
