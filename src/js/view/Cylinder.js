@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp } from '../Helpers';
+import { addProp, makeComponent } from '../Helpers';
 
 /**
  * Class: Cylinder
@@ -130,4 +130,4 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
   return me;
 };
 
-export default Cylinder;
+export default makeComponent(Cylinder);

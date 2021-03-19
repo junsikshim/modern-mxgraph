@@ -13,7 +13,7 @@ import {
   IS_SF,
   IS_TOUCH
 } from '../Client';
-import { addProp, isSet, isUnset, noop } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent, noop } from '../Helpers';
 import ImageShape from '../shape/ImageShape';
 import {
   ALIGN_BOTTOM,
@@ -61,6 +61,7 @@ import {
   toRadians
 } from '../util/Utils';
 import CellState from './CellState';
+import StyleRegistry from './StyleRegistry';
 
 /**
  * Class: mxGraphView
@@ -2734,4 +2735,4 @@ const CurrentRootChange = (view, root) => {
   };
 };
 
-export default GraphView;
+export default makeComponent(GraphView);

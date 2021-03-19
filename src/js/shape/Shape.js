@@ -4,10 +4,8 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {} from '../Client';
-import { isUnset, noop } from '../Helpers';
+import { isUnset, makeComponent, noop } from '../Helpers';
 import {
-  DIALECT_SVG,
   DIRECTION_EAST,
   DIRECTION_NORTH,
   DIRECTION_SOUTH,
@@ -43,8 +41,7 @@ import {
   STYLE_STARTSIZE,
   STYLE_STROKECOLOR,
   STYLE_STROKEWIDTH,
-  STYLE_STROKE_OPACITY,
-  VML_SHADOWCOLOR
+  STYLE_STROKE_OPACITY
 } from '../util/Constants';
 import Rectangle from '../util/Rectangle';
 import SvgCanvas2D from '../util/SvgCanvas2D';
@@ -110,7 +107,7 @@ import Point from '../util/Point';
  *
  * Constructs a new shape.
  */
-const Shape = (stencil, overrides = {}) => {
+const Shape = (stencil) => {
   /**
    * Variable: scale
    *
@@ -378,8 +375,7 @@ const Shape = (stencil, overrides = {}) => {
    * Reconfigures this shape. This will update the colors etc in
    * addition to the bounds or points.
    */
-  const reconfigure = () =>
-    isSet(overrides.redraw) ? overrides.redraw() : redraw();
+  const reconfigure = () => me.redraw();
 
   /**
    * Function: redraw
@@ -389,29 +385,14 @@ const Shape = (stencil, overrides = {}) => {
   const redraw = () => {
     updateBoundsFromPoints();
 
-    const isCheck = isSet(overrides.checkBounds)
-      ? overrides.checkBounds()
-      : checkBounds();
-
-    const isHtml = isSet(overrides.isHtmlAllowed)
-      ? overrides.isHtmlAllowed()
-      : isHtmlAllowed();
+    const isCheck = me.checkBounds();
+    const isHtml = me.isHtmlAllowed();
 
     if (isVisible() && isCheck) {
       getNode().style.visibility = 'visible';
       clear();
-
-      if (getNode().nodeName === 'DIV' && isHtml) {
-        isSet(overrides.redrawHtmlShape)
-          ? overrides.redrawHtmlShape()
-          : redrawHtmlShape();
-      } else {
-        redrawShape();
-      }
-
-      isSet(overrides.updateBoundingBox)
-        ? overrides.updateBoundingBox()
-        : updateBoundingBox();
+      redrawShape();
+      me.updateBoundingBox();
     } else {
       getNode().style.visibility = 'hidden';
       setBoundingBox();
@@ -426,15 +407,8 @@ const Shape = (stencil, overrides = {}) => {
   const clear = () => {
     const node = getNode();
 
-    if (isSet(node.ownerSVGElement)) {
-      while (isSet(node.lastChild)) {
-        node.removeChild(node.lastChild);
-      }
-    } else {
-      node.style.cssText =
-        'position: absolute;' +
-        (isSet(getCursor()) ? 'cursor: ' + getCursor() + ';' : '');
-      node.innerHTML = '';
+    while (isSet(node.lastChild)) {
+      node.removeChild(node.lastChild);
     }
   };
 
@@ -560,8 +534,7 @@ const Shape = (stencil, overrides = {}) => {
 
       beforePaint(canvas);
 
-      if (isSet(overrides.paint)) overrides.paint(canvas);
-      else paint(canvas);
+      me.paint(canvas);
 
       afterPaint(canvas);
 
@@ -615,9 +588,7 @@ const Shape = (stencil, overrides = {}) => {
     const canvas = SvgCanvas2D(getNode(), false);
     canvas.setStrokeTolerance(isPointerEvents() ? getSvgStrokeTolerance() : 0);
     canvas.setPointerEventsValue(getSvgPointerEvents());
-    const off = isSet(overrides.getSvgScreenOffset)
-      ? overrides.getSvgScreenOffset()
-      : getSvgScreenOffset();
+    const off = me.getSvgScreenOffset();
 
     if (off !== 0) {
       getNode().setAttribute('transform', 'translate(' + off + ',' + off + ')');
@@ -865,13 +836,10 @@ const Shape = (stencil, overrides = {}) => {
           }
         }
 
-        if (isSet(overrides.paintEdgeShape)) overrides.paintEdgeShape(c, pts);
-        else paintEdgeShape(c, pts);
+        me.paintEdgeShape(c, pts);
       } else {
         // Paints vertex shape
-        if (isSet(overrides.paintVertexShape))
-          overrides.paintVertexShape(c, x, y, w, h);
-        else paintVertexShape(c, x, y, w, h);
+        me.paintVertexShape(c, x, y, w, h);
       }
     }
 
@@ -967,9 +935,7 @@ const Shape = (stencil, overrides = {}) => {
    * Paints the vertex shape.
    */
   const paintVertexShape = (c, x, y, w, h) => {
-    if (isSet(overrides.paintBackground))
-      overrides.paintBackground(c, x, y, w, h);
-    else paintBackground(c, x, y, w, h);
+    me.paintBackground(c, x, y, w, h);
 
     if (
       !isOutline() ||
@@ -977,8 +943,7 @@ const Shape = (stencil, overrides = {}) => {
       getValue(getStyle(), STYLE_BACKGROUND_OUTLINE, 0) === 0
     ) {
       c.setShadow(false);
-      if (isSet(overrides.paintForeground)) paintForeground(c, x, y, w, h);
-      else paintForeground(c, x, y, w, h);
+      me.paintForeground(c, x, y, w, h);
     }
   };
 
@@ -1627,4 +1592,4 @@ const Shape = (stencil, overrides = {}) => {
   return me;
 };
 
-export default Shape;
+export default makeComponent(Shape);

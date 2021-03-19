@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, createWithOverrides, isSet, makeComponent } from '../Helpers';
 import Shape from '../shape/Shape';
 import {
   ALIGN_CENTER,
@@ -127,8 +127,7 @@ const Text = (
   clipped = false,
   overflow = 'visible',
   labelPadding = 0,
-  textDirection,
-  overrides = {}
+  textDirection
 ) => {
   const [getData, setData] = addProp(data);
   const [getColor, setColor] = addProp(color);
@@ -361,24 +360,18 @@ const Text = (
       isCacheEnabled() &&
       getLastData() === getData()
     ) {
-      if (_shape.getNode().nodeName === 'DIV' && isHtmlAllowed()) {
-        redrawHtmlShapeWithCss3();
+      const canvas = createCanvas();
 
+      if (isSet(canvas) && isSet(canvas.isUpdateText())) {
+        // Specifies if events should be handled
+        canvas.setPointerEvents(getPointerEvents());
+
+        paint(canvas, true);
+        destroyCanvas(canvas);
         updateBoundingBox();
-      } else {
-        const canvas = createCanvas();
-
-        if (isSet(canvas) && isSet(canvas.isUpdateText())) {
-          // Specifies if events should be handled
-          canvas.setPointerEvents(getPointerEvents());
-
-          paint(canvas, true);
-          destroyCanvas(canvas);
-          updateBoundingBox();
-        }
       }
     } else {
-      _shape.redraw();
+      _shape._redraw();
 
       if (isNode(getData())) {
         setLastData(getData());
@@ -427,7 +420,7 @@ const Text = (
     const style = _shape.getStyle();
     const old = _getSpacing();
 
-    _shape.apply(state);
+    _shape._apply(state);
 
     if (isSet(style)) {
       setFontStyle(getValue(style, STYLE_FONTSTYLE, getFontStyle()));
@@ -519,7 +512,7 @@ const Text = (
    */
   const updateBoundingBox = () => {
     const node = _shape.getNode();
-    setBoundingBox(_shape.getBounds().clone());
+    _shape.setBoundingBox(_shape.getBounds().clone());
     const rot = getTextRotation();
     const style = _shape.getStyle();
     const scale = _shape.getScale();
@@ -543,81 +536,42 @@ const Text = (
       let ow;
       let oh;
 
-      if (isSet(node.ownerSVGElement)) {
-        if (
-          isSet(node.firstChild) &&
-          isSet(node.firstChild.firstChild) &&
-          node.firstChild.firstChild.nodeName === 'foreignObject'
-        ) {
-          // Uses second inner DIV for font metrics
-          node = node.firstChild.firstChild.firstChild.firstChild;
-          oh = node.offsetHeight * scale;
+      if (
+        isSet(node.firstChild) &&
+        isSet(node.firstChild.firstChild) &&
+        node.firstChild.firstChild.nodeName === 'foreignObject'
+      ) {
+        // Uses second inner DIV for font metrics
+        node = node.firstChild.firstChild.firstChild.firstChild;
+        oh = node.offsetHeight * scale;
 
-          if (getOverflow() === 'width') {
-            ow = getBoundingBox().getWidth();
-          } else {
-            ow = node.offsetWidth * scale;
-          }
+        if (getOverflow() === 'width') {
+          ow = getBoundingBox().getWidth();
         } else {
-          try {
-            const b = node.getBBox();
-
-            // Workaround for bounding box of empty string
-            if (typeof getData() === 'string' && trim(getData()) === 0) {
-              setBoundingBox();
-            } else if (b.getWidth() === 0 && b.getHeight() === 0) {
-              setBoundingBox();
-            } else {
-              setBoundingBox(
-                Rectangle(b.getX(), b.getY(), b.getWidth(), b.getHeight())
-              );
-            }
-
-            return;
-          } catch (e) {
-            throw e;
-            // Ignores NS_ERROR_FAILURE in FF if container display is none.
-          }
+          ow = node.offsetWidth * scale;
         }
       } else {
-        const td = isSet(_shape.getState())
-          ? _shape.getState().getView().textDiv
-          : undefined;
+        try {
+          const b = node.getBBox();
 
-        // Use cached offset size
-        if (isSet(getOffsetWidth()) && isSet(getOffsetHeight())) {
-          ow = getOffsetWidth() * scale;
-          oh = getOffsetHeight() * scale;
-        } else {
-          // Cannot get node size while container hidden so a
-          // shared temporary DIV is used for text measuring
-          if (isSet(td)) {
-            updateFont(td);
-            updateSize(td, false);
-            updateInnerHtml(td);
-
-            node = td;
+          // Workaround for bounding box of empty string
+          if (typeof getData() === 'string' && getData().trim() === '0') {
+            _shape.setBoundingBox();
+          } else if (b.width === 0 && b.height === 0) {
+            _shape.setBoundingBox();
+          } else {
+            _shape.setBoundingBox(Rectangle(b.x, b.y, b.width, b.height));
           }
 
-          let sizeDiv = node;
-
-          if (
-            isset(sizeDiv.firstChild) &&
-            sizeDiv.firstChild.nodeName === 'DIV'
-          ) {
-            sizeDiv = sizeDiv.firstChild;
-          }
-
-          setOffsetWidth(sizeDiv.offsetWidth + getTextWidthPadding());
-          setOffsetHeight(sizeDiv.offsetHeight);
-
-          ow = getOffsetWidth() * scale;
-          oh = getOffsetHeight() * scale;
+          return;
+        } catch (e) {
+          throw e;
+          // Ignores NS_ERROR_FAILURE in FF if container display is none.
         }
       }
 
       if (isSet(ow) && isSet(oh)) {
-        setBoundingBox(
+        _shape.setBoundingBox(
           Rectangle(
             _shape.getBounds().getX(),
             _shape.getBounds().getY(),
@@ -900,7 +854,7 @@ const Text = (
     return Point(dx, dy);
   };
 
-  const _shape = Shape(undefined, {
+  const _shape = createWithOverrides({
     apply,
     redraw,
     isHtmlAllowed,
@@ -908,8 +862,9 @@ const Text = (
     checkBounds,
     paint,
     getSvgScreenOffset,
-    ...overrides
-  });
+    updateBoundingBox,
+    ...Text.getOverrides()
+  })(Shape)();
 
   _shape.setBounds(bounds);
   _shape.setRotation(0);
@@ -958,4 +913,4 @@ const Text = (
   return me;
 };
 
-export default Text;
+export default makeComponent(Text);

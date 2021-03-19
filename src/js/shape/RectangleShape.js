@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { isSet } from '../Helpers';
+import { createWithOverrides, isSet, makeComponent } from '../Helpers';
 import {
   LINE_ARCSIZE,
   NONE,
@@ -36,13 +36,7 @@ import Shape from './Shape';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const RectangleShape = (
-  bounds,
-  fill,
-  stroke,
-  strokeWidth = 1,
-  overrides = {}
-) => {
+const RectangleShape = (bounds, fill, stroke, strokeWidth = 1) => {
   /**
    * Function: isHtmlAllowed
    *
@@ -144,12 +138,12 @@ const RectangleShape = (
     }
   };
 
-  const _shape = Shape(undefined, {
+  const _shape = createWithOverrides({
     isHtmlAllowed,
     paintForeground,
     paintBackground,
-    ...overrides
-  });
+    ...RectangleShape.getOverrides()
+  })(Shape)();
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
@@ -165,4 +159,4 @@ const RectangleShape = (
   return me;
 };
 
-export default RectangleShape;
+export default makeComponent(RectangleShape);

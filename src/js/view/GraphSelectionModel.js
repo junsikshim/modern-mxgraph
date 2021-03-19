@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
 import EventSource from '../util/EventSource';
@@ -370,4 +370,4 @@ const SelectionChange = (selectionModel, added = [], removed = []) => {
   };
 };
 
-export default GraphSelectionModel;
+export default makeComponent(GraphSelectionModel);

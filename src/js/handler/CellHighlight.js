@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import {
   DEFAULT_VALID_COLOR,
   HIGHLIGHT_OPACITY,
@@ -284,4 +284,4 @@ const CellHighlight = (
   return me;
 };
 
-export default CellHighlight;
+export default makeComponent(CellHighlight);

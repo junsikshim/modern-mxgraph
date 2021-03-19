@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp } from '../Helpers';
+import { addProp, makeComponent } from '../Helpers';
 import {
   ALIGN_CENTER,
   ALIGN_MIDDLE,
@@ -264,4 +264,4 @@ const Stylesheet = () => {
   return me;
 };
 
-export default Stylesheet;
+export default makeComponent(Stylesheet);

@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import { makeComponent } from '../Helpers';
 import Shape from './Shape';
 
 /**
@@ -26,7 +27,7 @@ import Shape from './Shape';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const Ellipse = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
+const Ellipse = (bounds, fill, stroke, strokewidth = 1) => {
   /**
    * Function: paintVertexShape
    *
@@ -37,10 +38,10 @@ const Ellipse = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
     c.fillAndStroke();
   };
 
-  const _shape = Shape(undefined, {
+  const _shape = createWithOverrides({
     paintVertexShape,
-    ...overrides
-  });
+    ...Ellipse.getOverrides()
+  })(Shape)();
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
@@ -55,4 +56,4 @@ const Ellipse = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
   return me;
 };
 
-export default Ellipse;
+export default makeComponent(Ellipse);

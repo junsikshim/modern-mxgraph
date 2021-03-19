@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import {
   DEFAULT_HOTSPOT,
   DEFAULT_INVALID_COLOR,
@@ -404,4 +404,4 @@ const CellMarker = (
   return me;
 };
 
-export default CellMarker;
+export default makeComponent(CellMarker);

@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Dictionary from '../util/Dictionary';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
@@ -297,4 +297,4 @@ const SelectionCellsHandler = (graph) => {
   return me;
 };
 
-export default SelectionCellsHandler;
+export default makeComponent(SelectionCellsHandler);

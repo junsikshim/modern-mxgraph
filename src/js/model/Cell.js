@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isUnset, withConstructor } from '../Helpers';
+import { addProp, isUnset, makeComponent } from '../Helpers';
 
 /**
  * Class: Cell
@@ -721,7 +721,7 @@ const Cell = (value, geometry, style) => {
     toString
   };
 
-  return withConstructor(me, Cell);
+  return me;
 };
 
-export default Cell;
+export default makeComponent(Cell);

@@ -4,6 +4,23 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import {
+  EDGESTYLE_ELBOW,
+  EDGESTYLE_ENTITY_RELATION,
+  EDGESTYLE_LOOP,
+  EDGESTYLE_ORTHOGONAL,
+  EDGESTYLE_SEGMENT,
+  EDGESTYLE_SIDETOSIDE,
+  EDGESTYLE_TOPTOBOTTOM,
+  PERIMETER_ELLIPSE,
+  PERIMETER_HEXAGON,
+  PERIMETER_RECTANGLE,
+  PERIMETER_RHOMBUS,
+  PERIMETER_TRIANGLE
+} from '../util/Constants';
+import EdgeStyle from './EdgeStyle';
+import Perimeter from './Perimeter';
+
 /* Variable: values
  *
  * Maps from strings to objects.
@@ -60,3 +77,5 @@ StyleRegistry.putValue(PERIMETER_RECTANGLE, Perimeter.RectanglePerimeter);
 StyleRegistry.putValue(PERIMETER_RHOMBUS, Perimeter.RhombusPerimeter);
 StyleRegistry.putValue(PERIMETER_TRIANGLE, Perimeter.TrianglePerimeter);
 StyleRegistry.putValue(PERIMETER_HEXAGON, Perimeter.HexagonPerimeter);
+
+export default StyleRegistry;

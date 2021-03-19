@@ -12,7 +12,7 @@ import ObjectIdentity from '../util/ObjectIdentity';
 import Point from '../util/Point';
 import UndoableEdit from '../util/UndoableEdit';
 import { isNumeric } from '../util/Utils';
-import { addProp, isSet, withConstructor } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import CellPath from './CellPath';
 import Cell from './Cell';
 
@@ -2110,7 +2110,7 @@ const GraphModel = (root) => {
  * Constructs a change of the root in the
  * specified model.
  */
-export const RootChange = (model, root) => {
+export const RootChange = makeComponent((model, root) => {
   const [getModel, setModel] = addProp(model);
   const [getRoot, setRoot] = addProp(root);
   const [getPrevious, setPrevious] = addProp(root);
@@ -2130,8 +2130,8 @@ export const RootChange = (model, root) => {
     execute
   };
 
-  return withConstructor(me, RootChange);
-};
+  return me;
+});
 
 /**
  * Class: ChildChange
@@ -2143,7 +2143,7 @@ export const RootChange = (model, root) => {
  * Constructs a change of a child in the
  * specified model.
  */
-export const ChildChange = (model, parent, child, index) => {
+export const ChildChange = makeComponent((model, parent, child, index) => {
   const [getModel, setModel] = addProp(model);
   const [getParent, setParent] = addProp(parent);
   const [getPrevious, setPrevious] = addProp(parent);
@@ -2222,8 +2222,8 @@ export const ChildChange = (model, parent, child, index) => {
     getPrevious
   };
 
-  return withConstructor(me, ChildChange);
-};
+  return me;
+});
 
 /**
  * Class: TerminalChange
@@ -2235,7 +2235,7 @@ export const ChildChange = (model, parent, child, index) => {
  * Constructs a change of a terminal in the
  * specified model.
  */
-export const TerminalChange = (model, cell, terminal, source) => {
+export const TerminalChange = makeComponent((model, cell, terminal, source) => {
   const [getModel, setModel] = addProp(model);
   const [getCell, setCell] = addProp(cell);
   const [getTerminal, setTerminal] = addProp(terminal);
@@ -2263,8 +2263,8 @@ export const TerminalChange = (model, cell, terminal, source) => {
     getPrevious
   };
 
-  return withConstructor(me, TerminalChange);
-};
+  return me;
+});
 
 /**
  * Class: ValueChange
@@ -2276,7 +2276,7 @@ export const TerminalChange = (model, cell, terminal, source) => {
  * Constructs a change of a user object in the
  * specified model.
  */
-export const ValueChange = (model, cell, value) => {
+export const ValueChange = makeComponent((model, cell, value) => {
   const [getModel, setModel] = addProp(model);
   const [getCell, setCell] = addProp(cell);
   const [getValue, setValue] = addProp(value);
@@ -2300,8 +2300,8 @@ export const ValueChange = (model, cell, value) => {
     getCell
   };
 
-  return withConstructor(me, ValueChange);
-};
+  return me;
+});
 
 /**
  * Class: StyleChange
@@ -2313,7 +2313,7 @@ export const ValueChange = (model, cell, value) => {
  * Constructs a change of a style in the
  * specified model.
  */
-export const StyleChange = (model, cell, style) => {
+export const StyleChange = makeComponent((model, cell, style) => {
   const [getModel, setModel] = addProp(model);
   const [getCell, setCell] = addProp(cell);
   const [getStyle, setStyle] = addProp(style);
@@ -2336,8 +2336,8 @@ export const StyleChange = (model, cell, style) => {
     execute
   };
 
-  return withConstructor(me, StyleChange);
-};
+  return me;
+});
 
 /**
  * Class: GeometryChange
@@ -2349,7 +2349,7 @@ export const StyleChange = (model, cell, style) => {
  * Constructs a change of a geometry in the
  * specified model.
  */
-export const GeometryChange = (model, cell, geometry) => {
+export const GeometryChange = makeComponent((model, cell, geometry) => {
   const [getModel, setModel] = addProp(model);
   const [getCell, setCell] = addProp(cell);
   const [getGeometry, setGeometry] = addProp(geometry);
@@ -2375,8 +2375,8 @@ export const GeometryChange = (model, cell, geometry) => {
     getGeometry
   };
 
-  return withConstructor(me, GeometryChange);
-};
+  return me;
+});
 
 /**
  * Class: CollapseChange
@@ -2388,7 +2388,7 @@ export const GeometryChange = (model, cell, geometry) => {
  * Constructs a change of a collapsed state in the
  * specified model.
  */
-export const CollapseChange = (model, cell, collapsed) => {
+export const CollapseChange = makeComponent((model, cell, collapsed) => {
   const [getModel, setModel] = addProp(model);
   const [getCell, setCell] = addProp(cell);
   const [getCollapsed, setCollapsed] = addProp(collapsed);
@@ -2414,8 +2414,8 @@ export const CollapseChange = (model, cell, collapsed) => {
     getCell
   };
 
-  return withConstructor(me, CollapseChange);
-};
+  return me;
+});
 
 /**
  * Class: VisibleChange
@@ -2427,7 +2427,7 @@ export const CollapseChange = (model, cell, collapsed) => {
  * Constructs a change of a visible state in the
  * specified model.
  */
-export const VisibleChange = (model, cell, visible) => {
+export const VisibleChange = makeComponent((model, cell, visible) => {
   const [getModel, setModel] = addProp(model);
   const [getCell, setCell] = addProp(cell);
   const [getVisible, setVisible] = addProp(visible);
@@ -2453,8 +2453,8 @@ export const VisibleChange = (model, cell, visible) => {
     getCell
   };
 
-  return withConstructor(me, VisibleChange);
-};
+  return me;
+});
 
 /**
  * Class: CellAttributeChange
@@ -2488,7 +2488,7 @@ export const VisibleChange = (model, cell, visible) => {
  * Constructs a change of a attribute of the DOM node
  * stored as the value of the given <Cell>.
  */
-export const CellAttributeChange = (cell, attribute, value) => {
+export const CellAttributeChange = makeComponent((cell, attribute, value) => {
   const [getCell, setCell] = addProp(cell);
   const [getAttribute, setAttribute] = addProp(attribute);
   const [getValue, setValue] = addProp(value);
@@ -2518,7 +2518,7 @@ export const CellAttributeChange = (cell, attribute, value) => {
     getCell
   };
 
-  return withConstructor(me, CellAttributeChange);
-};
+  return me;
+});
 
-export default GraphModel;
+export default makeComponent(GraphModel);

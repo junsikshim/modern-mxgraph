@@ -5,7 +5,7 @@
  */
 
 import { IS_FF, IS_IE11 } from '../Client';
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import Text from '../shape/Text';
 import {
   ALIGN_CENTER,
@@ -1247,4 +1247,4 @@ const CellEditor = (graph) => {
   return me;
 };
 
-export default CellEditor;
+export default makeComponent(CellEditor);

@@ -17,13 +17,15 @@ import {
 } from '../Client';
 import ConnectionHandler from '../handler/ConnectionHandler';
 import EdgeHandler from '../handler/EdgeHandler';
+import EdgeSegmentHandler from '../handler/EdgeSegmentHandler';
+import ElbowEdgeHandler from '../handler/ElbowEdgeHandler';
 import GraphHandler from '../handler/GraphHandler';
 import PanningHandler from '../handler/PanningHandler';
 import PopupMenuHandler from '../handler/PopupMenuHandler';
 import SelectionCellsHandler from '../handler/SelectionCellsHandler';
 import TooltipHandler from '../handler/TooltipHandler';
 import VertexHandler from '../handler/VertexHandler';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Cell from '../model/Cell';
 import Geometry from '../model/Geometry';
 import GraphModel, {
@@ -1929,7 +1931,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const processChange = (change) => {
     const view = getView();
-
+    console.log('change', change);
     // Resets the view settings, removes all cells and clears
     // the selection if the root changes.
     if (change.constructor === RootChange) {
@@ -12724,6 +12726,9 @@ const Graph = (container, model, _, stylesheet) => {
     getTooltipHandler,
     getPopupMenuHandler,
     getSelectionCellsHandler,
+    setSelectionCellsHandler,
+    getConnectionHandler,
+    setConnectionHandler,
     getGraphHandler,
     getCellEditor,
     isNativeDblClickEnabled,
@@ -12746,7 +12751,8 @@ const Graph = (container, model, _, stylesheet) => {
     setResetEdgesOnResize,
     getDefaultLoopStyle,
     setDefaultLoopStyle,
-    destroy
+    destroy,
+    ...Graph.overrides
   };
 
   // Initializes the main members that do not require a container
@@ -12773,4 +12779,4 @@ const Graph = (container, model, _, stylesheet) => {
   return me;
 };
 
-export default Graph;
+export default makeComponent(Graph);

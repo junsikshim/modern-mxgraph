@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Connector from '../shape/Connector';
 import Ellipse from '../shape/Ellipse';
 import RectangleShape from '../shape/RectangleShape';
@@ -1681,4 +1681,4 @@ CellRenderer.registerShape(SHAPE_CONNECTOR, Connector);
 CellRenderer.registerShape(SHAPE_IMAGE, ImageShape);
 // CellRenderer.registerShape(SHAPE_LABEL, Label);
 
-export default CellRenderer;
+export default makeComponent(CellRenderer);

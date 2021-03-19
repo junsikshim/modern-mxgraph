@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp } from '../Helpers';
+import { addProp, makeComponent } from '../Helpers';
 
 /**
  * Class: mxConnectionConstraint
@@ -77,4 +77,4 @@ const ConnectionConstraint = (point, perimeter = true, name, dx, dy) => {
   return me;
 };
 
-export default ConnectionConstraint;
+export default makeComponent(ConnectionConstraint);

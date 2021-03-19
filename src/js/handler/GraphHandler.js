@@ -5,7 +5,7 @@
  */
 
 import { IS_IOS } from '../Client';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import RectangleShape from '../shape/RectangleShape';
 import {
   CURSOR_MOVABLE_EDGE,
@@ -1192,7 +1192,7 @@ const GraphHandler = (graph) => {
       }
 
       // Resets the handler if everything was removed
-      if (states.length == 0) {
+      if (states.length === 0) {
         reset();
       } else {
         // Redraws connected edges
@@ -1875,4 +1875,4 @@ const GraphHandler = (graph) => {
   return me;
 };
 
-export default GraphHandler;
+export default makeComponent(GraphHandler);

@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 
 /**
  * Class: TemporaryCellStates
@@ -116,4 +116,4 @@ const TemporaryCellStates = (
   return me;
 };
 
-export default TemporaryCellStates;
+export default makeComponent(TemporaryCellStates);

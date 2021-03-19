@@ -5,7 +5,7 @@
  */
 
 import { imageBasePath } from '../Client';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import ImageShape from '../shape/ImageShape';
 import RectangleShape from '../shape/RectangleShape';
 import {
@@ -579,4 +579,4 @@ const ConstraintHandler = (graph) => {
   return me;
 };
 
-export default ConstraintHandler;
+export default makeComponent(ConstraintHandler);

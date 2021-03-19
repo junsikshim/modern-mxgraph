@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset, noop } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent, noop } from '../Helpers';
 import Ellipse from '../shape/Ellipse';
 import ImageShape from '../shape/ImageShape';
 import RectangleShape from '../shape/RectangleShape';
@@ -2351,4 +2351,4 @@ const VertexHandler = (state) => {
   return me;
 };
 
-export default VertexHandler;
+export default makeComponent(VertexHandler);

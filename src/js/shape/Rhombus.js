@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
+import { createWithOverrides, makeComponent } from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE } from '../util/Constants';
 import Point from '../util/Point';
 import { getValue } from '../util/Utils';
@@ -28,7 +29,7 @@ import { getValue } from '../util/Utils';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const Rhombus = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
+const Rhombus = (bounds, fill, stroke, strokewidth = 1) => {
   /**
    * Function: isRoundable
    *
@@ -62,11 +63,11 @@ const Rhombus = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
     c.fillAndStroke();
   };
 
-  const _shape = Shape(undefined, {
+  const _shape = createWithOverrides({
     isRoundable,
     paintVertexShape,
-    ...overrides
-  });
+    ...Rhombus.getOverrides()
+  })(Shape)();
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
@@ -82,4 +83,4 @@ const Rhombus = (bounds, fill, stroke, strokewidth = 1, overrides = {}) => {
   return me;
 };
 
-export default Rhombus;
+export default makeComponent(Rhombus);

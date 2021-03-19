@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { isSet, withConstructor } from '../Helpers';
+import { createWithOverrides, isSet, makeComponent } from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
   STYLE_CURVED,
@@ -41,7 +41,7 @@ import Polyline from './Polyline';
  * strokeWidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokeWidth>.
  */
-const Connector = (points, stroke, strokeWidth, overrides = {}) => {
+const Connector = (points, stroke, strokeWidth) => {
   /**
    * Function: updateBoundingBox
    *
@@ -67,7 +67,7 @@ const Connector = (points, stroke, strokeWidth, overrides = {}) => {
     const sourceMarker = createMarker(c, pts, true);
     const targetMarker = createMarker(c, pts, false);
 
-    _polyline.paintEdgeShape(c, pts);
+    _polyline._paintEdgeShape(c, pts);
 
     // Disables shadows, dashed styles and fixes fill color for markers
     c.setFillColor(_polyline.getStroke());
@@ -155,7 +155,7 @@ const Connector = (points, stroke, strokeWidth, overrides = {}) => {
    * Augments the bounding box with the strokeWidth and shadow offsets.
    */
   const augmentBoundingBox = (bbox) => {
-    _polyline.augmentBoundingBox(bbox);
+    _polyline._augmentBoundingBox(bbox);
 
     // Adds marker sizes
     let size = 0;
@@ -173,10 +173,10 @@ const Connector = (points, stroke, strokeWidth, overrides = {}) => {
     bbox.grow(size * _polyline.getScale());
   };
 
-  const _polyline = Polyline(points, stroke, strokeWidth, {
+  const _polyline = createWithOverrides({
     paintEdgeShape,
-    ...overrides
-  });
+    ...Connector.getOverrides()
+  })(Polyline)(points, stroke, strokeWidth);
 
   const me = {
     ..._polyline,
@@ -185,7 +185,7 @@ const Connector = (points, stroke, strokeWidth, overrides = {}) => {
     augmentBoundingBox
   };
 
-  return withConstructor(me, Connector);
+  return me;
 };
 
-export default Connector;
+export default makeComponent(Connector);

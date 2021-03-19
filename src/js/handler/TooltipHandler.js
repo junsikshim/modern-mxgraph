@@ -1,5 +1,5 @@
 import Event from '../util/Event';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import { fit, getScrollOrigin } from '../util/Utils';
 import { TOOLTIP_VERTICAL_OFFSET } from '../util/Constants';
 
@@ -195,4 +195,4 @@ const TooltipHandler = (graph, delay = 500) => {
   return me;
 };
 
-export default TooltipHandler;
+export default makeComponent(TooltipHandler);

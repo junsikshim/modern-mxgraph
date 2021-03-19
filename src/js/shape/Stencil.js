@@ -786,8 +786,6 @@ const Stencil = (desc) => {
     }
   };
 
-  const {} = Shape();
-
   const me = {
     parseDescription,
     parseConstraints,

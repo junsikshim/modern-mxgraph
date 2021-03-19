@@ -29,7 +29,7 @@ import {
   WORD_WRAP
 } from './Constants';
 import { write } from './Utils';
-import { addProp, isSet, isUnset, withConstructor } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import { IS_CHROMEAPP, IS_EDGE, IS_FF, IS_IE, IS_IE11, IS_OT } from '../Client';
 
 /**
@@ -1713,7 +1713,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     }
   }
 
-  return withConstructor(me, SvgCanvas2D);
+  return me;
 };
 
 const createCss = (
@@ -1803,4 +1803,4 @@ const createCss = (
   callback(dx, dy, flex + fw + fh, item + ofl, block, ofl);
 };
 
-export default SvgCanvas2D;
+export default makeComponent(SvgCanvas2D);

@@ -1,9 +1,18 @@
+/**
+ * Copyright (c) 2006-2015, JGraph Ltd
+ * Copyright (c) 2006-2015, Gaudenz Alder
+ * Copyright (c) 2021, Junsik Shim
+ */
+
 import { isSet, isUnset } from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
   DIRECTION_EAST,
+  DIRECTION_MASK_ALL,
   DIRECTION_MASK_EAST,
   DIRECTION_MASK_NONE,
+  DIRECTION_MASK_NORTH,
+  DIRECTION_MASK_SOUTH,
   DIRECTION_MASK_WEST,
   DIRECTION_NORTH,
   DIRECTION_SOUTH,
@@ -14,6 +23,7 @@ import {
   STYLE_ENDARROW,
   STYLE_ENDSIZE,
   STYLE_JETTY_SIZE,
+  STYLE_ROTATION,
   STYLE_SEGMENT,
   STYLE_SOURCE_JETTY_SIZE,
   STYLE_STARTARROW,
@@ -21,9 +31,84 @@ import {
   STYLE_TARGET_JETTY_SIZE
 } from '../util/Constants';
 import Point from '../util/Point';
-import { contains, getValue } from '../util/Utils';
+import {
+  contains,
+  getPortConstraints,
+  getValue,
+  reversePortConstraints
+} from '../util/Utils';
 import CellState from './CellState';
 
+/**
+ * Class: EdgeStyle
+ *
+ * Provides various edge styles to be used as the values for
+ * <mxConstants.STYLE_EDGE> in a cell style.
+ *
+ * Example:
+ *
+ * (code)
+ * var style = stylesheet.getDefaultEdgeStyle();
+ * style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
+ * (end)
+ *
+ * Sets the default edge style to <ElbowConnector>.
+ *
+ * Custom edge style:
+ *
+ * To write a custom edge style, a function must be added to the mxEdgeStyle
+ * object as follows:
+ *
+ * (code)
+ * mxEdgeStyle.MyStyle = function(state, source, target, points, result)
+ * {
+ *   if (source != null && target != null)
+ *   {
+ *     var pt = new mxPoint(target.getCenterX(), source.getCenterY());
+ *
+ *     if (mxUtils.contains(source, pt.x, pt.y))
+ *     {
+ *       pt.y = source.y + source.height;
+ *     }
+ *
+ *     result.push(pt);
+ *   }
+ * };
+ * (end)
+ *
+ * In the above example, a right angle is created using a point on the
+ * horizontal center of the target vertex and the vertical center of the source
+ * vertex. The code checks if that point intersects the source vertex and makes
+ * the edge straight if it does. The point is then added into the result array,
+ * which acts as the return value of the function.
+ *
+ * The new edge style should then be registered in the <mxStyleRegistry> as follows:
+ * (code)
+ * mxStyleRegistry.putValue('myEdgeStyle', mxEdgeStyle.MyStyle);
+ * (end)
+ *
+ * The custom edge style above can now be used in a specific edge as follows:
+ *
+ * (code)
+ * model.setStyle(edge, 'edgeStyle=myEdgeStyle');
+ * (end)
+ *
+ * Note that the key of the <mxStyleRegistry> entry for the function should
+ * be used in string values, unless <mxGraphView.allowEval> is true, in
+ * which case you can also use mxEdgeStyle.MyStyle for the value in the
+ * cell style above.
+ *
+ * Or it can be used for all edges in the graph as follows:
+ *
+ * (code)
+ * var style = graph.getStylesheet().getDefaultEdgeStyle();
+ * style[mxConstants.STYLE_EDGE] = mxEdgeStyle.MyStyle;
+ * (end)
+ *
+ * Note that the object can be used directly when programmatically setting
+ * the value, but the key in the <mxStyleRegistry> should be used when
+ * setting the value via a key, value pair in a cell style.
+ */
 const EdgeStyle = {
   /**
    * Function: EntityRelation
@@ -235,7 +320,7 @@ const EdgeStyle = {
           if (dir === DIRECTION_NORTH) {
             y = source.getY() - 2 * dx;
           } else if (dir === DIRECTION_SOUTH) {
-            y = source.getY() + source.height + 2 * dx;
+            y = source.getY() + source.getHeight() + 2 * dx;
           } else if (dir === DIRECTION_EAST) {
             x = source.getX() - 2 * dy;
           } else {
@@ -444,7 +529,7 @@ const EdgeStyle = {
       if (
         isSet(pt) &&
         pt.getX() >= source.getX() &&
-        pt.getX() <= source.getX() + source.width
+        pt.getX() <= source.getX() + source.getWidth()
       ) {
         x = pt.getX();
       }
@@ -521,8 +606,8 @@ const EdgeStyle = {
     const tol = 1;
 
     // Whether the first segment outgoing from the source end is horizontal
-    const lastPushed = result.length > 0 ? result[0] : null;
-    const horizontal = true;
+    let lastPushed = result.length > 0 ? result[0] : null;
+    let horizontal = true;
     let hint = null;
 
     // Adds waypoints only if outside of tolerance
@@ -531,7 +616,7 @@ const EdgeStyle = {
       pt.setY(Math.round(pt.setY() * scale * 10) / 10);
 
       if (
-        lastPushed === null ||
+        isUnset(lastPushed) ||
         Math.abs(lastPushed.getX() - pt.getX()) >= tol ||
         Math.abs(lastPushed.setY() - pt.setY()) >= Math.max(1, scale)
       ) {
@@ -544,6 +629,7 @@ const EdgeStyle = {
 
     // Adds the first point
     let pt = pts[0];
+    let pe;
 
     if (isUnset(pt) && isSet(source)) {
       pt = Point(
@@ -584,7 +670,7 @@ const EdgeStyle = {
         }
       }
 
-      const pe = pts[lastInx];
+      pe = pts[lastInx];
 
       if (isSet(pe) && isSet(hints[hints.length - 1])) {
         if (Math.abs(hints[hints.length - 1].getX() - pe.getX()) < tol) {
@@ -599,7 +685,7 @@ const EdgeStyle = {
       hint = hints[0];
 
       let currentTerm = source;
-      const currentPt = pts[0];
+      let currentPt = pts[0];
       let hozChan = false;
       let vertChan = false;
       let currentHint = hint;
@@ -1016,6 +1102,11 @@ const EdgeStyle = {
   OrthConnector: (state, sourceScaled, targetScaled, controlHints, result) => {
     const graph = state.getView().getGraph();
     const scale = state.getView().getScale();
+
+    const pts = EdgeStyle.scalePointArray(state.getAbsolutePoints(), scale);
+    const source = EdgeStyle.scaleCellState(sourceScaled, scale);
+    const target = EdgeStyle.scaleCellState(targetScaled, scale);
+
     const sourceEdge = isUnset(source)
       ? false
       : graph.getModel().isEdge(source.getCell());
@@ -1023,22 +1114,18 @@ const EdgeStyle = {
       ? false
       : graph.getModel().isEdge(target.getCell());
 
-    const pts = EdgeStyle.scalePointArray(state.getAbsolutePoints(), scale);
-    const source = EdgeStyle.scaleCellState(sourceScaled, scale);
-    const target = EdgeStyle.scaleCellState(targetScaled, scale);
-
     const p0 = pts[0];
     const pe = pts[pts.length - 1];
 
-    const sourceX = isSet(source) ? source.x : p0.x;
-    const sourceY = isSet(source) ? source.y : p0.y;
-    const sourceWidth = isSet(source) ? source.width : 0;
-    const sourceHeight = isSet(source) ? source.height : 0;
+    const sourceX = isSet(source) ? source.getX() : p0.getX();
+    const sourceY = isSet(source) ? source.getY() : p0.getY();
+    const sourceWidth = isSet(source) ? source.getWidth() : 0;
+    const sourceHeight = isSet(source) ? source.getHeight() : 0;
 
-    const targetX = isSet(target) ? target.x : pe.x;
-    const targetY = isSet(target) ? target.y : pe.y;
-    const targetWidth = isSet(target) ? target.width : 0;
-    const targetHeight = isSet(target) ? target.height : 0;
+    const targetX = isSet(target) ? target.getX() : pe.getX();
+    const targetY = isSet(target) ? target.getY() : pe.getY();
+    const targetWidth = isSet(target) ? target.getWidth() : 0;
+    const targetHeight = isSet(target) ? target.getHeight() : 0;
 
     let sourceBuffer = EdgeStyle.getJettySize(state, true);
     let targetBuffer = EdgeStyle.getJettySize(state, false);
@@ -1273,7 +1360,7 @@ const EdgeStyle = {
       }
 
       if ((vertPref[i] & portConstraint[i]) === 0) {
-        vertPref[i] = mxUtils.reversePortConstraints(vertPref[i]);
+        vertPref[i] = reversePortConstraints(vertPref[i]);
       }
 
       prefOrdering[i][0] = vertPref[i];
@@ -1406,7 +1493,7 @@ const EdgeStyle = {
     let currentIndex = 0;
 
     // Orientation, 0 horizontal, 1 vertical
-    const lastOrientation =
+    let lastOrientation =
       (dir[0] & (DIRECTION_MASK_EAST | DIRECTION_MASK_WEST)) > 0 ? 0 : 1;
     const initialOrientation = lastOrientation;
     let currentOrientation = 0;

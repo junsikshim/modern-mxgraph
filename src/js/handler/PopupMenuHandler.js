@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import PopupMenu from '../util/PopupMenu';
 import { getScrollOrigin } from '../util/Utils';
 
@@ -240,4 +240,4 @@ const PopupMenuHandler = (graph, factoryMethod) => {
   return me;
 };
 
-export default PopupMenuHandler;
+export default makeComponent(PopupMenuHandler);

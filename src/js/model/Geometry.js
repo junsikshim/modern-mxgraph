@@ -7,7 +7,7 @@
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import { equalPoints, getRotatedPoint, toRadians } from '../util/Utils';
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 
 /**
  * Class: Geometry
@@ -483,4 +483,4 @@ const Geometry = (x, y, width, height) => {
  */
 Geometry.TRANSLATE_CONTROL_POINTS = true;
 
-export default Geometry;
+export default makeComponent(Geometry);

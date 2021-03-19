@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Cell from '../model/Cell';
 import Geometry from '../model/Geometry';
 import ImageShape from '../shape/ImageShape';
@@ -586,7 +586,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    *
    * Starts a new connection for the given state and coordinates.
    */
-  const start = (state, x, y, edgeState = createEdgeState()) => {
+  const start = (state, x, y, edgeState = me.createEdgeState()) => {
     setPrevious(state);
     setFirst(Point(x, y));
     setEdgeState(edgeState);
@@ -877,7 +877,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
         setFirst(Point(mE.getGraphX(), mE.getGraphY()));
       }
 
-      setEdgeState(createEdgeState(mE));
+      setEdgeState(me.createEdgeState(mE));
       setMouseDownCounter(1);
 
       if (isWaypointsEnabled() && isUnset(getShape())) {
@@ -931,7 +931,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    * };
    * (end)
    */
-  const createEdgeState = (mE) => undefined;
+  const createEdgeState = (mE) => {};
 
   /**
    * Function: isOutlineConnectEvent
@@ -2260,4 +2260,4 @@ const ConnectionHandler = (graph, factoryMethod) => {
   return me;
 };
 
-export default ConnectionHandler;
+export default makeComponent(ConnectionHandler);

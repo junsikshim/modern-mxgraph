@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import EventSource from '../util/EventSource';
 import { hasScrollbars } from '../util/Utils';
 
@@ -478,4 +478,4 @@ const PanningHandler = (graph) => {
   return me;
 };
 
-export default PanningHandler;
+export default makeComponent(PanningHandler);

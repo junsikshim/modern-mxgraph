@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import { isNode } from '../util/Utils';
 
 /**
@@ -260,4 +260,4 @@ const Multiplicities = (
   return me;
 };
 
-export default Multiplicities;
+export default makeComponent(Multiplicities);

@@ -5,7 +5,7 @@
  */
 
 import Rectangle from '../util/Rectangle';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Point from '../util/Point';
 
 /**
@@ -415,7 +415,8 @@ const CellState = (view, cell, style = {}) => {
     getHeight,
     setHeight,
     getCenterX,
-    getCenterY
+    getCenterY,
+    setRect
   } = Rectangle();
 
   const me = {
@@ -490,6 +491,7 @@ const CellState = (view, cell, style = {}) => {
     setTerminalDistance,
     getSegments,
     setSegments,
+    setRect,
     destroy,
     toString
   };
@@ -497,4 +499,4 @@ const CellState = (view, cell, style = {}) => {
   return me;
 };
 
-export default CellState;
+export default makeComponent(CellState);

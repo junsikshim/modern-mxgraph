@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, isSet } from '../Helpers';
+import { addProp, createWithOverrides, isSet, makeComponent } from '../Helpers';
 import { STYLE_IMAGE_BACKGROUND, STYLE_IMAGE_BORDER } from '../util/Constants';
 import { getNumber } from '../util/Utils';
 import RectangleShape from './RectangleShape';
@@ -31,14 +31,7 @@ import Shape from './Shape';
  * strokeWidth - Optional integer that defines the stroke width. Default is
  * 0. This is stored in <strokeWidth>.
  */
-const ImageShape = (
-  bounds,
-  image,
-  fill,
-  stroke,
-  strokeWidth,
-  overrides = {}
-) => {
+const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
   const [getImage, setImage] = addProp(image);
 
   /**
@@ -197,7 +190,7 @@ const ImageShape = (
     }
   };
 
-  const _shape = Shape(undefined, {
+  const _shape = createWithOverrides({
     getSvgScreenOffset,
     apply,
     isHtmlAllowed,
@@ -205,8 +198,8 @@ const ImageShape = (
     isRoundable,
     paintVertexShape,
     redrawHtmlShape,
-    ...overrides
-  });
+    ...ImageShape.getOverrides()
+  })(Shape)();
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
@@ -230,4 +223,4 @@ const ImageShape = (
   return me;
 };
 
-export default ImageShape;
+export default makeComponent(ImageShape);

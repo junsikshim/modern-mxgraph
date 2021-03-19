@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { isUnset } from '../Helpers';
+import { createWithOverrides, isUnset, makeComponent } from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE, STYLE_CURVED } from '../util/Constants';
 import { getValue } from '../util/Utils';
 import Shape from './Shape';
@@ -29,7 +29,7 @@ import Shape from './Shape';
  * strokewidth - Optional integer that defines the stroke width. Default is
  * 1. This is stored in <strokewidth>.
  */
-const Polyline = (points, stroke, strokewidth = 1, overrides = {}) => {
+const Polyline = (points, stroke, strokewidth = 1) => {
   /**
    * Function: getRotation
    *
@@ -111,10 +111,10 @@ const Polyline = (points, stroke, strokewidth = 1, overrides = {}) => {
     c.stroke();
   };
 
-  const _shape = Shape(undefined, {
+  const _shape = createWithOverrides({
     paintEdgeShape,
-    ...overrides
-  });
+    ...Polyline.getOverrides()
+  })(Shape)();
 
   _shape.setPoints(points);
   _shape.setStroke(stroke);
@@ -133,4 +133,4 @@ const Polyline = (points, stroke, strokewidth = 1, overrides = {}) => {
   return me;
 };
 
-export default Polyline;
+export default makeComponent(Polyline);

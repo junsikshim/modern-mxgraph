@@ -1,5 +1,11 @@
+/**
+ * Copyright (c) 2006-2016, JGraph Ltd
+ * Copyright (c) 2006-2016, Gaudenz Alder
+ * Copyright (c) 2021, Junsik Shim
+ */
+
 import { IS_FF } from '../Client';
-import { addProp, isSet, isUnset } from '../Helpers';
+import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Event from '../util/Event';
 import MouseEvent from '../util/MouseEvent';
 import Point from '../util/Point';
@@ -12,15 +18,77 @@ import {
   setOpacity
 } from '../util/Utils';
 
+/**
+ * Class: Rubberband
+ *
+ * Event handler that selects rectangular regions. This is not built-into
+ * <mxGraph>. To enable rubberband selection in a graph, use the following code.
+ *
+ * Example:
+ *
+ * (code)
+ * var rubberband = new mxRubberband(graph);
+ * (end)
+ *
+ * Constructor: mxRubberband
+ *
+ * Constructs an event handler that selects rectangular regions in the graph
+ * using rubberband selection.
+ */
 const Rubberband = (graph) => {
   const [getGraph, setGraph] = addProp(graph);
+
+  /**
+   * Variable: defaultOpacity
+   *
+   * Specifies the default opacity to be used for the rubberband div. Default
+   * is 20.
+   */
   const [getDefaultOpacity, setDefaultOpacity] = addProp(20);
+
+  /**
+   * Variable: enabled
+   *
+   * Specifies if events are handled. Default is true.
+   */
   const [isEnabled, setEnabled] = addProp(true);
+
+  /**
+   * Variable: div
+   *
+   * Holds the DIV element which is currently visible.
+   */
   const [getDiv, setDiv] = addProp();
+
+  /**
+   * Variable: sharedDiv
+   *
+   * Holds the DIV element which is used to display the rubberband.
+   */
   const [getSharedDiv, setSharedDiv] = addProp();
+
+  /**
+   * Variable: currentX
+   *
+   * Holds the value of the x argument in the last call to <update>.
+   */
   const [getCurrentX, setCurrentX] = addProp(0);
+
+  /**
+   * Variable: currentY
+   *
+   * Holds the value of the y argument in the last call to <update>.
+   */
   const [getCurrentY, setCurrentY] = addProp(0);
+
+  /**
+   * Variable: fadeOut
+   *
+   * Optional fade out effect. Default is false.
+   */
   const [isFadeOut, setFadeOut] = addProp(false);
+
+  // Handles force rubberband event
   const [getForceRubberbandHandler, setForceRubberbandHandler] = addProp(
     (sender, evt) => {
       const evtName = evt.getProperty('eventName');
@@ -37,8 +105,10 @@ const Rubberband = (graph) => {
     }
   );
 
+  // Repaints the marquee after autoscroll
   const [getPanHandler, setPanHandler] = addProp(() => repaint());
 
+  // Does not show menu if any touch gestures take place after the trigger
   const [getGestureHandler, setGestureHandler] = addProp((sender, eo) => {
     if (isSet(getFirst())) {
       reset();
@@ -55,8 +125,21 @@ const Rubberband = (graph) => {
   const [getHeight, setHeight] = addProp();
   const [isDestroyed, setDestroyed] = addProp(false);
 
+  /**
+   * Function: isForceRubberbandEvent
+   *
+   * Returns true if the given <mxMouseEvent> should start rubberband selection.
+   * This implementation returns true if the alt key is pressed.
+   */
   const isForceRubberbandEvent = (mE) => Event.isAltDown(mE.getEvent());
 
+  /**
+   * Function: mouseDown
+   *
+   * Handles the event by initiating a rubberband selection. By consuming the
+   * event all subsequent events of the gesture are redirected to this
+   * handler.
+   */
   const mouseDown = (sender, mE) => {
     const graph = getGraph();
 
@@ -82,6 +165,11 @@ const Rubberband = (graph) => {
     }
   };
 
+  /**
+   * Function: start
+   *
+   * Sets the start point for the rubberband selection.
+   */
   const start = (x, y) => {
     const graph = getGraph();
 
@@ -114,6 +202,11 @@ const Rubberband = (graph) => {
     }
   };
 
+  /**
+   * Function: mouseMove
+   *
+   * Handles the event by updating therubberband selection.
+   */
   const mouseMove = (sender, mE) => {
     const graph = getGraph();
 
@@ -143,6 +236,11 @@ const Rubberband = (graph) => {
     }
   };
 
+  /**
+   * Function: createShape
+   *
+   * Creates the rubberband selection shape.
+   */
   const createShape = () => {
     let sharedDiv = getSharedDiv();
 
@@ -162,9 +260,20 @@ const Rubberband = (graph) => {
     return result;
   };
 
+  /**
+   * Function: isActive
+   *
+   * Returns true if this handler is active.
+   */
   const isActive = (sender, mE) =>
     isSet(getDiv()) && getDiv().style.display !== 'none';
 
+  /**
+   * Function: mouseUp
+   *
+   * Handles the event by selecting the region of the rubberband using
+   * <mxGraph.selectRegion>.
+   */
   const mouseUp = (sender, mE) => {
     const active = isActive();
     reset();
@@ -175,11 +284,22 @@ const Rubberband = (graph) => {
     }
   };
 
+  /**
+   * Function: execute
+   *
+   * Resets the state of this handler and selects the current region
+   * for the given event.
+   */
   const execute = (evt) => {
     const rect = Rectangle(getX(), getY(), getWidth(), getHeight());
     getGraph().selectRegion(rect, evt);
   };
 
+  /**
+   * Function: reset
+   *
+   * Resets the state of the rubberband selection.
+   */
   const reset = () => {
     if (isSet(getDiv())) {
       if (isFadeOut()) {
@@ -211,6 +331,11 @@ const Rubberband = (graph) => {
     setDiv();
   };
 
+  /**
+   * Function: update
+   *
+   * Sets <currentX> and <currentY> and calls <repaint>.
+   */
   const update = (x, y) => {
     setCurrentX(x);
     setCurrentY(y);
@@ -218,6 +343,11 @@ const Rubberband = (graph) => {
     repaint();
   };
 
+  /**
+   * Function: repaint
+   *
+   * Computes the bounding box and updates the style of the <div>.
+   */
   const repaint = () => {
     const div = getDiv();
 
@@ -238,6 +368,13 @@ const Rubberband = (graph) => {
     }
   };
 
+  /**
+   * Function: destroy
+   *
+   * Destroys the handler and all its resources and DOM nodes. This does
+   * normally not need to be called, it is called automatically when the
+   * window unloads.
+   */
   const destroy = () => {
     const graph = getGraph();
 
@@ -255,7 +392,20 @@ const Rubberband = (graph) => {
   };
 
   const me = {
+    /**
+     * Function: isEnabled
+     *
+     * Returns true if events are handled. This implementation returns
+     * <enabled>.
+     */
     isEnabled,
+
+    /**
+     * Function: setEnabled
+     *
+     * Enables or disables event handling. This implementation updates
+     * <enabled>.
+     */
     setEnabled,
     isForceRubberbandEvent,
     mouseDown,
@@ -279,4 +429,4 @@ const Rubberband = (graph) => {
   return me;
 };
 
-export default Rubberband;
+export default makeComponent(Rubberband);
