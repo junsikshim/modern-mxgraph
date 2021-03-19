@@ -6,7 +6,7 @@
 
 import Event from './Event';
 import EventObject from './EventObject';
-import { addProp } from '../Helpers';
+import { addProp, makeComponent } from '../Helpers';
 
 /**
  * Class: UndoableEdit
@@ -195,4 +195,4 @@ const UndoableEdit = (source, significant) => {
   return me;
 };
 
-export default UndoableEdit;
+export default makeComponent(UndoableEdit);

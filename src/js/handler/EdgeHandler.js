@@ -2487,7 +2487,6 @@ const EdgeHandler = (state) => {
 
       updateParentHighlight();
     } catch (e) {
-      console.log(e);
       // ignore
     }
   };

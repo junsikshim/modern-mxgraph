@@ -1931,7 +1931,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const processChange = (change) => {
     const view = getView();
-    console.log('change', change);
+
     // Resets the view settings, removes all cells and clears
     // the selection if the root changes.
     if (change.constructor === RootChange) {
@@ -5687,7 +5687,7 @@ const Graph = (container, model, _, stylesheet) => {
     const model = getModel();
     const prev = model.getGeometry(cell);
 
-    if (isSet(prev) && prev.equals(bounds)) {
+    if (isSet(prev) && !prev.equals(bounds)) {
       const geo = prev.clone();
 
       if (!ignoreRelative && geo.isRelative()) {
