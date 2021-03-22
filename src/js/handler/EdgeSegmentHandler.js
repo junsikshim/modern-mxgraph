@@ -60,21 +60,21 @@ const EdgeSegmentHandler = (state) => {
    * Updates the given preview state taking into account the state of the constraint handler.
    */
   const getPreviewPoints = (point) => {
-    const _handler = _elbowEdgeHandler;
-    const state = _handler.getState();
+    const handler = _elbowEdgeHandler;
+    const state = handler.getState();
 
-    if (_handler.isSource() || _handler.isTarget()) {
-      return _handler.getPreviewPoints(point);
+    if (handler.isSource() || handler.isTarget()) {
+      return handler.getPreviewPoints(point);
     } else {
       const pts = getCurrentPoints();
-      let last = _handler.convertPoint(pts[0].clone(), false);
-      point = _handler.convertPoint(point.clone(), false);
+      let last = handler.convertPoint(pts[0].clone(), false);
+      point = handler.convertPoint(point.clone(), false);
       const result = [];
 
       for (let i = 1; i < pts.length; i++) {
-        const pt = _handler.convertPoint(pts[i].clone(), false);
+        const pt = handler.convertPoint(pts[i].clone(), false);
 
-        if (i === _handler.getIndex()) {
+        if (i === handler.getIndex()) {
           if (Math.round(last.getX() - pt.getX()) === 0) {
             last.setX(point.getX());
             pt.setX(point.getX());
@@ -121,13 +121,13 @@ const EdgeSegmentHandler = (state) => {
    * Overridden to perform optimization of the edge style result.
    */
   const updatePreviewState = (edge, point, terminalState, mE) => {
-    const _handler = _elbowEdgeHandler;
+    const handler = _elbowEdgeHandler;
 
-    _handler.updatePreviewState(edge, point, terminalState, mE);
+    handler.updatePreviewState(edge, point, terminalState, mE);
 
     // Checks and corrects preview by running edge style again
-    if (!_handler.isSource() && !_handler.isTarget()) {
-      point = _handler.convertPoint(point.clone(), false);
+    if (!handler.isSource() && !handler.isTarget()) {
+      point = handler.convertPoint(point.clone(), false);
       const pts = edge.getAbsolutePoints();
       let pt0 = pts[0];
       let pt1 = pts[1];
@@ -144,15 +144,15 @@ const EdgeSegmentHandler = (state) => {
           (Math.round(pt0.getY() - pt1.getY()) !== 0 ||
             Math.round(pt1.getY() - pt2.getY()) !== 0)
         ) {
-          result.push(_handler.convertPoint(pt1.clone(), false));
+          result.push(handler.convertPoint(pt1.clone(), false));
         }
 
         pt0 = pt1;
         pt1 = pt2;
       }
 
-      const graph = _handler.getGraph();
-      const state = _handler.getState();
+      const graph = handler.getGraph();
+      const state = handler.getState();
       const source = state.getVisibleTerminalState(true);
       const target = state.getVisibleTerminalState(false);
       const rpts = state.getAbsolutePoints();
@@ -187,7 +187,7 @@ const EdgeSegmentHandler = (state) => {
           const pt = graph.getConnectionPoint(source, sc);
 
           if (isSet(pt)) {
-            _handler.convertPoint(pt, false);
+            handler.convertPoint(pt, false);
             y0 = pt.getY();
           }
         }
@@ -201,7 +201,7 @@ const EdgeSegmentHandler = (state) => {
           const pt = graph.getConnectionPoint(target, tc);
 
           if (isSet(pt)) {
-            _handler.convertPoint(pt, false);
+            handler.convertPoint(pt, false);
             ye = pt.getY();
           }
         }
@@ -209,11 +209,11 @@ const EdgeSegmentHandler = (state) => {
         result = [Point(point.getX(), y0), Point(point.getX(), ye)];
       }
 
-      _handler.setPoints(result);
+      handler.setPoints(result);
 
       // LATER: Check if points and result are different
       edge.getView().updateFixedTerminalPoints(edge, source, target);
-      edge.getView().updatePoints(edge, _handler.getPoints(), source, target);
+      edge.getView().updatePoints(edge, handler.getPoints(), source, target);
       edge.getView().updateFloatingTerminalPoints(edge, source, target);
     }
   };
@@ -222,14 +222,14 @@ const EdgeSegmentHandler = (state) => {
    * Overriden to merge edge segments.
    */
   const connect = (edge, terminal, isSource, isClone, mE) => {
-    const _handler = _elbowEdgeHandler;
-    const model = _handler.getGraph().getModel();
+    const handler = _elbowEdgeHandler;
+    const model = handler.getGraph().getModel();
     const geo = model.getGeometry(edge);
     let result;
 
     // Merges adjacent edge segments
     if (isSet(geo) && isSet(geo.getPoints()) && geo.getPoints().length > 0) {
-      const pts = _handler.getAbsPoints();
+      const pts = handler.getAbsPoints();
       let pt0 = pts[0];
       let pt1 = pts[1];
       result = [];
@@ -244,7 +244,7 @@ const EdgeSegmentHandler = (state) => {
           (Math.round(pt0.getY() - pt1.getY()) !== 0 ||
             Math.round(pt1.getY() - pt2.getY()) !== 0)
         ) {
-          result.push(_handler.convertPoint(pt1.clone(), false));
+          result.push(handler.convertPoint(pt1.clone(), false));
         }
 
         pt0 = pt1;
@@ -266,7 +266,7 @@ const EdgeSegmentHandler = (state) => {
         }
       }
 
-      edge = _handler.connect(edge, terminal, isSource, isClone, mE);
+      edge = handler.connect(edge, terminal, isSource, isClone, mE);
     } finally {
       model.endUpdate();
     }
@@ -287,17 +287,17 @@ const EdgeSegmentHandler = (state) => {
    * Starts the handling of the mouse gesture.
    */
   const start = (x, y, index) => {
-    const _handler = _elbowEdgeHandler;
+    const handler = _elbowEdgeHandler;
 
-    _handler.start(x, y, index);
+    handler.start(x, y, index);
 
     if (
-      isSet(_handler.getBends()) &&
-      isSet(_handler.getBends()[index]) &&
-      !_handler.isSource() &&
-      !_handler.isTarget()
+      isSet(handler.getBends()) &&
+      isSet(handler.getBends()[index]) &&
+      !handler.isSource() &&
+      !handler.isTarget()
     ) {
-      setOpacity(_handler.getBends()[index].getNode(), 100);
+      setOpacity(handler.getBends()[index].getNode(), 100);
     }
   };
 
@@ -307,25 +307,25 @@ const EdgeSegmentHandler = (state) => {
    * Adds custom bends for the center of each segment.
    */
   const createBends = () => {
-    const _handler = _elbowEdgeHandler;
+    const handler = _elbowEdgeHandler;
     const bends = [];
 
     // Source
-    let bend = _handler.createHandleShape(0);
-    _handler.initBend(bend);
+    let bend = handler.createHandleShape(0);
+    handler.initBend(bend);
     bend.setCursor(CURSOR_TERMINAL_HANDLE);
     bends.push(bend);
 
     const pts = getCurrentPoints();
 
     // Waypoints (segment handles)
-    if (_handler.getGraph().isCellBendable(_handler.getState().getCell())) {
-      if (isUnset(_handler.getPoints())) {
-        _handler.setPoints([]);
+    if (handler.getGraph().isCellBendable(handler.getState().getCell())) {
+      if (isUnset(handler.getPoints())) {
+        handler.setPoints([]);
       }
 
       for (let i = 0; i < pts.length - 1; i++) {
-        bend = _handler.createVirtualBend();
+        bend = handler.createVirtualBend();
         bends.push(bend);
         let horizontal = Math.round(pts[i].getX() - pts[i + 1].getX()) === 0;
 
@@ -338,13 +338,13 @@ const EdgeSegmentHandler = (state) => {
         }
 
         bend.setCursor(horizontal ? 'col-resize' : 'row-resize');
-        _handler.getPoints().push(Point(0, 0));
+        handler.getPoints().push(Point(0, 0));
       }
     }
 
     // Target
-    bend = _handler.createHandleShape(pts.length);
-    _handler.initBend(bend);
+    bend = handler.createHandleShape(pts.length);
+    handler.initBend(bend);
     bend.setCursor(CURSOR_TERMINAL_HANDLE);
     bends.push(bend);
 
@@ -367,9 +367,9 @@ const EdgeSegmentHandler = (state) => {
    * Updates the position of the custom bends.
    */
   const redrawInnerBends = (p0, pe) => {
-    const _handler = _elbowEdgeHandler;
+    const handler = _elbowEdgeHandler;
 
-    if (_handler.getGraph().isCellBendable(_handler.getState().getCell())) {
+    if (handler.getGraph().isCellBendable(handler.getState().getCell())) {
       const pts = getCurrentPoints();
 
       if (isSet(pts) && pts.length > 1) {
@@ -396,7 +396,7 @@ const EdgeSegmentHandler = (state) => {
           }
         }
 
-        const bends = _handler.getBends();
+        const bends = handler.getBends();
 
         for (let i = 0; i < pts.length - 1; i++) {
           if (isSet(bends[i + 1])) {
@@ -417,15 +417,15 @@ const EdgeSegmentHandler = (state) => {
             );
             bends[i + 1].redraw();
 
-            if (_handler.isManageLabelHandle()) {
-              _handler.checkLabelHandle(bends[i + 1].getBounds());
+            if (handler.isManageLabelHandle()) {
+              handler.checkLabelHandle(bends[i + 1].getBounds());
             }
           }
         }
 
         if (straight) {
-          setOpacity(bends[1].getNode(), _handler.getVirtualBendOpacity());
-          setOpacity(bends[3].getNode(), _handler.getVirtualBendOpacity());
+          setOpacity(bends[1].getNode(), handler.getVirtualBendOpacity());
+          setOpacity(bends[3].getNode(), handler.getVirtualBendOpacity());
         }
       }
     }

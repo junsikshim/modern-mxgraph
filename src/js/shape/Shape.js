@@ -273,6 +273,7 @@ const Shape = (stencil) => {
   const [getIndicatorImage, setIndicatorImage] = addProp();
   const [getIndicatorShape, setIndicatorShape] = addProp();
   const [getOldGradients, setOldGradients] = addProp();
+  const [getConstraints, setConstraints] = addProp();
 
   /**
    * Function: init
@@ -1586,6 +1587,8 @@ const Shape = (stencil) => {
     setSvgPointerEvents,
     isUseSvgBoundingBox,
     setUseSvgBoundingBox,
+    getConstraints,
+    setConstraints,
     destroy
   };
 

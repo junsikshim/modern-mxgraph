@@ -1329,7 +1329,7 @@ const GraphView = (graph) => {
       } else if (isSet(points)) {
         for (let i = 0; i < points.length; i++) {
           if (isSet(points[i])) {
-            const pt = clone(points[i]);
+            const pt = points[i].clone();
             pts.push(transformControlPoint(edge, pt));
           }
         }
@@ -1839,11 +1839,11 @@ const GraphView = (graph) => {
     let x = state.getCenterX();
     let y = state.getCenterY();
 
-    if (isSet(state.segments) && (isUnset(geometry) || geometry.isRelative())) {
+    if (isSet(state.getSegments()) && (isUnset(geometry) || geometry.isRelative())) {
       const gx = isSet(geometry) ? geometry.getX() / 2 : 0;
       const pointCount = state.getAbsolutePoints().length;
       const dist = Math.round((gx + 0.5) * state.getLength());
-      const segment = state.getSegments()[0];
+      let segment = state.getSegments()[0];
       let length = 0;
       let index = 1;
 

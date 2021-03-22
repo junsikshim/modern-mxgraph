@@ -613,12 +613,12 @@ const EdgeStyle = {
     // Adds waypoints only if outside of tolerance
     const pushPoint = (pt) => {
       pt.setX(Math.round(pt.getX() * scale * 10) / 10);
-      pt.setY(Math.round(pt.setY() * scale * 10) / 10);
+      pt.setY(Math.round(pt.getY() * scale * 10) / 10);
 
       if (
         isUnset(lastPushed) ||
         Math.abs(lastPushed.getX() - pt.getX()) >= tol ||
-        Math.abs(lastPushed.setY() - pt.setY()) >= Math.max(1, scale)
+        Math.abs(lastPushed.getY() - pt.getY()) >= Math.max(1, scale)
       ) {
         result.push(pt);
         lastPushed = pt;
@@ -665,8 +665,8 @@ const EdgeStyle = {
           hints[0].setX(pt.getX());
         }
 
-        if (Math.abs(hints[0].setY() - pt.setY()) < tol) {
-          hints[0].setY(pt.setY());
+        if (Math.abs(hints[0].getY() - pt.getY()) < tol) {
+          hints[0].setY(pt.getY());
         }
       }
 
@@ -677,8 +677,8 @@ const EdgeStyle = {
           hints[hints.length - 1].setX(pe.getX());
         }
 
-        if (Math.abs(hints[hints.length - 1].setY() - pe.setY()) < tol) {
-          hints[hints.length - 1].setY(pe.setY());
+        if (Math.abs(hints[hints.length - 1].getY() - pe.getY()) < tol) {
+          hints[hints.length - 1].setY(pe.getY());
         }
       }
 
@@ -700,12 +700,12 @@ const EdgeStyle = {
         const fixedVertAlign =
           isSet(currentPt) && currentPt.getX() === currentHint.getX();
         const fixedHozAlign =
-          isSet(currentPt) && currentPt.setY() === currentHint.setY();
+          isSet(currentPt) && currentPt.getY() === currentHint.getY();
 
         const inHozChan =
           isSet(currentTerm) &&
-          currentHint.setY() >= currentTerm.setY() &&
-          currentHint.setY() <= currentTerm.setY() + currentTerm.getHeight();
+          currentHint.getY() >= currentTerm.getY() &&
+          currentHint.getY() <= currentTerm.getY() + currentTerm.getHeight();
         const inVertChan =
           isSet(currentTerm) &&
           currentHint.getX() >= currentTerm.getX() &&
@@ -761,13 +761,13 @@ const EdgeStyle = {
 
       if (
         horizontal &&
-        ((isSet(pts[0]) && pts[0].setY() !== hint.setY()) ||
+        ((isSet(pts[0]) && pts[0].getY() !== hint.getY()) ||
           (isUnset(pts[0]) &&
             isSet(source) &&
-            (hint.setY() < source.setY() ||
-              hint.setY() > source.setY() + source.getHeight())))
+            (hint.getY() < source.getY() ||
+              hint.getY() > source.getY() + source.getHeight())))
       ) {
-        pushPoint(Point(pt.getX(), hint.setY()));
+        pushPoint(Point(pt.getX(), hint.getY()));
       } else if (
         !horizontal &&
         ((isSet(pts[0]) && pts[0].getX() !== hint.getX()) ||
@@ -776,11 +776,11 @@ const EdgeStyle = {
             (hint.getX() < source.getX() ||
               hint.getX() > source.getX() + source.getWidth())))
       ) {
-        pushPoint(Point(hint.getX(), pt.setY()));
+        pushPoint(Point(hint.getX(), pt.getY()));
       }
 
       if (horizontal) {
-        pt.setY(hint.setY());
+        pt.setY(hint.getY());
       } else {
         pt.setX(hint.getX());
       }
@@ -790,7 +790,7 @@ const EdgeStyle = {
         hint = hints[i];
 
         if (horizontal) {
-          pt.setY(hint.setY());
+          pt.setY(hint.getY());
         } else {
           pt.setX(hint.getX());
         }
@@ -817,13 +817,13 @@ const EdgeStyle = {
       if (isSet(hint)) {
         if (
           horizontal &&
-          ((isSet(pts[lastInx]) && pts[lastInx].setY() !== hint.setY()) ||
+          ((isSet(pts[lastInx]) && pts[lastInx].getY() !== hint.getY()) ||
             (isUnset(pts[lastInx]) &&
               isSet(target) &&
-              (hint.setY() < target.setY() ||
-                hint.setY() > target.setY() + target.getHeight())))
+              (hint.getY() < target.getY() ||
+                hint.getY() > target.getY() + target.getHeight())))
         ) {
-          pushPoint(Point(pt.getX(), hint.setY()));
+          pushPoint(Point(pt.getX(), hint.getY()));
         } else if (
           !horizontal &&
           ((isSet(pts[lastInx]) && pts[lastInx].getX() !== hint.getX()) ||
@@ -832,7 +832,7 @@ const EdgeStyle = {
               (hint.getX() < target.getX() ||
                 hint.getX() > target.getX() + target.getWidth())))
         ) {
-          pushPoint(Point(hint.getX(), pt.setY()));
+          pushPoint(Point(hint.getX(), pt.getY()));
         }
       }
     }
@@ -842,7 +842,7 @@ const EdgeStyle = {
       while (
         result.length > 1 &&
         isSet(result[1]) &&
-        contains(source, result[1].getX(), result[1].setY())
+        contains(source, result[1].getX(), result[1].getY())
       ) {
         result.splice(1, 1);
       }
@@ -856,7 +856,7 @@ const EdgeStyle = {
         contains(
           target,
           result[result.length - 1].getX(),
-          result[result.length - 1].setY()
+          result[result.length - 1].getY()
         )
       ) {
         result.splice(result.length - 1, 1);
@@ -868,7 +868,7 @@ const EdgeStyle = {
       isSet(pe) &&
       isSet(result[result.length - 1]) &&
       Math.abs(pe.getX() - result[result.length - 1].getX()) <= tol &&
-      Math.abs(pe.setY() - result[result.length - 1].setY()) <= tol
+      Math.abs(pe.getY() - result[result.length - 1].getY()) <= tol
     ) {
       result.splice(result.length - 1, 1);
 
@@ -878,8 +878,8 @@ const EdgeStyle = {
           result[result.length - 1].setX(pe.getX());
         }
 
-        if (Math.abs(result[result.length - 1].setY() - pe.setY()) < tol) {
-          result[result.length - 1].setY(pe.setY());
+        if (Math.abs(result[result.length - 1].getY() - pe.getY()) < tol) {
+          result[result.length - 1].setY(pe.getY());
         }
       }
     }
