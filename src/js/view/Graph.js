@@ -27,15 +27,14 @@ import TooltipHandler from '../handler/TooltipHandler';
 import VertexHandler from '../handler/VertexHandler';
 import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
 import Cell from '../model/Cell';
+import ChildChange from '../model/change/ChildChange';
+import GeometryChange from '../model/change/GeometryChange';
+import RootChange from '../model/change/RootChange';
+import StyleChange from '../model/change/StyleChange';
+import TerminalChange from '../model/change/TerminalChange';
+import ValueChange from '../model/change/ValueChange';
 import Geometry from '../model/Geometry';
-import GraphModel, {
-  ChildChange,
-  GeometryChange,
-  RootChange,
-  StyleChange,
-  TerminalChange,
-  ValueChange
-} from '../model/GraphModel';
+import GraphModel from '../model/GraphModel';
 import RectangleShape from '../shape/RectangleShape';
 import {
   ALIGN_MIDDLE,
@@ -11006,6 +11005,9 @@ const Graph = (container, model, _, stylesheet) => {
       result = EdgeHandler(state);
     }
 
+    // lazy initialization
+    result.init();
+
     return result;
   };
 
@@ -12751,8 +12753,7 @@ const Graph = (container, model, _, stylesheet) => {
     setResetEdgesOnResize,
     getDefaultLoopStyle,
     setDefaultLoopStyle,
-    destroy,
-    ...Graph.overrides
+    destroy
   };
 
   // Initializes the main members that do not require a container

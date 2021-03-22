@@ -7,6 +7,7 @@
 import {
   addProp,
   createWithOverrides,
+  extendFrom,
   isSet,
   isUnset,
   makeComponent
@@ -20,6 +21,7 @@ import {
   STYLE_EDGE
 } from '../util/Constants';
 import Point from '../util/Point';
+import EdgeStyle from '../view/EdgeStyle';
 import EdgeHandler from './EdgeHandler';
 
 /**
@@ -55,7 +57,7 @@ const ElbowEdgeHandler = (state) => {
 
     // Source
     const bend = _edgeHandler.createHandleShape(0);
-    initBend(bend);
+    _edgeHandler.initBend(bend);
     bend.setCursor(CURSOR_TERMINAL_HANDLE);
     bends.push(bend);
 
@@ -75,7 +77,7 @@ const ElbowEdgeHandler = (state) => {
 
     // Target
     bend = _edgeHandler.createHandleShape(2);
-    initBend(bend);
+    _edgeHandler.initBend(bend);
     bend.setCursor(CURSOR_TERMINAL_HANDLE);
     bends.push(bend);
 
@@ -90,7 +92,7 @@ const ElbowEdgeHandler = (state) => {
    */
   const createVirtualBend = (dblClickHandler) => {
     const bend = _edgeHandler.createHandleShape();
-    initBend(bend, dblClickHandler);
+    _edgeHandler.initBend(bend, dblClickHandler);
 
     bend.setCursor(getCursorForBend());
 
@@ -250,17 +252,7 @@ const ElbowEdgeHandler = (state) => {
     }
   };
 
-  // Extends EdgeHandler.
-  const _edgeHandler = createWithOverrides({
-    createBends,
-    createVirtualBend,
-    convertPoint,
-    redrawInnerBends,
-    ...ElbowEdgeHandler.getOverrides()
-  })(EdgeHandler)(state);
-
   const me = {
-    ..._edgeHandler,
     isFlipEnabled,
     setFlipEnabled,
     createBends,
@@ -270,6 +262,10 @@ const ElbowEdgeHandler = (state) => {
     convertPoint,
     redrawInnerBends
   };
+
+  // Extends EdgeHandler.
+  const _edgeHandler = EdgeHandler(state);
+  extendFrom(_edgeHandler)(me);
 
   return me;
 };

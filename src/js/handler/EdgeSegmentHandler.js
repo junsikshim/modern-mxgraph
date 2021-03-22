@@ -4,7 +4,13 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { createWithOverrides, isSet, isUnset, makeComponent } from '../Helpers';
+import {
+  createWithOverrides,
+  extendFrom,
+  isSet,
+  isUnset,
+  makeComponent
+} from '../Helpers';
 import { CURSOR_TERMINAL_HANDLE } from '../util/Constants';
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
@@ -60,7 +66,7 @@ const EdgeSegmentHandler = (state) => {
     if (_handler.isSource() || _handler.isTarget()) {
       return _handler.getPreviewPoints(point);
     } else {
-      const pts = _handler.getCurrentPoints();
+      const pts = getCurrentPoints();
       let last = _handler.convertPoint(pts[0].clone(), false);
       point = _handler.convertPoint(point.clone(), false);
       const result = [];
@@ -115,9 +121,9 @@ const EdgeSegmentHandler = (state) => {
    * Overridden to perform optimization of the edge style result.
    */
   const updatePreviewState = (edge, point, terminalState, mE) => {
-    _edgeHandler._updatePreviewState(edge, point, terminalState, mE);
-
     const _handler = _elbowEdgeHandler;
+
+    _handler.updatePreviewState(edge, point, terminalState, mE);
 
     // Checks and corrects preview by running edge style again
     if (!_handler.isSource() && !_handler.isTarget()) {
@@ -260,7 +266,7 @@ const EdgeSegmentHandler = (state) => {
         }
       }
 
-      edge = _edgeHandler.connect(edge, terminal, isSource, isClone, mE);
+      edge = _handler.connect(edge, terminal, isSource, isClone, mE);
     } finally {
       model.endUpdate();
     }
@@ -283,7 +289,7 @@ const EdgeSegmentHandler = (state) => {
   const start = (x, y, index) => {
     const _handler = _elbowEdgeHandler;
 
-    _edgeHandler._start(x, y, index);
+    _handler.start(x, y, index);
 
     if (
       isSet(_handler.getBends()) &&
@@ -310,7 +316,7 @@ const EdgeSegmentHandler = (state) => {
     bend.setCursor(CURSOR_TERMINAL_HANDLE);
     bends.push(bend);
 
-    const pts = _handler.getCurrentPoints();
+    const pts = getCurrentPoints();
 
     // Waypoints (segment handles)
     if (_handler.getGraph().isCellBendable(_handler.getState().getCell())) {
@@ -352,7 +358,7 @@ const EdgeSegmentHandler = (state) => {
    */
   const redraw = () => {
     _elbowEdgeHandler.refresh();
-    _edgeHandler._redraw();
+    _elbowEdgeHandler.redraw();
   };
 
   /**
@@ -364,7 +370,7 @@ const EdgeSegmentHandler = (state) => {
     const _handler = _elbowEdgeHandler;
 
     if (_handler.getGraph().isCellBendable(_handler.getState().getCell())) {
-      const pts = _handler.getCurrentPoints();
+      const pts = getCurrentPoints();
 
       if (isSet(pts) && pts.length > 1) {
         let straight = false;
@@ -425,26 +431,7 @@ const EdgeSegmentHandler = (state) => {
     }
   };
 
-  const _edgeHandler = createWithOverrides({
-    getPreviewPoints,
-    updatePreviewState,
-    start,
-    createBends,
-    redrawInnerBends,
-    ...EdgeSegmentHandler.getOverrides()
-  })(EdgeHandler)(state);
-
-  const _elbowEdgeHandler = createWithOverrides({
-    getPreviewPoints,
-    updatePreviewState,
-    start,
-    createBends,
-    redrawInnerBends,
-    ...EdgeSegmentHandler.getOverrides()
-  })(ElbowEdgeHandler)(state);
-
   const me = {
-    ..._elbowEdgeHandler,
     getCurrentPoints,
     getPreviewPoints,
     updatePreviewState,
@@ -455,6 +442,9 @@ const EdgeSegmentHandler = (state) => {
     redraw,
     redrawInnerBends
   };
+
+  const _elbowEdgeHandler = ElbowEdgeHandler(state);
+  extendFrom(_elbowEdgeHandler)(me);
 
   return me;
 };

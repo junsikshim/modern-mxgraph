@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { createWithOverrides, isSet, makeComponent } from '../Helpers';
+import { extendFrom, isSet, makeComponent } from '../Helpers';
 import {
   LINE_ARCSIZE,
   NONE,
@@ -138,23 +138,20 @@ const RectangleShape = (bounds, fill, stroke, strokeWidth = 1) => {
     }
   };
 
-  const _shape = createWithOverrides({
+  const me = {
     isHtmlAllowed,
+    isRoundable,
     paintForeground,
-    paintBackground,
-    ...RectangleShape.getOverrides()
-  })(Shape)();
+    paintBackground
+  };
+
+  const _shape = Shape();
+  extendFrom(_shape)(me);
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
   _shape.setStroke(stroke);
   _shape.setStrokeWidth(strokeWidth);
-
-  const me = {
-    ..._shape,
-    isHtmlAllowed,
-    isRoundable
-  };
 
   return me;
 };

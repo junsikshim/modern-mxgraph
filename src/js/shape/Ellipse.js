@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { makeComponent } from '../Helpers';
+import { extendFrom, makeComponent } from '../Helpers';
 import Shape from './Shape';
 
 /**
@@ -38,20 +38,17 @@ const Ellipse = (bounds, fill, stroke, strokewidth = 1) => {
     c.fillAndStroke();
   };
 
-  const _shape = createWithOverrides({
-    paintVertexShape,
-    ...Ellipse.getOverrides()
-  })(Shape)();
+  const me = {
+    paintVertexShape
+  };
+
+  const _shape = Shape();
+  extendFrom(_shape)(me);
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
   _shape.setStroke(stroke);
   _shape.setStrokeWidth(strokewidth);
-
-  const me = {
-    ..._shape,
-    paintVertexShape
-  };
 
   return me;
 };

@@ -375,7 +375,7 @@ const Shape = (stencil) => {
    * Reconfigures this shape. This will update the colors etc in
    * addition to the bounds or points.
    */
-  const reconfigure = () => me.redraw();
+  const reconfigure = () => me.resolve('redraw')();
 
   /**
    * Function: redraw
@@ -385,14 +385,14 @@ const Shape = (stencil) => {
   const redraw = () => {
     updateBoundsFromPoints();
 
-    const isCheck = me.checkBounds();
-    const isHtml = me.isHtmlAllowed();
+    const isCheck = me.resolve('checkBounds')();
+    const isHtml = me.resolve('isHtmlAllowed')();
 
     if (isVisible() && isCheck) {
       getNode().style.visibility = 'visible';
       clear();
       redrawShape();
-      me.updateBoundingBox();
+      me.resolve('updateBoundingBox')();
     } else {
       getNode().style.visibility = 'hidden';
       setBoundingBox();
@@ -534,7 +534,7 @@ const Shape = (stencil) => {
 
       beforePaint(canvas);
 
-      me.paint(canvas);
+      me.resolve('paint')(canvas);
 
       afterPaint(canvas);
 
@@ -588,7 +588,7 @@ const Shape = (stencil) => {
     const canvas = SvgCanvas2D(getNode(), false);
     canvas.setStrokeTolerance(isPointerEvents() ? getSvgStrokeTolerance() : 0);
     canvas.setPointerEventsValue(getSvgPointerEvents());
-    const off = me.getSvgScreenOffset();
+    const off = me.resolve('getSvgScreenOffset')();
 
     if (off !== 0) {
       getNode().setAttribute('transform', 'translate(' + off + ',' + off + ')');
@@ -836,10 +836,10 @@ const Shape = (stencil) => {
           }
         }
 
-        me.paintEdgeShape(c, pts);
+        me.resolve('paintEdgeShape')(c, pts);
       } else {
         // Paints vertex shape
-        me.paintVertexShape(c, x, y, w, h);
+        me.resolve('paintVertexShape')(c, x, y, w, h);
       }
     }
 
@@ -935,7 +935,7 @@ const Shape = (stencil) => {
    * Paints the vertex shape.
    */
   const paintVertexShape = (c, x, y, w, h) => {
-    me.paintBackground(c, x, y, w, h);
+    me.resolve('paintBackground')(c, x, y, w, h);
 
     if (
       !isOutline() ||
@@ -943,7 +943,7 @@ const Shape = (stencil) => {
       getValue(getStyle(), STYLE_BACKGROUND_OUTLINE, 0) === 0
     ) {
       c.setShadow(false);
-      me.paintForeground(c, x, y, w, h);
+      me.resolve('paintForeground')(c, x, y, w, h);
     }
   };
 
@@ -1584,6 +1584,8 @@ const Shape = (stencil) => {
     setOutline,
     getSvgPointerEvents,
     setSvgPointerEvents,
+    isUseSvgBoundingBox,
+    setUseSvgBoundingBox,
     destroy
   };
 

@@ -4,7 +4,13 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, createWithOverrides, isSet, makeComponent } from '../Helpers';
+import {
+  addProp,
+  createWithOverrides,
+  extendFrom,
+  isSet,
+  makeComponent
+} from '../Helpers';
 import Shape from '../shape/Shape';
 import {
   ALIGN_CENTER,
@@ -371,7 +377,7 @@ const Text = (
         updateBoundingBox();
       }
     } else {
-      _shape._redraw();
+      _shape.redraw();
 
       if (isNode(getData())) {
         setLastData(getData());
@@ -420,7 +426,7 @@ const Text = (
     const style = _shape.getStyle();
     const old = _getSpacing();
 
-    _shape._apply(state);
+    _shape.apply(state);
 
     if (isSet(style)) {
       setFontStyle(getValue(style, STYLE_FONTSTYLE, getFontStyle()));
@@ -854,23 +860,7 @@ const Text = (
     return Point(dx, dy);
   };
 
-  const _shape = createWithOverrides({
-    apply,
-    redraw,
-    isHtmlAllowed,
-    redrawHtmlShape,
-    checkBounds,
-    paint,
-    getSvgScreenOffset,
-    updateBoundingBox,
-    ...Text.getOverrides()
-  })(Shape)();
-
-  _shape.setBounds(bounds);
-  _shape.setRotation(0);
-
   const me = {
-    ..._shape,
     isHtmlAllowed,
     getSvgScreenOffset,
     checkBounds,
@@ -909,6 +899,12 @@ const Text = (
     getOverflow,
     setOverflow
   };
+
+  const _shape = Shape();
+  extendFrom(_shape)(me);
+
+  _shape.setBounds(bounds);
+  _shape.setRotation(0);
 
   return me;
 };

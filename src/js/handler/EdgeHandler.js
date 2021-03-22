@@ -285,6 +285,7 @@ const EdgeHandler = (state) => {
   const init = () => {
     const state = getState();
     const graph = setGraph(state.getView().getGraph());
+
     setMarker(createMarker());
     setConstraintHandler(ConstraintHandler(graph));
 
@@ -295,6 +296,7 @@ const EdgeHandler = (state) => {
     // Uses the absolute points of the state
     // for the initial configuration and preview
     setAbsPoints(getSelectionPoints(state));
+
     const shape = setShape(createSelectionShape(getAbsPoints()));
     shape.init(graph.getView().getOverlayPane());
     shape.setPointerEvents(false);
@@ -306,10 +308,10 @@ const EdgeHandler = (state) => {
     // Creates bends for the non-routed absolute points
     // or bends that don't correspond to points
     if (graph.getSelectionCount() < getMaxCells() || getMaxCells() <= 0) {
-      setBends(me.createBends());
+      setBends(me.resolve('createBends')());
 
       if (isVirtualBendsEnabled()) {
-        setVirtualBends(me.createVirtualBends());
+        setVirtualBends(me.resolve('createVirtualBends')());
       }
     }
 
@@ -324,7 +326,7 @@ const EdgeHandler = (state) => {
     setCustomHandles(createCustomHandles());
 
     updateParentHighlight();
-    me.redraw();
+    me.resolve('redraw')();
   };
 
   /**
@@ -955,7 +957,7 @@ const EdgeHandler = (state) => {
           );
         }
 
-        me.start(mE.getX(), mE.getY(), handle);
+        me.resolve('start')(mE.getX(), mE.getY(), handle);
       }
 
       mE.consume();
@@ -1250,7 +1252,7 @@ const EdgeHandler = (state) => {
     let result;
 
     if (!isSource() && !isTarget()) {
-      me.convertPoint(point, false);
+      me.resolve('convertPoint')(point, false);
 
       const index = getIndex();
 
@@ -1571,7 +1573,7 @@ const EdgeHandler = (state) => {
         getLabel().setX(currentPoint.getX());
         getLabel().setY(currentPoint.getY());
       } else {
-        setPoints(me.getPreviewPoints(currentPoint, mE));
+        setPoints(me.resolve('getPreviewPoints')(currentPoint, mE));
 
         let terminalState =
           isSource() || isTarget() ? getPreviewTerminalState(mE) : undefined;
@@ -1611,7 +1613,7 @@ const EdgeHandler = (state) => {
           getCurrentPoint(),
           isSet(terminalState) ? terminalState.getCell() : undefined
         );
-        me.updatePreviewState(
+        me.resolve('updatePreviewState')(
           clone,
           getCurrentPoint(),
           terminalState,
@@ -1741,7 +1743,13 @@ const EdgeHandler = (state) => {
                 edge = clone;
               }
 
-              edge = me.connect(edge, terminal, isSource(), clone, mE);
+              edge = me.resolve('connect')(
+                edge,
+                terminal,
+                isSource(),
+                clone,
+                mE
+              );
             } finally {
               model.endUpdate();
             }
@@ -1846,7 +1854,7 @@ const EdgeHandler = (state) => {
 
     setPreviewColor(EDGE_SELECTION_COLOR);
     removeHint();
-    me.redraw();
+    me.resolve('redraw')();
   };
 
   /**
@@ -2066,13 +2074,13 @@ const EdgeHandler = (state) => {
    * Adds a control point for the given state and event.
    */
   const addPoint = (state, evt) => {
-    const pt = me.convertPoint(
+    const pt = me.resolve('convertPoint')(
       getGraph().getContainer(),
       Event.getClientX(evt),
       Event.getClientY(evt)
     );
     const gridEnabled = getGraph().isGridEnabledEvent(evt);
-    me.convertPoint(pt, gridEnabled);
+    me.resolve('convertPoint')(pt, gridEnabled);
     addPointAt(state, pt.getX(), pt.getY());
     Event.consume(evt);
   };
@@ -2114,7 +2122,7 @@ const EdgeHandler = (state) => {
 
       graph.getModel().setGeometry(state.getCell(), geo);
       refresh();
-      me.redraw();
+      me.resolve('redraw')();
     }
   };
 
@@ -2132,7 +2140,7 @@ const EdgeHandler = (state) => {
         geo.getPoints().splice(index - 1, 1);
         getGraph().getModel().setGeometry(state.getCell(), geo);
         refresh();
-        me.redraw();
+        me.resolve('redraw')();
       }
     }
   };
@@ -2281,7 +2289,7 @@ const EdgeHandler = (state) => {
         checkLabelHandle(bends[bn].getBounds());
       }
 
-      me.redrawInnerBends(p0, pe);
+      me.resolve('redrawInnerBends')(p0, pe);
     }
 
     const absPoints = getAbsPoints();
@@ -2503,12 +2511,12 @@ const EdgeHandler = (state) => {
 
       if (isSet(getBends())) {
         destroyBends(getBends());
-        setBends(me.createBends());
+        setBends(me.resolve('createBends')());
       }
 
       if (isSet(getVirtualBends())) {
         destroyBends(getVirtualBends());
-        setVirtualBends(me.createVirtualBends());
+        setVirtualBends(me.resolve('createVirtualBends')());
       }
 
       if (isSet(getCustomHandles())) {
@@ -2628,6 +2636,8 @@ const EdgeHandler = (state) => {
     setShape,
     getBends,
     setBends,
+    getPoints,
+    setPoints,
     getLabelShape,
     setLabelShape,
     isCloneEnabled,
@@ -2725,12 +2735,16 @@ const EdgeHandler = (state) => {
     setIndex,
     isDestroyed,
     destroyBends,
+    isSource,
+    setSource,
+    isTarget,
+    setTarget,
     destroy
   };
 
   if (isSet(state) && isSet(state.getShape())) {
     setState(state);
-    init();
+    //init();
 
     state.getView().getGraph().addListener(Event.ESCAPE, getEscapeHandler());
   }

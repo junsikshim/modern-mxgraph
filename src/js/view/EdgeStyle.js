@@ -280,13 +280,13 @@ const EdgeStyle = {
     if (isSet(source)) {
       const view = state.getView();
       const graph = view.getGraph();
-      let pt = isSet(points) && points.length > 0 ? points[0] : null;
+      let pt = isSet(points) && points.length > 0 ? points[0] : undefined;
 
       if (isSet(pt)) {
         pt = view.transformControlPoint(state, pt);
 
         if (contains(source, pt.getX(), pt.getY())) {
-          pt = null;
+          pt = undefined;
         }
       }
 
@@ -348,7 +348,7 @@ const EdgeStyle = {
    * parameters.
    */
   ElbowConnector: (state, source, target, points, result) => {
-    let pt = isSet(points) && points.length > 0 ? points[0] : null;
+    let pt = isSet(points) && points.length > 0 ? points[0] : undefined;
 
     let vertical = false;
     let horizontal = false;
@@ -410,7 +410,7 @@ const EdgeStyle = {
    */
   SideToSide: (state, source, target, points, result) => {
     const view = state.getView();
-    let pt = isSet(points) && points.length > 0 ? points[0] : null;
+    let pt = isSet(points) && points.length > 0 ? points[0] : undefined;
     const pts = state.getAbsolutePoints();
     const p0 = pts[0];
     const pe = pts[pts.length - 1];
@@ -425,7 +425,7 @@ const EdgeStyle = {
       source.setY(p0.getY());
     }
 
-    if (pe !== null) {
+    if (isSet(pe)) {
       target = CellState();
       target.setX(pe.getX());
       target.setY(pe.getY());
@@ -496,7 +496,7 @@ const EdgeStyle = {
    */
   TopToBottom: (state, source, target, points, result) => {
     const view = state.getView();
-    let pt = isSet(points) && points.length > 0 ? points[0] : null;
+    let pt = isSet(points) && points.length > 0 ? points[0] : undefined;
     const pts = state.getAbsolutePoints();
     const p0 = pts[0];
     const pe = pts[pts.length - 1];
@@ -524,7 +524,7 @@ const EdgeStyle = {
         target.getY() + target.getHeight()
       );
 
-      var x = view.getRoutingCenterX(source);
+      let x = view.getRoutingCenterX(source);
 
       if (
         isSet(pt) &&
@@ -534,7 +534,7 @@ const EdgeStyle = {
         x = pt.getX();
       }
 
-      var y = isSet(pt) ? pt.getY() : Math.round(b + (t - b) / 2);
+      const y = isSet(pt) ? pt.getY() : Math.round(b + (t - b) / 2);
 
       if (!contains(target, x, y) && !contains(source, x, y)) {
         result.push(Point(x, y));
@@ -563,8 +563,8 @@ const EdgeStyle = {
             result.push(Point(pt.getX(), y));
           }
         } else {
-          var l = Math.max(source.getX(), target.getX());
-          var r = Math.min(
+          const l = Math.max(source.getX(), target.getX());
+          const r = Math.min(
             source.getX() + source.getWidth(),
             target.getX() + target.getWidth()
           );
@@ -606,9 +606,9 @@ const EdgeStyle = {
     const tol = 1;
 
     // Whether the first segment outgoing from the source end is horizontal
-    let lastPushed = result.length > 0 ? result[0] : null;
+    let lastPushed = result.length > 0 ? result[0] : undefined;
     let horizontal = true;
-    let hint = null;
+    let hint;
 
     // Adds waypoints only if outside of tolerance
     const pushPoint = (pt) => {
@@ -691,7 +691,7 @@ const EdgeStyle = {
       let currentHint = hint;
 
       if (isSet(currentPt)) {
-        currentTerm = null;
+        currentTerm = undefined;
       }
 
       // Check for alignment with fixed points and with channels
@@ -748,8 +748,8 @@ const EdgeStyle = {
         currentTerm = target;
         currentPt = pts[lastInx];
 
-        if (currentPt !== null) {
-          currentTerm = null;
+        if (isSet(currentPt)) {
+          currentTerm = undefined;
         }
 
         currentHint = hints[hints.length - 1];
@@ -788,9 +788,6 @@ const EdgeStyle = {
       for (let i = 0; i < hints.length; i++) {
         horizontal = !horizontal;
         hint = hints[i];
-
-        //				mxLog.show();
-        //				mxLog.debug('hint', i, hint.x, hint.y);
 
         if (horizontal) {
           pt.setY(hint.setY());
@@ -945,10 +942,10 @@ const EdgeStyle = {
   ],
 
   inlineRoutePatterns: [
-    [null, [2114, 2568], null, null],
-    [null, [514, 2081, 2114, 2568], null, null],
-    [null, [2114, 2561], null, null],
-    [[2081, 2562], [1057, 2114, 2568], [2184, 2562], null]
+    [undefined, [2114, 2568], undefined, undefined],
+    [undefined, [514, 2081, 2114, 2568], undefined, undefined],
+    [undefined, [2114, 2561], undefined, undefined],
+    [[2081, 2562], [1057, 2114, 2568], [2184, 2562], undefined]
   ],
   vertexSeperations: [],
 
@@ -1066,7 +1063,7 @@ const EdgeStyle = {
    *
    */
   scaleCellState: (state, scale) => {
-    let result = null;
+    let result;
 
     if (isSet(state)) {
       result = state.clone();
@@ -1077,7 +1074,7 @@ const EdgeStyle = {
         Math.round((state.getHeight() / scale) * 10) / 10
       );
     } else {
-      result = null;
+      result = undefined;
     }
 
     return result;
@@ -1266,7 +1263,7 @@ const EdgeStyle = {
     }
 
     // Check for connection constraints
-    let currentTerm = null;
+    let currentTerm;
 
     if (isSet(source)) {
       currentTerm = p0;
@@ -1296,7 +1293,7 @@ const EdgeStyle = {
         }
       }
 
-      currentTerm = null;
+      currentTerm = undefined;
 
       if (isSet(target)) {
         currentTerm = pe;
@@ -1465,7 +1462,7 @@ const EdgeStyle = {
       targetIndex += 4;
     }
 
-    var routePattern =
+    const routePattern =
       EdgeStyle.routePatterns[sourceIndex - 1][targetIndex - 1];
 
     EdgeStyle.wayPoints1[0][0] = geo[0][0];

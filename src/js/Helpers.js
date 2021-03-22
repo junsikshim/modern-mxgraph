@@ -11,51 +11,41 @@ export const addProp = (initialValue) => {
 };
 
 export const makeComponent = (constructor) => {
-  let overrides = {};
-
-  // need to access overrides inside the constructor
-  constructor.getOverrides = () => overrides;
-  constructor.setOverrides = (o) => (overrides = o);
-
-  // wrap the constructor
   const f = (...args) => {
     const o = constructor(...args);
-
-    for (const k in overrides) {
-      // prefix the old function with an underscore
-      if (isSet(o[k])) o['_' + k] = o[k];
-
-      o[k] = overrides[k];
-    }
 
     // needed for constructor comparison
     o.constructor = f;
     o.name = constructor.name;
 
+    o.resolve = (name) => {
+      let cur = o;
+
+      while (isSet(cur) && isSet(cur.child) && cur !== cur.child) {
+        cur = cur.child;
+      }
+
+      while (isSet(cur) && cur !== cur.parent) {
+        if (isSet(cur[name])) return cur[name];
+
+        cur = cur.parent;
+      }
+
+      throw new Error(`Could not resolve ${name}!`);
+    };
+
     return o;
   };
-
-  // access overrides from outside
-  f.getOverrides = constructor.getOverrides;
-  f.setOverrides = constructor.setOverrides;
-
-  // transfer the static ones
-  for (const k of Object.keys(constructor)) {
-    f[k] = constructor[k];
-  }
 
   return f;
 };
 
-export const createWithOverrides = (overrides = {}) => (Component) => (
-  ...args
-) => {
-  const orig = Component.getOverrides();
-  Component.setOverrides(overrides);
-  const o = Component(...args);
-  Component.setOverrides(orig);
+export const extendFrom = (parent) => (o) => {
+  if (parent === o) return;
 
-  return o;
+  Object.setPrototypeOf(o, parent);
+  o.parent = parent;
+  parent.child = o;
 };
 
 export const noop = () => {};

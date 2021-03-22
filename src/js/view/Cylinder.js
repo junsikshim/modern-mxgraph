@@ -111,21 +111,13 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
     }
   };
 
-  const {
-    getBounds,
-    setBounds,
-    getFill,
-    setFill,
-    getStroke,
-    setStroke,
-    getStrokeWidth,
-    setStrokeWidth
-  } = Shape();
-
   const me = {
     paintVertexShape,
     getCylinderSize
   };
+
+  const _shape = Shape();
+  Object.setPrototypeOf(me, _shape);
 
   return me;
 };

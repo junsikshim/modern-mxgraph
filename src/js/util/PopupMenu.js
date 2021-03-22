@@ -577,8 +577,6 @@ const PopupMenu = (factoryMethod) => {
     }
   };
 
-  const { fireEvent } = EventSource();
-
   const me = {
     init,
     getDiv,
@@ -616,6 +614,8 @@ const PopupMenu = (factoryMethod) => {
     getTbody,
     destroy
   };
+
+  const { fireEvent } = EventSource();
 
   if (isSet(factoryMethod)) {
     init();

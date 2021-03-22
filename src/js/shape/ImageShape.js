@@ -4,7 +4,13 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, createWithOverrides, isSet, makeComponent } from '../Helpers';
+import {
+  addProp,
+  createWithOverrides,
+  extendFrom,
+  isSet,
+  makeComponent
+} from '../Helpers';
 import { STYLE_IMAGE_BACKGROUND, STYLE_IMAGE_BORDER } from '../util/Constants';
 import { getNumber } from '../util/Utils';
 import RectangleShape from './RectangleShape';
@@ -190,27 +196,7 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
     }
   };
 
-  const _shape = createWithOverrides({
-    getSvgScreenOffset,
-    apply,
-    isHtmlAllowed,
-    createHtml,
-    isRoundable,
-    paintVertexShape,
-    redrawHtmlShape,
-    ...ImageShape.getOverrides()
-  })(Shape)();
-
-  _shape.setBounds(bounds);
-  _shape.setFill(fill);
-  _shape.setStroke(stroke);
-  _shape.setStrokeWidth(strokeWidth);
-  _shape.setShadow(false);
-
-  const { paintBackground } = RectangleShape();
-
   const me = {
-    ...Shape,
     getSvgScreenOffset,
     apply,
     isHtmlAllowed,
@@ -219,6 +205,20 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
     paintVertexShape,
     redrawHtmlShape
   };
+
+  const { paintBackground } = RectangleShape();
+  const _shape = Shape();
+
+  extendFrom({
+    paintBackground,
+    ..._shape
+  })(me);
+
+  _shape.setBounds(bounds);
+  _shape.setFill(fill);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokeWidth);
+  _shape.setShadow(false);
 
   return me;
 };

@@ -4,7 +4,12 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { createWithOverrides, isSet, makeComponent } from '../Helpers';
+import {
+  createWithOverrides,
+  extendFrom,
+  isSet,
+  makeComponent
+} from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
   STYLE_CURVED,
@@ -50,9 +55,9 @@ const Connector = (points, stroke, strokeWidth) => {
    */
   const updateBoundingBox = () => {
     _polyline.setUseSvgBoundingBox(
-      isSet(getStyle()) && getStyle()[STYLE_CURVED] === 1
+      isSet(_polyline.getStyle()) && _polyline.getStyle()[STYLE_CURVED] === 1
     );
-    _updateBoundingBox();
+    _polyline.updateBoundingBox();
   };
 
   /**
@@ -67,7 +72,7 @@ const Connector = (points, stroke, strokeWidth) => {
     const sourceMarker = createMarker(c, pts, true);
     const targetMarker = createMarker(c, pts, false);
 
-    _polyline._paintEdgeShape(c, pts);
+    _polyline.paintEdgeShape(c, pts);
 
     // Disables shadows, dashed styles and fixes fill color for markers
     c.setFillColor(_polyline.getStroke());
@@ -155,7 +160,7 @@ const Connector = (points, stroke, strokeWidth) => {
    * Augments the bounding box with the strokeWidth and shadow offsets.
    */
   const augmentBoundingBox = (bbox) => {
-    _polyline._augmentBoundingBox(bbox);
+    _polyline.augmentBoundingBox(bbox);
 
     // Adds marker sizes
     let size = 0;
@@ -173,17 +178,15 @@ const Connector = (points, stroke, strokeWidth) => {
     bbox.grow(size * _polyline.getScale());
   };
 
-  const _polyline = createWithOverrides({
-    paintEdgeShape,
-    ...Connector.getOverrides()
-  })(Polyline)(points, stroke, strokeWidth);
-
   const me = {
-    ..._polyline,
     updateBoundingBox,
     createMarker,
-    augmentBoundingBox
+    augmentBoundingBox,
+    paintEdgeShape
   };
+
+  const _polyline = Polyline(points, stroke, strokeWidth);
+  extendFrom(_polyline)(me);
 
   return me;
 };

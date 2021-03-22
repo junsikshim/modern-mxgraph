@@ -1630,10 +1630,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
 
   const fillAndStroke = () => addNode(true, true);
 
-  const _canvas = AbstractCanvas2D();
-
   const me = {
-    ..._canvas,
     getRoot,
     format,
     getBaseUrl,
@@ -1673,6 +1670,9 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     getGradients,
     setGradients
   };
+
+  const _canvas = AbstractCanvas2D();
+  Object.setPrototypeOf(me, _canvas);
 
   let svg;
 

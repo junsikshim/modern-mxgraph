@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { createWithOverrides, makeComponent } from '../Helpers';
+import { createWithOverrides, extendFrom, makeComponent } from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE } from '../util/Constants';
 import Point from '../util/Point';
 import { getValue } from '../util/Utils';
@@ -63,22 +63,18 @@ const Rhombus = (bounds, fill, stroke, strokewidth = 1) => {
     c.fillAndStroke();
   };
 
-  const _shape = createWithOverrides({
+  const me = {
     isRoundable,
-    paintVertexShape,
-    ...Rhombus.getOverrides()
-  })(Shape)();
+    paintVertexShape
+  };
+
+  const _shape = Shape();
+  extendFrom(_shape)(me);
 
   _shape.setBounds(bounds);
   _shape.setFill(fill);
   _shape.setStroke(stroke);
   _shape.setStrokeWidth(strokewidth);
-
-  const me = {
-    ..._shape,
-    isRoundable,
-    paintVertexShape
-  };
 
   return me;
 };

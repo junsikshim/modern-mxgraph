@@ -4,7 +4,12 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { createWithOverrides, isUnset, makeComponent } from '../Helpers';
+import {
+  createWithOverrides,
+  extendFrom,
+  isUnset,
+  makeComponent
+} from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE, STYLE_CURVED } from '../util/Constants';
 import { getValue } from '../util/Utils';
 import Shape from './Shape';
@@ -111,17 +116,7 @@ const Polyline = (points, stroke, strokewidth = 1) => {
     c.stroke();
   };
 
-  const _shape = createWithOverrides({
-    paintEdgeShape,
-    ...Polyline.getOverrides()
-  })(Shape)();
-
-  _shape.setPoints(points);
-  _shape.setStroke(stroke);
-  _shape.setStrokeWidth(strokewidth);
-
   const me = {
-    ..._shape,
     getRotation,
     getShapeRotation,
     isPaintBoundsInverted,
@@ -129,6 +124,13 @@ const Polyline = (points, stroke, strokewidth = 1) => {
     paintCurvedLine,
     paintEdgeShape
   };
+
+  const _shape = Shape();
+  extendFrom(_shape)(me);
+
+  _shape.setPoints(points);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokewidth);
 
   return me;
 };
