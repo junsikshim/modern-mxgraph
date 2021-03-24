@@ -5,6 +5,7 @@
  */
 
 import { addProp, isSet, isUnset, makeComponent } from '../Helpers';
+import Event from '../util/Event';
 import PopupMenu from '../util/PopupMenu';
 import { getScrollOrigin } from '../util/Utils';
 

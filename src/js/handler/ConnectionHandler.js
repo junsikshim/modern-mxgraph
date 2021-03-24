@@ -1192,7 +1192,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       (isIgnoreMouseDown() || isSet(getFirst()) || !graph.isMouseDown())
     ) {
       // Handles special case when handler is disabled during highlight
-      if (!isEnabled() && isset(getCurrentState())) {
+      if (!isEnabled() && isSet(getCurrentState())) {
         destroyIcons();
         setCurrentState();
       }

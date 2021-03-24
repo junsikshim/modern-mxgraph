@@ -4,7 +4,8 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, makeComponent } from '../Helpers';
+import { addProp, extendFrom, isSet, isUnset, makeComponent } from '../Helpers';
+import Shape from '../shape/Shape';
 
 /**
  * Class: Cylinder
@@ -44,11 +45,6 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
    */
   const [getSvgStrokeTolerance, setSvgStrokeTolerance] = addProp(0);
 
-  setBounds(bounds);
-  setFill(fill);
-  setStroke(stroke);
-  setStrokeWidth(strokewidth);
-
   /**
    * Function: paintVertexShape
    *
@@ -61,7 +57,7 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
     c.fillAndStroke();
 
     if (
-      !isOutline() ||
+      !_shape.isOutline() ||
       isUnset(getStyle()) ||
       getValue(getStyle(), STYLE_BACKGROUND_OUTLINE, 0) === 0
     ) {
@@ -89,8 +85,8 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
     const dy = getCylinderSize(x, y, w, h);
 
     if (
-      (isForeground && isSet(getFill())) ||
-      (!isForeground && isUnset(getFill()))
+      (isForeground && isSet(_shape.getFill())) ||
+      (!isForeground && isUnset(_shape.getFill()))
     ) {
       c.moveTo(0, dy);
       c.curveTo(0, 2 * dy, w, 2 * dy, w, dy);
@@ -117,7 +113,12 @@ const Cylinder = (bounds, fill, stroke, strokewidth = 1) => {
   };
 
   const _shape = Shape();
-  Object.setPrototypeOf(me, _shape);
+  extendFrom(_shape)(me);
+
+  _shape.setBounds(bounds);
+  _shape.setFill(fill);
+  _shape.setStroke(stroke);
+  _shape.setStrokeWidth(strokewidth);
 
   return me;
 };

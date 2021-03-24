@@ -7,6 +7,7 @@
 import { IS_IE } from '../Client';
 import { isAncestorNode } from './Utils';
 import { addProp, isSet } from '../Helpers';
+import Event from './Event';
 
 /**
  * Class: MouseEvent

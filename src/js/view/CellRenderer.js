@@ -66,6 +66,7 @@ import Rectangle from '../util/Rectangle';
 import { IS_IOS, IS_SVG, IS_TOUCH, NO_FO } from '../Client';
 import { equalEntries, equalPoints, getValue, isNode } from '../util/Utils';
 import MouseEvent from '../util/MouseEvent';
+import Event from '../util/Event';
 
 /**
  * Variable: defaultShapes

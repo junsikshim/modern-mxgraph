@@ -5,6 +5,7 @@
  */
 
 import { addProp, isSet, makeComponent } from '../Helpers';
+import Event from '../util/Event';
 import EventSource from '../util/EventSource';
 import { hasScrollbars } from '../util/Utils';
 
