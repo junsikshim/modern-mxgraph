@@ -24,7 +24,7 @@ import { addProp, makeComponent } from '../Helpers';
  * perimeter - Optional boolean that specifies if the fixed point should be
  * projected onto the perimeter of the terminal. Default is true.
  */
-const ConnectionConstraint = (point, perimeter = true, name, dx, dy) => {
+const ConnectionConstraint = (point, perimeter = true, name, dx = 0, dy = 0) => {
   /**
    * Variable: point
    *
@@ -38,7 +38,7 @@ const ConnectionConstraint = (point, perimeter = true, name, dx, dy) => {
    * Boolean that specifies if the point should be projected onto the perimeter
    * of the terminal.
    */
-  const [getPerimeter, setPerimeter] = addProp(perimeter);
+  const [isPerimeter, setPerimeter] = addProp(perimeter);
 
   /**
    * Variable: name
@@ -64,7 +64,7 @@ const ConnectionConstraint = (point, perimeter = true, name, dx, dy) => {
   const me = {
     getPoint,
     setPoint,
-    getPerimeter,
+    isPerimeter,
     setPerimeter,
     getName,
     setName,

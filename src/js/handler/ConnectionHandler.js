@@ -16,8 +16,13 @@ import {
   INVALID_COLOR,
   OUTLINE_HIGHLIGHT_COLOR,
   OUTLINE_HIGHLIGHT_STROKEWIDTH,
+  STYLE_ENTRY_X,
+  STYLE_ENTRY_Y,
+  STYLE_EXIT_X,
+  STYLE_EXIT_Y,
   STYLE_ROTATION,
-  TOOLTIP_VERTICAL_OFFSET
+  TOOLTIP_VERTICAL_OFFSET,
+  VALID_COLOR
 } from '../util/Constants';
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
@@ -25,6 +30,8 @@ import EventSource from '../util/EventSource';
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import { getOffset, getRotatedPoint, getValue, toRadians } from '../util/Utils';
+import CellMarker from './CellMarker';
+import ConstraintHandler from './ConstraintHandler';
 
 /**
  * Class: ConnectionHandler
@@ -382,6 +389,17 @@ const ConnectionHandler = (graph, factoryMethod) => {
   const [isInsertBeforeSource, setInsertBeforeSource] = addProp(false);
 
   const [getEscapeHandler, setEscapeHandler] = addProp(() => reset());
+  const [getIconState, setIconState] = addProp();
+  const [getPrevious, setPrevious] = addProp();
+  const [getCurrentPoint, setCurrentPoint] = addProp();
+  const [getShape, setShape] = addProp();
+  const [getCurrentState, setCurrentState] = addProp();
+  const [getIcon, setIcon] = addProp();
+  const [getIcons, setIcons] = addProp();
+  const [getSelectedIcon, setSelectedIcon] = addProp();
+  const [getSourceConstraint, setSourceConstraint] = addProp();
+  const [getOriginalPoint, setOriginalPoint] = addProp();
+  const [getWaypoints, setWaypoints] = addProp();
 
   /**
    * Function: isInsertBefore
@@ -483,12 +501,17 @@ const ConnectionHandler = (graph, factoryMethod) => {
     const graph = getGraph();
 
     const marker = CellMarker(graph);
+    const _getCell = marker.getCell.bind();
+    const _isValidState = marker.isValidState.bind();
+    const _getMarkerColor = marker.getMarkerColor.bind();
+    const _intersects = marker.intersects.bind();
+
     marker.setHotspotEnabled(true);
 
     // Overrides to return cell at location only if valid (so that
     // there is no highlight for invalid cells)
     marker.getCell = (mE) => {
-      let cell = marker.getCell(mE);
+      let cell = _getCell(mE);
       setError();
 
       // Checks for cell at preview point (with grid)
@@ -557,7 +580,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
       if (isConnecting()) {
         return isUnset(getError());
       } else {
-        return marker.isValidState(state);
+        return _isValidState(state);
       }
     };
 
@@ -565,7 +588,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
     // target selection
     marker.getMarkerColor = (evt, state, isValid) =>
       isUnset(getConnectImage()) || isConnecting()
-        ? marker.getMarkerColor(evt, state, isValid)
+        ? _getMarkerColor(evt, state, isValid)
         : undefined;
 
     // Overrides to use hotspot only for source selection otherwise
@@ -575,7 +598,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
         return true;
       }
 
-      return marker.intersects(state, evt);
+      return _intersects(state, evt);
     };
 
     return marker;
@@ -1264,7 +1287,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
           pt2 = getEdgeState().getAbsolutePoints()[0];
         } else {
           if (isSet(getCurrentState())) {
-            if (isUnset(constraintHandler.getCurrentConstraint())) {
+            if (isUnset(getConstraintHandler().getCurrentConstraint())) {
               const tmp = getTargetPerimeterPoint(getCurrentState(), mE);
 
               if (isSet(tmp)) {
@@ -1330,9 +1353,9 @@ const ConnectionHandler = (graph, factoryMethod) => {
         Event.consume(mE.getEvent());
         mE.consume();
       } else if (!isEnabled() || !graph.isEnabled()) {
-        constraintHandler.reset();
+        getConstraintHandler().reset();
       } else if (
-        getPrevious() !== this.currentState &&
+        getPrevious() !== getCurrentState() &&
         isUnset(getEdgeState())
       ) {
         destroyIcons();
@@ -1341,7 +1364,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
         if (
           isSet(getCurrentState()) &&
           isUnset(getError()) &&
-          isUnset(constraintHandler.getCurrentConstraint())
+          isUnset(getConstraintHandler().getCurrentConstraint())
         ) {
           setIcons(createIcons(getCurrentState()));
 
@@ -1382,7 +1405,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
         }
       }
     } else {
-      constraintHandler.reset();
+      getConstraintHandler().reset();
     }
   };
 
@@ -1703,7 +1726,7 @@ const ConnectionHandler = (graph, factoryMethod) => {
    */
   const reset = () => {
     if (isSet(getShape())) {
-      etShape().destroy();
+      getShape().destroy();
       setShape();
     }
 
@@ -1934,11 +1957,11 @@ const ConnectionHandler = (graph, factoryMethod) => {
             const pt = isSet(getOriginalPoint())
               ? Point(
                   getOriginalPoint().getX() / s - t.getX(),
-                  getOriginalPoint().y / s - t.y
+                  getOriginalPoint().getY() / s - t.getY()
                 )
               : Point(
                   getCurrentPoint().getX() / s - t.getX(),
-                  getCurrentPoint().y / s - t.y
+                  getCurrentPoint().getY() / s - t.getY()
                 );
             pt.setX(pt.getX() - graph.getPanDx() / s);
             pt.setY(pt.getY() - graph.getPanDy() / s);
@@ -2254,6 +2277,8 @@ const ConnectionHandler = (graph, factoryMethod) => {
     createEdge,
     destroy
   };
+
+  init();
 
   graph.addListener(Event.ESCAPE, getEscapeHandler());
 

@@ -319,6 +319,7 @@ const EdgeHandler = (state) => {
     setLabel(
       Point(state.getAbsoluteOffset().getX(), state.getAbsoluteOffset().getY())
     );
+
     setLabelShape(createLabelHandleShape());
     initBend(getLabelShape());
     getLabelShape().setCursor(CURSOR_LABEL_HANDLE);
@@ -2224,24 +2225,30 @@ const EdgeHandler = (state) => {
 
     // Updates the handle for the label position
     const labelShape = getLabelShape();
-    let b = labelShape.getBounds();
-    const label = setLabel(
-      Point(state.getAbsoluteOffset().getX(), state.getAbsoluteOffset().getY())
-    );
-    labelShape.setBounds(
-      Rectangle(
-        Math.round(label.getX() - b.getWidth() / 2),
-        Math.round(label.getY() - b.getHeight() / 2),
-        b.getWidth(),
-        b.getHeight()
-      )
-    );
 
-    // Shows or hides the label handle depending on the label
-    const lab = graph.getLabel(cell);
-    labelShape.setVisible(
-      isSet(lab) && lab.length > 0 && graph.isLabelMovable(cell)
-    );
+    if (isSet(labelShape)) {
+      let b = labelShape.getBounds();
+      const label = setLabel(
+        Point(
+          state.getAbsoluteOffset().getX(),
+          state.getAbsoluteOffset().getY()
+        )
+      );
+      labelShape.setBounds(
+        Rectangle(
+          Math.round(label.getX() - b.getWidth() / 2),
+          Math.round(label.getY() - b.getHeight() / 2),
+          b.getWidth(),
+          b.getHeight()
+        )
+      );
+
+      // Shows or hides the label handle depending on the label
+      const lab = graph.getLabel(cell);
+      labelShape.setVisible(
+        isSet(lab) && lab.length > 0 && graph.isLabelMovable(cell)
+      );
+    }
 
     const bends = getBends();
 
@@ -2252,7 +2259,7 @@ const EdgeHandler = (state) => {
       const x0 = p0.getX();
       const y0 = p0.getY();
 
-      b = bends[0].getBounds();
+      let b = bends[0].getBounds();
       bends[0].setBounds(
         Rectangle(
           Math.floor(x0 - b.getWidth() / 2),
@@ -2739,12 +2746,17 @@ const EdgeHandler = (state) => {
     setSource,
     isTarget,
     setTarget,
+    getStartX,
+    setStartX,
+    getStartY,
+    setStartY,
+    getAbsPoints,
+    setAbsPoints,
     destroy
   };
 
   if (isSet(state) && isSet(state.getShape())) {
     setState(state);
-    //init();
 
     state.getView().getGraph().addListener(Event.ESCAPE, getEscapeHandler());
   }

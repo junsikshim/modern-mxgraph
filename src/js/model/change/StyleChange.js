@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, makeComponent } from '../../Helpers';
+import { addProp, makeComponent } from "../../Helpers";
 
 /**
  * Class: StyleChange
@@ -36,7 +36,8 @@ const StyleChange = (model, cell, style) => {
   };
 
   const me = {
-    execute
+    execute,
+    getCell,
   };
 
   return me;

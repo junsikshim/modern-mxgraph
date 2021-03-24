@@ -4,12 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {
-  createWithOverrides,
-  extendFrom,
-  isSet,
-  makeComponent
-} from '../Helpers';
+import { extendFrom, isSet, makeComponent } from '../Helpers';
 import {
   DEFAULT_MARKERSIZE,
   STYLE_CURVED,

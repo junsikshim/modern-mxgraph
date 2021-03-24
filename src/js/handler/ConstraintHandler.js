@@ -429,6 +429,7 @@ const ConstraintHandler = (graph) => {
           img.getWidth(),
           img.getHeight()
         );
+
         const icon = ImageShape(bounds, src);
         icon.setPreserveImageAspect(false);
         icon.init(graph.getView().getDecoratorPane());

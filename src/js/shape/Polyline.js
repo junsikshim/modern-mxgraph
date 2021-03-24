@@ -4,12 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {
-  createWithOverrides,
-  extendFrom,
-  isUnset,
-  makeComponent
-} from '../Helpers';
+import { extendFrom, isUnset, makeComponent } from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE, STYLE_CURVED } from '../util/Constants';
 import { getValue } from '../util/Utils';
 import Shape from './Shape';

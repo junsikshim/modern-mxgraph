@@ -327,6 +327,6 @@ export const link = (rel, href, doc = document, id) => {
   head.appendChild(link);
 };
 
-export const basePath = '.';
+export const basePath = typeof mxBasePath !== 'undefined' ? mxBasePath: '.';
 
 export const imageBasePath = basePath + '/images';

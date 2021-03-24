@@ -26,7 +26,10 @@ export const makeComponent = (constructor) => {
       }
 
       while (isSet(cur) && cur !== cur.parent) {
-        if (isSet(cur[name])) return cur[name];
+        if (isSet(cur.constructor.overrides[name])) {
+          return cur.constructor.overrides[name];
+        }
+        if (cur.hasOwnProperty(name)) return cur[name];
 
         cur = cur.parent;
       }
@@ -36,6 +39,11 @@ export const makeComponent = (constructor) => {
 
     return o;
   };
+
+  Object.defineProperty(f, 'overrides', { value: {}, enumerable: false })
+
+  f.getOverrides = () => f.overrides;
+  f.setOverride = (name, func) => f.overrides[name] = func;
 
   return f;
 };

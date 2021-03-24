@@ -6699,7 +6699,7 @@ const Graph = (container, model, _, stylesheet) => {
       const cx = Point(bounds.getCenterX(), bounds.getCenterY());
       const direction = vertex.getStyle()[STYLE_DIRECTION];
       let r1 = 0;
-
+      
       // Bounds need to be rotated by 90 degrees for further computation
       if (
         isSet(direction) &&

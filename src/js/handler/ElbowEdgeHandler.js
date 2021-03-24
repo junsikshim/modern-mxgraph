@@ -4,14 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {
-  addProp,
-  createWithOverrides,
-  extendFrom,
-  isSet,
-  isUnset,
-  makeComponent
-} from '../Helpers';
+import { addProp, extendFrom, isSet, isUnset, makeComponent } from '../Helpers';
 import {
   CURSOR_TERMINAL_HANDLE,
   EDGESTYLE_ELBOW,
@@ -21,6 +14,7 @@ import {
   STYLE_EDGE
 } from '../util/Constants';
 import Point from '../util/Point';
+import Rectangle from '../util/Rectangle';
 import EdgeStyle from '../view/EdgeStyle';
 import EdgeHandler from './EdgeHandler';
 
@@ -56,14 +50,14 @@ const ElbowEdgeHandler = (state) => {
     const bends = [];
 
     // Source
-    const bend = _edgeHandler.createHandleShape(0);
+    let bend = _edgeHandler.createHandleShape(0);
     _edgeHandler.initBend(bend);
     bend.setCursor(CURSOR_TERMINAL_HANDLE);
     bends.push(bend);
 
     // Virtual
     bends.push(
-      this.createVirtualBend((evt) => {
+      createVirtualBend((evt) => {
         if (!Event.isConsumed(evt) && isFlipEnabled()) {
           _edgeHandler
             .getGraph()
@@ -230,7 +224,7 @@ const ElbowEdgeHandler = (state) => {
     if (_edgeHandler.isManageLabelHandle()) {
       _edgeHandler.checkLabelHandle(bounds);
     } else if (
-      isUnset(getHandleImage()) &&
+      isUnset(_edgeHandler.getHandleImage()) &&
       _edgeHandler.getLabelShape().isVisible() &&
       intersects(bounds, _edgeHandler.getLabelShape().getBounds())
     ) {

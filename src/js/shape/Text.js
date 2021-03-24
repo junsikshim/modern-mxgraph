@@ -4,13 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {
-  addProp,
-  createWithOverrides,
-  extendFrom,
-  isSet,
-  makeComponent
-} from '../Helpers';
+import { addProp, extendFrom, isSet, makeComponent } from '../Helpers';
 import Shape from '../shape/Shape';
 import {
   ALIGN_CENTER,

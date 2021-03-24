@@ -15,6 +15,7 @@ import {
 import Event from '../util/Event';
 import EventObject from '../util/EventObject';
 import EventSource from '../util/EventSource';
+import { intersectsHotspot } from '../util/Utils';
 import CellHighlight from './CellHighlight';
 
 /**

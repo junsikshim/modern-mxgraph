@@ -32,14 +32,14 @@ The official mxGraph is at https://github.com/jgraph/mxgraph. However, it is dis
 | /handler/mxConnectionHandler     | 2250  | Converted |            |
 | /handler/mxConstraintHandler     | 518   | Converted |            |
 | /handler/mxEdgeHandler           | 2545  | Converted |            |
-| /handler/mxEdgeSegmentHandler    | 414   |           |            |
-| /handler/mxElbowEdgeHandler      | 231   |           |            |
+| /handler/mxEdgeSegmentHandler    | 414   | Converted |            |
+| /handler/mxElbowEdgeHandler      | 231   | Converted |            |
 | /handler/mxGraphHandler          | 1866  | Converted |            |
 | /handler/mxHandle                | 353   |           |            |
 | /handler/mxKeyHandler            | 429   |           |            |
 | /handler/mxPanningHandler        | 495   | Converted |            |
 | /handler/mxPopupMenuHandler      | 219   | Converted |            |
-| /handler/mxRubberband            | 430   |           |            |
+| /handler/mxRubberband            | 430   | Converted |            |
 | /handler/mxSelectionCellsHandler | 345   | Converted |            |
 | /handler/mxTooltipHandler        | 354   | Converted |            |
 | /handler/mxVertexHandler         | 2252  | Converted |            |

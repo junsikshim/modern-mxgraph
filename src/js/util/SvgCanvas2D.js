@@ -754,7 +754,7 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     flipH = false,
     flipV = false
   ) => {
-    const source = getConverter().convert(src);
+    const source = _canvas.getConverter().convert(src);
 
     // LATER: Add option for embedding images as base64.
 
@@ -1668,7 +1668,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     getMinStrokeWidth,
     setMinStrokeWidth,
     getGradients,
-    setGradients
+    setGradients,
+    image
   };
 
   const _canvas = AbstractCanvas2D();

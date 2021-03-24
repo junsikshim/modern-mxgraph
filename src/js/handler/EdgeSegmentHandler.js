@@ -4,18 +4,11 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import {
-  createWithOverrides,
-  extendFrom,
-  isSet,
-  isUnset,
-  makeComponent
-} from '../Helpers';
+import { extendFrom, isSet, isUnset, makeComponent } from '../Helpers';
 import { CURSOR_TERMINAL_HANDLE } from '../util/Constants';
 import Point from '../util/Point';
 import Rectangle from '../util/Rectangle';
 import { contains, setOpacity } from '../util/Utils';
-import EdgeHandler from './EdgeHandler';
 import ElbowEdgeHandler from './ElbowEdgeHandler';
 
 const EdgeSegmentHandler = (state) => {

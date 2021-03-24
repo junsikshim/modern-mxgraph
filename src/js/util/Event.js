@@ -439,7 +439,7 @@ const Event = {
    *
    * Returns true if the event has been consumed using <consume>.
    */
-  isConsumed: (evt) => evt.isConsumed,
+  isConsumed: (evt) => !!evt.isConsumed,
 
   /**
    * Function: isTouchEvent

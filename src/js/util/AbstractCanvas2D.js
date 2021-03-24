@@ -611,8 +611,12 @@ const AbstractCanvas2D = () => {
     setPointerEvents,
     getState,
     getPath,
-    setPath
+    setPath,
+    getConverter,
+    setConverter
   };
+
+  setConverter(createUrlConverter());
 
   reset();
 

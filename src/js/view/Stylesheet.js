@@ -4,11 +4,12 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { addProp, makeComponent } from '../Helpers';
+import { addProp, isSet, makeComponent } from '../Helpers';
 import {
   ALIGN_CENTER,
   ALIGN_MIDDLE,
   ARROW_CLASSIC,
+  NONE,
   SHAPE_CONNECTOR,
   SHAPE_RECTANGLE,
   STYLE_ALIGN,
@@ -202,7 +203,7 @@ const Stylesheet = () => {
    * defaultStyle - Default style to be returned if no style can be found.
    */
   const getCellStyle = (name, defaultStyle) => {
-    const style = defaultStyle;
+    let style = defaultStyle;
 
     if (isSet(name) && name.length > 0) {
       const pairs = name.split(';');

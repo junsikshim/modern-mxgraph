@@ -273,6 +273,8 @@ const CellHighlight = (
     isHighlightAt,
     getShape,
     setShape,
+    getState,
+    setState,
     destroy
   };
 

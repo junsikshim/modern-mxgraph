@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { createWithOverrides, extendFrom, makeComponent } from '../Helpers';
+import { extendFrom, makeComponent } from '../Helpers';
 import { LINE_ARCSIZE, STYLE_ARCSIZE } from '../util/Constants';
 import Point from '../util/Point';
 import { getValue } from '../util/Utils';

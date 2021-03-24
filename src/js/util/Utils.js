@@ -1084,7 +1084,7 @@ export const fit = (node) => {
   const offset = getDocumentScrollOrigin(node.ownerDocument);
   const sl = offset.getX();
   const st = offset.getY();
-  const right = sl + ds.width;
+  const right = sl + ds.getWidth();
 
   if (left + width > right) {
     node.style.left = Math.max(sl, right - width) + 'px';
@@ -1092,7 +1092,7 @@ export const fit = (node) => {
 
   const top = parseInt(node.offsetTop);
   const height = parseInt(node.offsetHeight);
-  const bottom = st + ds.height;
+  const bottom = st + ds.getHeight();
 
   if (top + height > bottom) {
     node.style.top = Math.max(st, bottom - height) + 'px';
@@ -1857,19 +1857,19 @@ export const contains = (bounds, x, y) =>
  * b - <mxRectangle> to be checked for intersection.
  */
 export const intersects = (a, b) => {
-  let tw = a.width;
-  let th = a.height;
-  let rw = b.width;
-  let rh = b.height;
+  let tw = a.getWidth();
+  let th = a.getHeight();
+  let rw = b.getWidth();
+  let rh = b.getHeight();
 
   if (rw <= 0 || rh <= 0 || tw <= 0 || th <= 0) {
     return false;
   }
 
-  let tx = a.x;
-  let ty = a.y;
-  let rx = b.x;
-  let ry = b.y;
+  let tx = a.getX();
+  let ty = a.getY();
+  let rx = b.getX();
+  let ry = b.getY();
 
   rw += rx;
   rh += ry;
@@ -1941,8 +1941,8 @@ export const intersectsHotspot = (
       const sin = Math.sin(-alpha);
       const cx = Point(state.getCenterX(), state.getCenterY());
       const pt = getRotatedPoint(Point(x, y), cos, sin, cx);
-      x = pt.x;
-      y = pt.y;
+      x = pt.getX();
+      y = pt.getY();
     }
 
     return contains(rect, x, y);

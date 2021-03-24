@@ -11,6 +11,7 @@
     <!-- Sets the basepath for the library if not in same directory -->
     <script type="text/javascript">
       mxBasePath = '../src';
+      imageBasePath = 'src';
     </script>
 
     <!-- Loads and initializes the library -->
@@ -29,30 +30,12 @@
         Point,
         Shape,
         Polyline,
-        ConnectionHandler
+        ConnectionHandler,
+        CellState
       } = window.mxgraph;
 
-      // Overridden to define per-shape connection points
-      Graph.setOverrides({
-        getAllConnectionConstraints: (terminal, source) => {
-          console.log('getAllConnectionConstraints');
-          if (terminal != null && terminal.shape != null) {
-            if (terminal.shape.stencil != null) {
-              if (terminal.shape.stencil.constraints != null) {
-                return terminal.shape.stencil.constraints;
-              }
-            } else if (terminal.shape.constraints != null) {
-              return terminal.shape.constraints;
-            }
-          }
-
-          return null;
-        }
-      });
-
       // Defines the default constraints for all shapes
-      Shape.setOverrides({
-        getConstraints: () => [
+      Shape.setOverride('getConstraints', () => [
           ConnectionConstraint(Point(0.25, 0), true),
           ConnectionConstraint(Point(0.5, 0), true),
           ConnectionConstraint(Point(0.75, 0), true),
@@ -66,22 +49,10 @@
           ConnectionConstraint(Point(0.5, 1), true),
           ConnectionConstraint(Point(0.75, 1), true)
         ]
-      });
+      );
 
       // Edges have no connection points
-      Polyline.setOverrides({
-        getConstraints: () => {}
-      });
-
-      // Enables connect preview for the default edge style
-      ConnectionHandler.setOverrides({
-        createEdgeState: (mE) => {
-          console.log('createEdgeState');
-          var edge = graph.createEdge(null, null, null, null, null);
-
-          return CellState(graph.getView(), edge, graph.getCellStyle(edge));
-        }
-      });
+      Polyline.setOverride('getConstraints', () => {});
 
       // Program starts here. Creates a sample graph in the
       // DOM node with the specified ID. This function is invoked
@@ -100,6 +71,28 @@
           // Creates the graph inside the given container
           var graph = Graph(container);
           graph.setConnectable(true);
+
+          // Overridden to define per-shape connection points
+          graph.getAllConnectionConstraints = (terminal, source) => {
+            if (terminal != null && terminal.getShape() != null) {
+              if (terminal.getShape().getStencil() != null) {
+                if (terminal.getShape().getStencil().getConstraints() != null) {
+                  return terminal.getShape().getStencil().getConstraints();
+                }
+              } else if (terminal.getShape().resolve('getConstraints')() != null) {
+                return terminal.getShape().resolve('getConstraints')();
+              }
+            }
+
+            return null;
+          }
+
+          // // Enables connect preview for the default edge style
+          graph.getConnectionHandler().createEdgeState = (mE) => {
+            var edge = graph.createEdge();
+
+            return CellState(graph.getView(), edge, graph.getCellStyle(edge));
+          };
 
           // Specifies the default edge style
           graph.getStylesheet().getDefaultEdgeStyle()['edgeStyle'] =

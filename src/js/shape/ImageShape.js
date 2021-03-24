@@ -6,15 +6,13 @@
 
 import {
   addProp,
-  createWithOverrides,
   extendFrom,
   isSet,
   makeComponent
 } from '../Helpers';
 import { STYLE_IMAGE_BACKGROUND, STYLE_IMAGE_BORDER } from '../util/Constants';
-import { getNumber } from '../util/Utils';
+import { getNumber, getValue } from '../util/Utils';
 import RectangleShape from './RectangleShape';
-import Shape from './Shape';
 
 /**
  * Class: ImageShape
@@ -72,13 +70,13 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
    * state - <mxCellState> of the corresponding cell.
    */
   const apply = (state) => {
-    shapeApply(state);
+    _rect.apply(state);
 
-    setFill();
-    setStroke();
-    setGradient();
+    _rect.setFill();
+    _rect.setStroke();
+    _rect.setGradient();
 
-    const style = getStyle();
+    const style = _rect.getStyle();
 
     if (isSet(style)) {
       setPreserveImageAspect(getNumber(style, STYLE_IMAGE_ASPECT, 1) === 1);
@@ -121,7 +119,7 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
    */
   const paintVertexShape = (c, x, y, w, h) => {
     if (isSet(getImage())) {
-      const style = getStyle();
+      const style = _rect.getStyle();
       const fill = getValue(style, STYLE_IMAGE_BACKGROUND, null);
       let stroke = getValue(style, STYLE_IMAGE_BORDER, null);
 
@@ -145,7 +143,7 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
         c.stroke();
       }
     } else {
-      paintBackground(c, x, y, w, h);
+      _rect.paintBackground(c, x, y, w, h);
     }
   };
 
@@ -155,9 +153,9 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
    * Overrides <mxShape.redrawHtmlShape> to preserve the aspect ratio of images.
    */
   const redrawHtmlShape = () => {
-    const node = getNode();
-    const bounds = getBounds();
-    const style = getStyle();
+    const node = _rect.getNode();
+    const bounds = _rect.getBounds();
+    const style = _rect.getStyle();
 
     node.style.left = Math.round(bounds.getX()) + 'px';
     node.style.top = Math.round(bounds.getY()) + 'px';
@@ -203,24 +201,17 @@ const ImageShape = (bounds, image, fill, stroke, strokeWidth) => {
     createHtml,
     isRoundable,
     paintVertexShape,
-    redrawHtmlShape
+    redrawHtmlShape,
+    isPreserveImageAspect,
+    setPreserveImageAspect
   };
 
-  const { paintBackground } = RectangleShape();
-  const _shape = Shape();
+  const _rect = RectangleShape(bounds, fill, stroke, strokeWidth);
+  extendFrom(_rect)(me);
 
-  extendFrom({
-    paintBackground,
-    ..._shape
-  })(me);
-
-  _shape.setBounds(bounds);
-  _shape.setFill(fill);
-  _shape.setStroke(stroke);
-  _shape.setStrokeWidth(strokeWidth);
-  _shape.setShadow(false);
+  _rect.setShadow(false);
 
   return me;
 };
-
+    
 export default makeComponent(ImageShape);
