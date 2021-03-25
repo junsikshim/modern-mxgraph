@@ -4,7 +4,7 @@
  * Copyright (c) 2021, Junsik Shim
  */
 
-import { isUnset, makeComponent, noop } from "../Helpers";
+import { isUnset, makeComponent, noop } from '../Helpers';
 import {
   DIRECTION_EAST,
   DIRECTION_NORTH,
@@ -41,13 +41,13 @@ import {
   STYLE_STARTSIZE,
   STYLE_STROKECOLOR,
   STYLE_STROKEWIDTH,
-  STYLE_STROKE_OPACITY,
-} from "../util/Constants";
-import Rectangle from "../util/Rectangle";
-import SvgCanvas2D from "../util/SvgCanvas2D";
-import { getDirectedBounds, getValue, mod } from "../util/Utils";
-import { addProp, isSet } from "../Helpers";
-import Point from "../util/Point";
+  STYLE_STROKE_OPACITY
+} from '../util/Constants';
+import Rectangle from '../util/Rectangle';
+import SvgCanvas2D from '../util/SvgCanvas2D';
+import { getDirectedBounds, getValue, mod } from '../util/Utils';
+import { addProp, isSet } from '../Helpers';
+import Point from '../util/Point';
 
 /**
  * Class: Shape
@@ -201,7 +201,7 @@ const Shape = (stencil) => {
    *
    * Specifies if pointer events should be handled. Default is true.
    */
-  const [getSvgPointerEvents, setSvgPointerEvents] = addProp("all");
+  const [getSvgPointerEvents, setSvgPointerEvents] = addProp('all');
 
   /**
    * Variable: shapePointerEvents
@@ -324,7 +324,7 @@ const Shape = (stencil) => {
   const getSvgScreenOffset = () => {
     const stencil = getStencil();
     const sw =
-      isSet(stencil) && stencil.getStrokeWidth() !== "inherit"
+      isSet(stencil) && stencil.getStrokeWidth() !== 'inherit'
         ? Number(stencil.getStrokeWidth())
         : getStrokeWidth();
 
@@ -354,7 +354,7 @@ const Shape = (stencil) => {
    *
    * Creates and returns the SVG node(s) to represent this shape.
    */
-  const createSvg = () => document.createElementNS(NS_SVG, "g");
+  const createSvg = () => document.createElementNS(NS_SVG, 'g');
 
   /**
    * Function: createHtml
@@ -364,8 +364,8 @@ const Shape = (stencil) => {
    * so that the HTML creation is optional.
    */
   const createHtml = () => {
-    const node = document.createElement("div");
-    node.style.position = "absolute";
+    const node = document.createElement('div');
+    node.style.position = 'absolute';
 
     return node;
   };
@@ -376,7 +376,7 @@ const Shape = (stencil) => {
    * Reconfigures this shape. This will update the colors etc in
    * addition to the bounds or points.
    */
-  const reconfigure = () => me.resolve("redraw")();
+  const reconfigure = () => me.resolve('redraw')();
 
   /**
    * Function: redraw
@@ -386,16 +386,16 @@ const Shape = (stencil) => {
   const redraw = () => {
     updateBoundsFromPoints();
 
-    const isCheck = me.resolve("checkBounds")();
-    const isHtml = me.resolve("isHtmlAllowed")();
+    const isCheck = me.resolve('checkBounds')();
+    const isHtml = me.resolve('isHtmlAllowed')();
 
     if (isVisible() && isCheck) {
-      getNode().style.visibility = "visible";
+      getNode().style.visibility = 'visible';
       clear();
       redrawShape();
-      me.resolve("updateBoundingBox")();
+      me.resolve('updateBoundingBox')();
     } else {
-      getNode().style.visibility = "hidden";
+      getNode().style.visibility = 'hidden';
       setBoundingBox();
     }
   };
@@ -463,8 +463,8 @@ const Shape = (stencil) => {
     const m = getLabelMargins(bounds);
 
     if (isSet(m)) {
-      let flipH = getValue(getStyle(), STYLE_FLIPH, false) === "1";
-      let flipV = getValue(getStyle(), STYLE_FLIPV, false) === "1";
+      let flipH = getValue(getStyle(), STYLE_FLIPH, false) === '1';
+      let flipV = getValue(getStyle(), STYLE_FLIPV, false) === '1';
 
       // Handles special case for vertical labels
       if (
@@ -535,13 +535,13 @@ const Shape = (stencil) => {
 
       beforePaint(canvas);
 
-      me.resolve("paint")(canvas);
+      me.resolve('paint')(canvas);
 
       afterPaint(canvas);
 
       if (getNode() !== canvas.getRoot()) {
         // Forces parsing in IE8 standards mode - slow! avoid
-        getNode().insertAdjacentHTML("beforeend", canvas.getRoot().outerHTML);
+        getNode().insertAdjacentHTML('beforeend', canvas.getRoot().outerHTML);
       }
 
       destroyCanvas(canvas);
@@ -589,12 +589,12 @@ const Shape = (stencil) => {
     const canvas = SvgCanvas2D(getNode(), false);
     canvas.setStrokeTolerance(isPointerEvents() ? getSvgStrokeTolerance() : 0);
     canvas.setPointerEventsValue(getSvgPointerEvents());
-    const off = me.resolve("getSvgScreenOffset")();
+    const off = me.resolve('getSvgScreenOffset')();
 
     if (off !== 0) {
-      getNode().setAttribute("transform", "translate(" + off + "," + off + ")");
+      getNode().setAttribute('transform', 'translate(' + off + ',' + off + ')');
     } else {
-      getNode().removeAttribute("transform");
+      getNode().removeAttribute('transform');
     }
 
     canvas.setMinStrokeWidth(getMinSvgStrokeWidth());
@@ -625,10 +625,10 @@ const Shape = (stencil) => {
    * Allow optimization by replacing VML with HTML.
    */
   const updateHtmlFilters = (node) => {
-    var f = "";
+    var f = '';
 
     if (getOpacity() < 100) {
-      f += "alpha(opacity=" + getOpacity() + ")";
+      f += 'alpha(opacity=' + getOpacity() + ')';
     }
 
     /* TODO: should implement linear gradient the standard way
@@ -675,24 +675,24 @@ const Shape = (stencil) => {
       node.style.borderColor = color;
 
       if (isDashed()) {
-        node.style.borderStyle = "dashed";
+        node.style.borderStyle = 'dashed';
       } else if (getStrokeWidth() > 0) {
-        node.style.borderStyle = "solid";
+        node.style.borderStyle = 'solid';
       }
 
       node.style.borderWidth =
-        Math.max(1, Math.ceil(getStrokeWidth() * getScale())) + "px";
+        Math.max(1, Math.ceil(getStrokeWidth() * getScale())) + 'px';
     } else {
-      node.style.borderWidth = "0px";
+      node.style.borderWidth = '0px';
     }
 
     color = isOutline() ? undefined : getFill();
 
     if (isSet(color) && color !== NONE) {
       node.style.backgroundColor = color;
-      node.style.backgroundImage = "none";
+      node.style.backgroundImage = 'none';
     } else if (isPointerEvents()) {
-      node.style.backgroundColor = "transparent";
+      node.style.backgroundColor = 'transparent';
     } else {
       setTransparentBackgroundImage(node);
     }
@@ -705,18 +705,18 @@ const Shape = (stencil) => {
    */
   const updateHtmlBounds = (node) => {
     let sw = Math.ceil(getStrokeWidth() * getScale());
-    node.style.borderWidth = Math.max(1, sw) + "px";
-    node.style.overflow = "hidden";
+    node.style.borderWidth = Math.max(1, sw) + 'px';
+    node.style.overflow = 'hidden';
 
-    node.style.left = Math.round(getBounds().getX() - sw / 2) + "px";
-    node.style.top = Math.round(getBounds().getY() - sw / 2) + "px";
+    node.style.left = Math.round(getBounds().getX() - sw / 2) + 'px';
+    node.style.top = Math.round(getBounds().getY() - sw / 2) + 'px';
 
     sw = -sw;
 
     node.style.width =
-      Math.round(Math.max(0, getBounds().getWidth() + sw)) + "px";
+      Math.round(Math.max(0, getBounds().getWidth() + sw)) + 'px';
     node.style.height =
-      Math.round(Math.max(0, getBounds().getHeight() + sw)) + "px";
+      Math.round(Math.max(0, getBounds().getHeight() + sw)) + 'px';
   };
 
   /**
@@ -837,15 +837,15 @@ const Shape = (stencil) => {
           }
         }
 
-        me.resolve("paintEdgeShape")(c, pts);
+        me.resolve('paintEdgeShape')(c, pts);
       } else {
         // Paints vertex shape
-        me.resolve("paintVertexShape")(c, x, y, w, h);
+        me.resolve('paintVertexShape')(c, x, y, w, h);
       }
     }
 
     if (isSet(bg) && isSet(c.getState()) && isSet(c.getState().transform)) {
-      bg.setAttribute("transform", c.getState().transform);
+      bg.setAttribute('transform', c.getState().transform);
     }
 
     // Draws highlight rectangle if no stroke was used
@@ -865,7 +865,7 @@ const Shape = (stencil) => {
     const style = getStyle();
 
     if (isSet(style)) {
-      dash = style["dashPattern"];
+      dash = style['dashPattern'];
     }
 
     c.setAlpha(getOpacity() / 100);
@@ -936,7 +936,7 @@ const Shape = (stencil) => {
    * Paints the vertex shape.
    */
   const paintVertexShape = (c, x, y, w, h) => {
-    me.resolve("paintBackground")(c, x, y, w, h);
+    me.resolve('paintBackground')(c, x, y, w, h);
 
     if (
       !isOutline() ||
@@ -944,7 +944,7 @@ const Shape = (stencil) => {
       getValue(getStyle(), STYLE_BACKGROUND_OUTLINE, 0) === 0
     ) {
       c.setShadow(false);
-      me.resolve("paintForeground")(c, x, y, w, h);
+      me.resolve('paintForeground')(c, x, y, w, h);
     }
   };
 
@@ -977,7 +977,7 @@ const Shape = (stencil) => {
   const getArcSize = (w, h) => {
     let r = 0;
 
-    if (getValue(getStyle(), STYLE_ABSOLUTE_ARCSIZE, 0) === "1") {
+    if (getValue(getStyle(), STYLE_ABSOLUTE_ARCSIZE, 0) === '1') {
       r = Math.min(
         w / 2,
         Math.min(h / 2, getValue(getStyle(), STYLE_ARCSIZE, LINE_ARCSIZE) / 2)
@@ -1001,7 +1001,7 @@ const Shape = (stencil) => {
     const sw = Math.ceil(getStrokeWidth() / 2);
     const size = 0.4;
 
-    c.setGradient("#ffffff", "#ffffff", x, y, w, h * 0.6, "south", 0.9, 0.1);
+    c.setGradient('#ffffff', '#ffffff', x, y, w, h * 0.6, 'south', 0.9, 0.1);
     c.begin();
     arc += 2 * sw;
 
@@ -1242,7 +1242,7 @@ const Shape = (stencil) => {
    *
    * cursor - The cursor to be used.
    */
-  const setCursor = (cursor = "") => {
+  const setCursor = (cursor = '') => {
     _setCursor(cursor);
 
     if (isSet(getNode())) getNode().style.cursor = cursor;
@@ -1396,14 +1396,14 @@ const Shape = (stencil) => {
    * Adds a transparent rectangle that catches all events.
    */
   const createTransparentSvgRectangle = (x, y, w, h) => {
-    const rect = document.createElementNS(NS_SVG, "rect");
-    rect.setAttribute("x", x);
-    rect.setAttribute("y", y);
-    rect.setAttribute("width", w);
-    rect.setAttribute("height", h);
-    rect.setAttribute("fill", "none");
-    rect.setAttribute("stroke", "none");
-    rect.setAttribute("pointer-events", "all");
+    const rect = document.createElementNS(NS_SVG, 'rect');
+    rect.setAttribute('x', x);
+    rect.setAttribute('y', y);
+    rect.setAttribute('width', w);
+    rect.setAttribute('height', h);
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', 'none');
+    rect.setAttribute('pointer-events', 'all');
 
     return rect;
   };
@@ -1589,7 +1589,7 @@ const Shape = (stencil) => {
     setUseSvgBoundingBox,
     getConstraints,
     setConstraints,
-    destroy,
+    destroy
   };
 
   initStyles();

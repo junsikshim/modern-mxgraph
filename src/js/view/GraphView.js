@@ -908,9 +908,9 @@ const GraphView = (graph) => {
 
       if (isSet(geo)) {
         if (!model.isEdge(state.getCell())) {
-          offset = isSet(geo.offset) ? geo.offset : Point();
+          offset = isSet(geo.getOffset()) ? geo.getOffset() : Point();
 
-          if (geo.relative && isSet(pState)) {
+          if (geo.isRelative() && isSet(pState)) {
             if (model.isEdge(pState.getCell())) {
               const origin = getPoint(pState, geo);
 
@@ -1839,7 +1839,10 @@ const GraphView = (graph) => {
     let x = state.getCenterX();
     let y = state.getCenterY();
 
-    if (isSet(state.getSegments()) && (isUnset(geometry) || geometry.isRelative())) {
+    if (
+      isSet(state.getSegments()) &&
+      (isUnset(geometry) || geometry.isRelative())
+    ) {
       const gx = isSet(geometry) ? geometry.getX() / 2 : 0;
       const pointCount = state.getAbsolutePoints().length;
       const dist = Math.round((gx + 0.5) * state.getLength());

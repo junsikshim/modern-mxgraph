@@ -5102,7 +5102,7 @@ const Graph = (container, model, _, stylesheet) => {
       try {
         for (let i = 0; i < cells.length; i++) {
           if (
-            (!checkFoldable || isCellFoldable(cells[i], collapse)) &&
+            (!checkFoldable || me.isCellFoldable(cells[i], collapse)) &&
             collapse !== isCellCollapsed(cells[i])
           ) {
             model.setCollapsed(cells[i], collapse);
@@ -5686,7 +5686,13 @@ const Graph = (container, model, _, stylesheet) => {
     const model = getModel();
     const prev = model.getGeometry(cell);
 
-    if (isSet(prev) && !prev.equals(bounds)) {
+    if (
+      isSet(prev) &&
+      (prev.getX() !== bounds.getX() ||
+        prev.getY() !== bounds.getY() ||
+        prev.getWidth() !== bounds.getWidth() ||
+        prev.getHeight() !== bounds.getHeight())
+    ) {
       const geo = prev.clone();
 
       if (!ignoreRelative && geo.isRelative()) {
@@ -6068,7 +6074,7 @@ const Graph = (container, model, _, stylesheet) => {
         }
 
         for (let i = 0; i < cells.length; i++) {
-          translateCell(cells[i], dx, dy);
+          me.translateCell(cells[i], dx, dy);
 
           if (extend && isExtendParent(cells[i])) {
             extendParent(cells[i]);
@@ -6232,7 +6238,7 @@ const Graph = (container, model, _, stylesheet) => {
     const model = getModel();
 
     if (isSet(cell)) {
-      const geo = getCellGeometry(cell);
+      let geo = getCellGeometry(cell);
 
       if (isSet(geo) && (isConstrainRelativeChildren() || !geo.isRelative())) {
         const parent = model.getParent(cell);
@@ -6699,7 +6705,7 @@ const Graph = (container, model, _, stylesheet) => {
       const cx = Point(bounds.getCenterX(), bounds.getCenterY());
       const direction = vertex.getStyle()[STYLE_DIRECTION];
       let r1 = 0;
-      
+
       // Bounds need to be rotated by 90 degrees for further computation
       if (
         isSet(direction) &&
@@ -8516,7 +8522,7 @@ const Graph = (container, model, _, stylesheet) => {
     ) {
       const tmp = isCellCollapsed(state.getCell());
 
-      if (isCellFoldable(state.getCell(), !tmp)) {
+      if (me.isCellFoldable(state.getCell(), !tmp)) {
         return tmp ? getCollapsedImage() : getExpandedImage();
       }
     }
@@ -9220,7 +9226,7 @@ const Graph = (container, model, _, stylesheet) => {
    * cell - <mxCell> whose label should be moved.
    */
   const isLabelMovable = (cell) =>
-    !isCellLocked(cell) &&
+    !me.isCellLocked(cell) &&
     ((getModel().isEdge(cell) && isEdgeLabelsMovable()) ||
       (getModel().isVertex(cell) && isVertexLabelsMovable()));
 
@@ -9263,7 +9269,7 @@ const Graph = (container, model, _, stylesheet) => {
     const style = getCurrentCellStyle(cell);
 
     return (
-      isCellsMovable() && !isCellLocked(cell) && style[STYLE_MOVABLE] !== 0
+      isCellsMovable() && !me.isCellLocked(cell) && style[STYLE_MOVABLE] !== 0
     );
   };
 
@@ -9284,7 +9290,7 @@ const Graph = (container, model, _, stylesheet) => {
 
     return (
       isCellsResizable() &&
-      !isCellLocked(cell) &&
+      !me.isCellLocked(cell) &&
       getValue(style, STYLE_RESIZABLE, '1') !== '0'
     );
   };
@@ -9320,7 +9326,7 @@ const Graph = (container, model, _, stylesheet) => {
     const style = getCurrentCellStyle(cell);
 
     return (
-      isCellsBendable() && !isCellLocked(cell) && style[STYLE_BENDABLE] !== 0
+      isCellsBendable() && !me.isCellLocked(cell) && style[STYLE_BENDABLE] !== 0
     );
   };
 
@@ -9339,7 +9345,7 @@ const Graph = (container, model, _, stylesheet) => {
     const style = getCurrentCellStyle(cell);
 
     return (
-      isCellsEditable() && !isCellLocked(cell) && style[STYLE_EDITABLE] !== 0
+      isCellsEditable() && !me.isCellLocked(cell) && style[STYLE_EDITABLE] !== 0
     );
   };
 
@@ -9358,7 +9364,7 @@ const Graph = (container, model, _, stylesheet) => {
    * disconnected.
    */
   const isCellDisconnectable = (cell, terminal, source) =>
-    isCellsDisconnectable() && !isCellLocked(cell);
+    isCellsDisconnectable() && !me.isCellLocked(cell);
 
   /**
    * Function: isValidSource
@@ -9554,7 +9560,7 @@ const Graph = (container, model, _, stylesheet) => {
    * Returns the cells which are movable in the given array of cells.
    */
   const getFoldableCells = (cells, collapse) =>
-    getModel().filterCells(cells, (cell) => isCellFoldable(cell, collapse));
+    getModel().filterCells(cells, (cell) => me.isCellFoldable(cell, collapse));
 
   /**
    * Function: isCellFoldable
@@ -9908,8 +9914,8 @@ const Graph = (container, model, _, stylesheet) => {
           const sin = Math.sin(-alpha);
           const cx = Point(state.getCenterX(), state.getCenterY());
           const pt = getRotatedPoint(Point(x, y), cos, sin, cx);
-          x = pt.x;
-          y = pt.y;
+          x = pt.getX();
+          y = pt.getY();
         }
 
         if (contains(state, x, y)) {

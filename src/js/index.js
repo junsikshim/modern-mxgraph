@@ -8,6 +8,8 @@ import Point from './util/Point';
 import Polyline from './shape/Polyline';
 import CellState from './view/CellState';
 import ConnectionHandler from './handler/ConnectionHandler';
+import * as Constants from './util/Constants';
+import * as Utils from './util/Utils';
 
 export default {
   Graph,
@@ -19,5 +21,7 @@ export default {
   Shape,
   Polyline,
   CellState,
-  ConnectionHandler
+  ConnectionHandler,
+  Constants,
+  Utils
 };

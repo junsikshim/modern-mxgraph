@@ -393,7 +393,7 @@ const GraphHandler = (graph) => {
         isSet(next) &&
         !graph.isCellSelected(next.getCell()) &&
         (model.isVertex(next.getCell()) || model.isEdge(next.getCell())) &&
-        this.isPropagateSelectionCell(state.getCell(), true, mE)
+        isPropagateSelectionCell(state.getCell(), true, mE)
       ) {
         state = next;
         next = graph.getView().getState(model.getParent(state.getCell()));
@@ -905,7 +905,7 @@ const GraphHandler = (graph) => {
         return;
       }
 
-      let delta = getDelta(mE);
+      let delta = me.getDelta(mE);
       const tol = graph.getTolerance();
 
       if (
@@ -1613,7 +1613,7 @@ const GraphHandler = (graph) => {
     if (
       isUnset(target) &&
       isRemoveCellsFromParent() &&
-      shouldRemoveCellsFromParent(parent, cells, evt)
+      me.shouldRemoveCellsFromParent(parent, cells, evt)
     ) {
       target = graph.getDefaultParent();
     }
@@ -1828,6 +1828,7 @@ const GraphHandler = (graph) => {
     consumeMouseEvent,
     mouseDown,
     getGuideStates,
+    _getCells,
     getCells,
     getPreviewBounds,
     getBoundingBox,
@@ -1860,6 +1861,8 @@ const GraphHandler = (graph) => {
     moveCells,
     shouldRemoveParent,
     getMaxCells,
+    getFirst,
+    setFirst,
     destroyShapes,
     destroy
   };

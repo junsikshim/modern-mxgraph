@@ -1669,7 +1669,8 @@ const SvgCanvas2D = (root, styleEnabled = false) => {
     setMinStrokeWidth,
     getGradients,
     setGradients,
-    image
+    image,
+    ellipse
   };
 
   const _canvas = AbstractCanvas2D();

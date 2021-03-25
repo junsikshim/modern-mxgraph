@@ -692,7 +692,7 @@ const CellRenderer = () => {
       control.init(state.getView().getOverlayPane());
     }
 
-    const node = control.getInnerNode() || control.getNode();
+    const node = control.getNode();
 
     // Workaround for missing click event on iOS is to check tolerance below
     if (isSet(clickHandler) && !IS_IOS) {
