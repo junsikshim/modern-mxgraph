@@ -336,7 +336,7 @@ const GraphView = (graph) => {
     const previousScale = getScale();
 
     if (getScale() !== value) {
-      setScale(value);
+      _setScale(value);
 
       if (isEventsEnabled()) {
         viewStateChanged();
@@ -2149,7 +2149,7 @@ const GraphView = (graph) => {
       state = getStates().remove(cell);
 
       if (isSet(state)) {
-        getGraph().getCellRenderer().destroy(state);
+        getGraph().getCellRenderer().resolve('destroy')(state);
         state.setInvalid(true);
         state.destroy();
       }

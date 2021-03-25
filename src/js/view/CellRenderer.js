@@ -1431,7 +1431,7 @@ const CellRenderer = () => {
     if (isSet(state.getShape()) && (isUnset(rendering) || rendering)) {
       redrawLabel(state, shapeChanged);
       redrawCellOverlays(state, shapeChanged);
-      redrawControl(state, shapeChanged);
+      me.resolve('redrawControl')(state, shapeChanged);
     }
   };
 
@@ -1516,7 +1516,7 @@ const CellRenderer = () => {
 
     if (isSet(shape)) {
       // Handles changes of the collapse icon
-      createControl(state);
+      me.resolve('createControl')(state);
 
       // Redraws the cell if required, ignores changes to bounds if points are
       // defined as the bounds are updated for the given points inside the shape

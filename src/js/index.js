@@ -10,6 +10,10 @@ import CellState from './view/CellState';
 import ConnectionHandler from './handler/ConnectionHandler';
 import * as Constants from './util/Constants';
 import * as Utils from './util/Utils';
+import Image from './util/Image';
+import CellRenderer from './view/CellRenderer';
+import Rectangle from './util/Rectangle';
+import ImageShape from './shape/ImageShape';
 
 export default {
   Graph,
@@ -23,5 +27,9 @@ export default {
   CellState,
   ConnectionHandler,
   Constants,
-  Utils
+  Utils,
+  Image,
+  CellRenderer,
+  Rectangle,
+  ImageShape
 };

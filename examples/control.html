@@ -5,173 +5,216 @@
   controls to specific cells in a graph.
 -->
 <html>
-<head>
-	<title>Control example for mxGraph</title>
+  <head>
+    <title>Control example for mxGraph</title>
 
-	<!-- Sets the basepath for the library if not in same directory -->
-	<script type="text/javascript">
-		mxBasePath = '../src';
-	</script>
+    <!-- Sets the basepath for the library if not in same directory -->
+    <script type="text/javascript">
+      mxBasePath = '../src';
+    </script>
 
-	<!-- Loads and initializes the library -->
-	<script type="text/javascript" src="../src/js/mxClient.js"></script>
+    <!-- Loads and initializes the library -->
+    <!-- <script type="text/javascript" src="../src/js/mxClient.js"></script> -->
+    <script src="../modern-mxgraph.js"></script>
 
-	<!-- Example code -->
-	<script type="text/javascript">
-		// Program starts here. Creates a sample graph in the
-		// DOM node with the specified ID. This function is invoked
-		// from the onLoad event handler of the document (see below).
-		function main(container)
-		{
-			// Checks if the browser is supported
-			if (!mxClient.isBrowserSupported())
-			{
-				// Displays an error message if the browser is not supported.
-				mxUtils.error('Browser is not supported!', 200, false);
-			}
-			else
-			{
-				// Creates the graph inside the given container
-				var graph = new mxGraph(container);
-				graph.setPanning(true);
-				
-				// Specifies the URL and size of the new control
-				var deleteImage = new mxImage('editors/images/overlays/forbidden.png', 16, 16);
+    <!-- Example code -->
+    <script type="text/javascript">
+      const {
+        Graph,
+        Client,
+        Utils,
+        Event,
+        Point,
+        Constants,
+        Rubberband,
+        Image,
+        CellRenderer,
+        Rectangle,
+        ImageShape
+      } = window.mxgraph;
 
-				// Overridden to add an additional control to the state at creation time
-				mxCellRendererCreateControl = mxCellRenderer.prototype.createControl;
-				mxCellRenderer.prototype.createControl = function(state)
-				{
-					mxCellRendererCreateControl.apply(this, arguments);
-					
-					var graph = state.view.graph;
-					
-					if (graph.getModel().isVertex(state.cell))
-					{
-						if (state.deleteControl == null)
-						{
-							var b = new mxRectangle(0, 0, deleteImage.width, deleteImage.height);
-							state.deleteControl = new mxImageShape(b, deleteImage.src);
-							state.deleteControl.dialect = graph.dialect;
-							state.deleteControl.preserveImageAspect = false;
-							
-							this.initControl(state, state.deleteControl, false, function (evt)
-							{
-								if (graph.isEnabled())
-								{
-									graph.removeCells([state.cell]);
-									mxEvent.consume(evt);
-								}
-							});
-						}
-					}
-					else if (state.deleteControl != null)
-					{
-						state.deleteControl.destroy();
-						state.deleteControl = null;
-					}
-				};
-				
-				// Helper function to compute the bounds of the control
-				var getDeleteControlBounds = function(state)
-				{
-					if (state.deleteControl != null)
-					{
-						var oldScale = state.deleteControl.scale;
-						var w = state.deleteControl.bounds.width / oldScale;
-						var h = state.deleteControl.bounds.height / oldScale;
-						var s = state.view.scale;			
+      // Program starts here. Creates a sample graph in the
+      // DOM node with the specified ID. This function is invoked
+      // from the onLoad event handler of the document (see below).
+      function main(container) {
+        // Checks if the browser is supported
+        if (!Client.isBrowserSupported()) {
+          // Displays an error message if the browser is not supported.
+          Utils.error('Browser is not supported!', 200, false);
+        } else {
+          // Creates the graph inside the given container
+          var graph = Graph(container);
+          graph.setPanning(true);
 
-						return (state.view.graph.getModel().isEdge(state.cell)) ? 
-							new mxRectangle(state.x + state.width / 2 - w / 2 * s,
-								state.y + state.height / 2 - h / 2 * s, w * s, h * s)
-							: new mxRectangle(state.x + state.width - w * s,
-								state.y, w * s, h * s);
-					}
-					
-					return null;
-				};
-				
-				// Overridden to update the scale and bounds of the control
-				mxCellRendererRedrawControl = mxCellRenderer.prototype.redrawControl;
-				mxCellRenderer.prototype.redrawControl = function(state)
-				{
-					mxCellRendererRedrawControl.apply(this, arguments);
-					
-					if (state.deleteControl != null)
-					{
-						var bounds = getDeleteControlBounds(state);
-						var s = state.view.scale;
-						
-						if (state.deleteControl.scale != s || !state.deleteControl.bounds.equals(bounds))
-						{
-							state.deleteControl.bounds = bounds;
-							state.deleteControl.scale = s;
-							state.deleteControl.redraw();
-						}
-					}
-				};
-				
-				// Overridden to remove the control if the state is destroyed
-				mxCellRendererDestroy = mxCellRenderer.prototype.destroy;
-				mxCellRenderer.prototype.destroy = function(state)
-				{
-					mxCellRendererDestroy.apply(this, arguments);
+          // Specifies the URL and size of the new control
+          var deleteImage = Image(
+            'editors/images/overlays/forbidden.png',
+            16,
+            16
+          );
 
-					if (state.deleteControl != null)
-					{
-						state.deleteControl.destroy();
-						state.deleteControl = null;
-					}
-				};
+          var cellRenderer = CellRenderer();
 
-				// Uncomment the following if you want the container
-				// to fit the size of the graph
-				//graph.setResizeContainer(true);
-				
-				// Enables rubberband selection
-				new mxRubberband(graph);
-				
-				// Gets the default parent for inserting new cells. This
-				// is normally the first child of the root (ie. layer 0).
-				var parent = graph.getDefaultParent();
-								
-				// Adds cells to the model in a single step
-				graph.getModel().beginUpdate();
-				try
-				{
-					var v1 = graph.insertVertex(parent, null, 'Hello,', 20, 20, 80, 30);
-					var v2 = graph.insertVertex(parent, null, 'World!', 200, 150, 80, 30);
-					var e1 = graph.insertEdge(parent, null, '', v1, v2);
-				}
-				finally
-				{
-					// Updates the display
-					graph.getModel().endUpdate();
-				}
-				
-				graph.centerZoom = false;
-				
-				document.body.appendChild(mxUtils.button('Zoom In', function()
-				{
-					graph.zoomIn();
-				}));
-				
-				document.body.appendChild(mxUtils.button('Zoom Out', function()
-				{
-					graph.zoomOut();
-				}));
-			}
-		};
-	</script>
-</head>
+          // Overridden to add an additional control to the state at creation time
+          var _createControl = cellRenderer.createControl;
 
-<!-- Page passes the container for the graph to the program -->
-<body onload="main(document.getElementById('graphContainer'))">
+          CellRenderer.setOverride('createControl', function (state) {
+            _createControl(state);
 
-	<!-- Creates a container for the graph with a grid wallpaper -->
-	<div id="graphContainer"
-		style="overflow:hidden;width:621px;height:441px;background:url('editors/images/grid.gif');cursor:default;">
-	</div>
-</body>
+            var graph = state.getView().getGraph();
+
+            if (graph.getModel().isVertex(state.getCell())) {
+              if (state.deleteControl == null) {
+                var b = Rectangle(
+                  0,
+                  0,
+                  deleteImage.getWidth(),
+                  deleteImage.getHeight()
+                );
+                state.deleteControl = ImageShape(b, deleteImage.getSrc());
+                state.deleteControl.setPreserveImageAspect(false);
+
+                cellRenderer.resolve('initControl')(
+                  state,
+                  state.deleteControl,
+                  false,
+                  function (evt) {
+                    if (graph.isEnabled()) {
+                      graph.removeCells([state.getCell()]);
+                      Event.consume(evt);
+                    }
+                  }
+                );
+              }
+            } else if (state.deleteControl != null) {
+              state.deleteControl.destroy();
+              state.deleteControl = null;
+            }
+          });
+
+          // Helper function to compute the bounds of the control
+          var getDeleteControlBounds = function (state) {
+            if (state.deleteControl != null) {
+              var oldScale = state.deleteControl.getScale();
+              var w = state.deleteControl.getBounds().getWidth() / oldScale;
+              var h = state.deleteControl.getBounds().getHeight() / oldScale;
+              var s = state.getView().getScale();
+
+              return state
+                .getView()
+                .getGraph()
+                .getModel()
+                .isEdge(state.getCell())
+                ? Rectangle(
+                    state.getX() + state.getWidth() / 2 - (w / 2) * s,
+                    state.getY() + state.getHeight() / 2 - (h / 2) * s,
+                    w * s,
+                    h * s
+                  )
+                : Rectangle(
+                    state.getX() + state.getWidth() - w * s,
+                    state.getY(),
+                    w * s,
+                    h * s
+                  );
+            }
+
+            return null;
+          };
+
+          // Overridden to update the scale and bounds of the control
+          var _redrawControl = cellRenderer.redrawControl;
+
+          CellRenderer.setOverride('redrawControl', function (state) {
+            _redrawControl(state);
+
+            if (state.deleteControl != null) {
+              var bounds = getDeleteControlBounds(state);
+              var s = state.getView().getScale();
+
+              if (
+                state.deleteControl.getScale() != s ||
+                !state.deleteControl.getBounds().equals(bounds)
+              ) {
+                state.deleteControl.setBounds(bounds);
+                state.deleteControl.setScale(s);
+                state.deleteControl.redraw();
+              }
+            }
+          });
+
+          // Overridden to remove the control if the state is destroyed
+          var _destroy = cellRenderer.destroy;
+
+          CellRenderer.setOverride('destroy', function (state) {
+            _destroy(state);
+
+            if (state.deleteControl != null) {
+              state.deleteControl.destroy();
+              state.deleteControl = null;
+            }
+          });
+
+          // Uncomment the following if you want the container
+          // to fit the size of the graph
+          //graph.setResizeContainer(true);
+
+          // Enables rubberband selection
+          Rubberband(graph);
+
+          // Gets the default parent for inserting new cells. This
+          // is normally the first child of the root (ie. layer 0).
+          var parent = graph.getDefaultParent();
+
+          // Adds cells to the model in a single step
+          graph.getModel().beginUpdate();
+          try {
+            var v1 = graph.insertVertex(parent, null, 'Hello,', 20, 20, 80, 30);
+            var v2 = graph.insertVertex(
+              parent,
+              null,
+              'World!',
+              200,
+              150,
+              80,
+              30
+            );
+            var e1 = graph.insertEdge(parent, null, '', v1, v2);
+          } finally {
+            // Updates the display
+            graph.getModel().endUpdate();
+          }
+
+          graph.setCenterZoom(false);
+
+          document.body.appendChild(
+            Utils.button('Zoom In', function () {
+              graph.zoomIn();
+            })
+          );
+
+          document.body.appendChild(
+            Utils.button('Zoom Out', function () {
+              graph.zoomOut();
+            })
+          );
+        }
+      }
+    </script>
+  </head>
+
+  <!-- Page passes the container for the graph to the program -->
+  <body onload="main(document.getElementById('graphContainer'))">
+    <!-- Creates a container for the graph with a grid wallpaper -->
+    <div
+      id="graphContainer"
+      style="
+        overflow: hidden;
+        width: 621px;
+        height: 441px;
+        background: url('editors/images/grid.gif');
+        cursor: default;
+      "
+    ></div>
+  </body>
 </html>

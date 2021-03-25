@@ -937,7 +937,7 @@ export const button = (label, funct, doc = document) => {
   const button = doc.createElement('button');
   write(button, label);
 
-  Event.addEventListener(button, 'click', (evt) => funct(evt));
+  Event.addListener(button, 'click', (evt) => funct(evt));
 
   return button;
 };

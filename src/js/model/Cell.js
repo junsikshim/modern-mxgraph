@@ -718,6 +718,8 @@ const Cell = (value, geometry, style) => {
     cloneValue,
     getOverlays,
     setOverlays,
+    getChildren,
+    setChildren,
     toString
   };
 

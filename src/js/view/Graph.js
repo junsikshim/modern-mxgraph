@@ -49,6 +49,7 @@ import {
   SHAPE_SWIMLANE,
   STYLE_AUTOSIZE,
   STYLE_BENDABLE,
+  STYLE_DELETABLE,
   STYLE_DIRECTION,
   STYLE_EDITABLE,
   STYLE_ENTRY_DX,
@@ -102,7 +103,8 @@ import {
   isNode,
   ptSegDistSq,
   toRadians,
-  contains
+  contains,
+  removeDuplicates
 } from '../util/Utils';
 import CellEditor from './CellEditor';
 import CellRenderer from './CellRenderer';
@@ -5249,7 +5251,7 @@ const Graph = (container, model, _, stylesheet) => {
    */
   const getAllEdges = (cells) => {
     const model = getModel();
-    const edges = [];
+    let edges = [];
 
     if (isSet(cells)) {
       for (let i = 0; i < cells.length; i++) {
@@ -7673,7 +7675,7 @@ const Graph = (container, model, _, stylesheet) => {
   const center = (horizontal = true, vertical = true, cx = 0.5, cy = 0.5) => {
     const view = getView();
     const container = getContainer();
-    const hasScrollbars = hasScrollbars(container);
+    const scrollBars = hasScrollbars(container);
     const padding = 2 * getBorder();
     const cw = container.clientWidth - padding;
     const ch = container.clientHeight - padding;
@@ -7685,7 +7687,7 @@ const Graph = (container, model, _, stylesheet) => {
     let dx = horizontal ? cw - bounds.getWidth() : 0;
     let dy = vertical ? ch - bounds.getHeight() : 0;
 
-    if (!hasScrollbars) {
+    if (!scrollBars) {
       view.setTranslate(
         horizontal
           ? Math.floor(t.getX() - bounds.getX() / s + (dx * cx) / s)
@@ -7725,7 +7727,7 @@ const Graph = (container, model, _, stylesheet) => {
    * argument that keeps the graph scrolled to the center. If the center argument
    * is omitted, then <centerZoom> will be used as its value.
    */
-  const zoom = (factor, center = getCenterZoom()) => {
+  const zoom = (factor, center = isCenterZoom()) => {
     const view = getView();
     const container = getContainer();
     const scale = Math.round(view.getScale() * factor * 100) / 100;
@@ -7750,9 +7752,9 @@ const Graph = (container, model, _, stylesheet) => {
         view.setScale(scale);
       }
     } else {
-      const hasScrollbars = hasScrollbars(container);
+      const scrollBars = hasScrollbars(container);
 
-      if (center && !hasScrollbars) {
+      if (center && !scrollBars) {
         let dx = container.offsetWidth;
         let dy = container.offsetHeight;
 
@@ -7782,7 +7784,7 @@ const Graph = (container, model, _, stylesheet) => {
 
         view.setScale(scale);
 
-        if (hasScrollbars) {
+        if (scrollBars) {
           let dx = 0;
           let dy = 0;
 
@@ -12759,6 +12761,8 @@ const Graph = (container, model, _, stylesheet) => {
     setResetEdgesOnResize,
     getDefaultLoopStyle,
     setDefaultLoopStyle,
+    isCenterZoom,
+    setCenterZoom,
     destroy
   };
 
