@@ -1,6 +1,8 @@
 # modern-mxgraph
 
-This is a modernized version of mxGraph.
+This is an experimental modernized version of mxGraph.
+
+I was trying some new ideas on the code base, and now I'm working on a forked version at https://github.com/jsGraph/mxgraph.
 
 The official mxGraph is at https://github.com/jgraph/mxgraph. However, it is discontinued as of now.
 
